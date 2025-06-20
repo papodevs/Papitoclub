@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+<style>
+  body { background: #000; color: #0ff; font-family: sans-serif; margin: 0; }
+  input, button { margin: 10px; padding: 10px; font-size: 1em; border-radius: 8px; border: none; }
+  button { background: #0ff; color: #000; cursor: pointer; }
+  .menu-lateral {
+    position: fixed;
+    top: 0; left: 0;
+    width: 70px;
+    height: 100%;
+    background: linear-gradient(to bottom, #000, #022);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    box-shadow: 2px 0 10px #0ff4;
+    z-index: 10;
+  }
+  .menu-lateral button {
+    background: none; border: none; color: #0ff;
+    margin: 15px 0; font-size: 1.5em; cursor: pointer;
+    transition: transform 0.2s ease, color 0.3s;
+  }
+  .menu-lateral button:hover {
+    transform: scale(1.2);
+    color: #fff;
+  }
+  .contenido {
+    margin-left: 80px;
+    padding: 20px;
+  }
+</style>
+<div class="menu-lateral">
+  <button title="Inicio" onclick="location.href='home.html'">🏠</button>
+  <button title="Perfil">👤</button>
+  <button title="Historial">📜</button>
+  <button title="Salir" onclick="logout()">🚪</button>
+</div>
+
+</head>
+<body>
+<div class="contenido">
+  <h2>Iniciar sesión</h2>
+  <input type="email" id="loginEmail" placeholder="Correo electrónico" />
+  <input type="password" id="loginPassword" placeholder="Contraseña" />
+  <button onclick="login()">Entrar</button>
+  <p><a href="registro.html" style="color:#0ff;">¿No tienes cuenta? Regístrate</a></p>
+</div>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  
+const firebaseConfig = {
+  apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+  authDomain: "papoclub-737ac.firebaseapp.com",
+  projectId: "papoclub-737ac",
+  storageBucket: "papoclub-737ac.appspot.com",
+  messagingSenderId: "1016897274452",
+  appId: "1:1016897274452:web:9b096128cbb136357763c1"
+};
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  window.login = () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => window.location.href = "home.html")
+      .catch(err => alert("Error: " + err.message));
+  };
+</script>
+</body>
+</html>
