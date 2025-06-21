@@ -184,13 +184,43 @@
         const post = docSnap.data();
         const id = docSnap.id;
 
-        let comentariosHTML = "";
-        try {
-          const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
+        const div = document.createElement("div");
+        div.className = "post";
+
+        div.innerHTML = \`
+          <div class="autor">
+            <img class="avatar" src="\${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
+            <b>\${post.autor}</b>
+          </div>
+          <p>\${post.texto}</p>
+          <div class="acciones">
+            <button onclick="likePost('\${id}')">❤️ \${post.likes}</button>
+            <button onclick="rtPost('\${id}')">🔁 \${post.retweets}</button>
+            <button onclick="compartir('\${post.texto.replace(/'/g, "\'").replace(/\"/g, '&quot;')}')">📤 Compartir</button>
+            \${post.autor === currentUser.email ? \`<button onclick="editarPost('\${id}', \`\${post.texto.replace(/`/g, '\\`')}\`)">✏️ Editar</button>\` : ""}
+          </div>
+          <div class="comentarios" id="comentarios-\${id}">
+            <div class="comentarios-lista">Cargando comentarios...</div>
+            <input type="text" placeholder="Comenta..." id="input-\${id}" style="width:80%; margin-top:5px; background:#002; color:#0ff; border:1px solid #0ff;" />
+            <button onclick="comentar('\${id}')">Enviar</button>
+          </div>
+        \`;
+
+        feed.appendChild(div);
+
+        const comentariosDiv = div.querySelector(".comentarios-lista");
+
+        onSnapshot(collection(db, "posts", id, "comentarios"), (comentariosSnap) => {
+          let innerHTML = "";
           comentariosSnap.forEach(c => {
             const data = c.data();
-            comentariosHTML += `<div class="comentario"><b>${data.autor}:</b> ${data.texto}</div>`;
+            innerHTML += \`<div class="comentario"><b>\${data.autor}:</b> \${data.texto}</div>\`;
           });
+          comentariosDiv.innerHTML = innerHTML;
+        });
+      }
+    });
+  });
         } catch (e) {
           console.warn("Error al cargar comentarios:", e);
         }
@@ -236,16 +266,35 @@
   };
 
   window.comentar = async function(postId) {
-    const input = document.getElementById("input-" + postId);
-    if (!input) return alert("Caja de comentario no encontrada");
-    const texto = input.value.trim();
-    if (!texto) return alert("Comentario vacío");
-    await addDoc(collection(db, "posts", postId, "comentarios"), {
-      autor: currentUser.email,
-      texto,
-      timestamp: Date.now()
-    });
-    input.value = "";
+    try {
+      if (!currentUser) {
+        alert("Debes iniciar sesión para comentar.");
+        return;
+      }
+
+      const input = document.getElementById("input-" + postId);
+      if (!input) {
+        alert("Caja de comentario no encontrada");
+        return;
+      }
+
+      const texto = input.value.trim();
+      if (!texto) {
+        alert("Comentario vacío");
+        return;
+      }
+
+      await addDoc(collection(db, "posts", postId, "comentarios"), {
+        autor: currentUser.email,
+        texto,
+        timestamp: Date.now()
+      });
+
+      input.value = "";
+    } catch (e) {
+      console.error("Error al comentar:", e);
+      alert("No se pudo publicar el comentario.");
+    }
   };
 
   window.editarPost = async function(postId, textoActual) {
