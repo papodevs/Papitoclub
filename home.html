@@ -1,75 +1,248 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Home - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-<style>
-  body { background: #000; color: #0ff; font-family: sans-serif; margin: 0; }
-  input, button { margin: 10px; padding: 10px; font-size: 1em; border-radius: 8px; border: none; }
-  button { background: #0ff; color: #000; cursor: pointer; }
-  .menu-lateral {
-    position: fixed;
-    top: 0; left: 0;
-    width: 70px;
-    height: 100%;
-    background: linear-gradient(to bottom, #000, #022);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 20px;
-    box-shadow: 2px 0 10px #0ff4;
-    z-index: 10;
-  }
-  .menu-lateral button {
-    background: none; border: none; color: #0ff;
-    margin: 15px 0; font-size: 1.5em; cursor: pointer;
-    transition: transform 0.2s ease, color 0.3s;
-  }
-  .menu-lateral button:hover {
-    transform: scale(1.2);
-    color: #fff;
-  }
-  .contenido {
-    margin-left: 80px;
-    padding: 20px;
-  }
-</style>
-<div class="menu-lateral">
-  <button title="Inicio" onclick="location.href='home.html'">🏠</button>
-  <button title="Perfil">👤</button>
-  <button title="Historial">📜</button>
-  <button title="Salir" onclick="logout()">🚪</button>
-</div>
-
+  <meta charset="UTF-8" />
+  <title>Papoclub - Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: #000;
+      color: #0ff;
+      font-family: sans-serif;
+      margin: 0;
+    }
+    .menu-lateral {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 70px;
+      height: 100%;
+      background: #011;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px #0ff4;
+    }
+    .menu-lateral button {
+      background: none;
+      border: none;
+      color: #0ff;
+      margin: 15px 0;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+    .contenido {
+      margin-left: 80px;
+      padding: 20px;
+      max-width: 600px;
+    }
+    textarea {
+      width: 100%;
+      height: 60px;
+      background: #011;
+      color: #0ff;
+      border: 1px solid #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 1em;
+      resize: none;
+    }
+    button {
+      background: #0ff;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      margin-top: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .post {
+      background: #011;
+      border: 1px solid #0ff3;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+    .acciones button {
+      background: none;
+      color: #0ff;
+      border: none;
+      margin-right: 10px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    .comentarios {
+      margin-top: 10px;
+      padding-left: 10px;
+      border-left: 2px solid #0ff3;
+    }
+    .comentario {
+      margin-top: 5px;
+      font-size: 0.9em;
+      color: #8ff;
+    }
+    .autor {
+      display: flex;
+      align-items: center;
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 8px;
+    }
+  </style>
 </head>
 <body>
-<div class="contenido">
-  <h2>Bienvenido a Papoclub</h2>
-  <p>Este es el inicio de tu red social futurista.</p>
-</div>
+  <div class="menu-lateral">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">📜</button>
+    <button onclick="logout()">🚪</button>
+  </div>
+
+  <div class="contenido">
+    <h2>Papoclub 🚀</h2>
+    <textarea id="postInput" placeholder="¿Qué estás pensando?"></textarea><br />
+    <button id="publicarBtn">Publicar</button>
+    <div id="feed"></div>
+  </div>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  
-const firebaseConfig = {
-  apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-  authDomain: "papoclub-737ac.firebaseapp.com",
-  projectId: "papoclub-737ac",
-  storageBucket: "papoclub-737ac.appspot.com",
-  messagingSenderId: "1016897274452",
-  appId: "1:1016897274452:web:9b096128cbb136357763c1"
-};
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, addDoc, query, orderBy, onSnapshot,
+    doc, updateDoc, increment, getDocs, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+    authDomain: "papoclub-737ac.firebaseapp.com",
+    projectId: "papoclub-737ac",
+    storageBucket: "papoclub-737ac.appspot.com",
+    messagingSenderId: "1016897274452",
+    appId: "1:1016897274452:web:9b096128cbb136357763c1"
+  };
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  window.logout = () => {
-    signOut(auth).then(() => {
-      window.location.href = 'index.html';
-    }).catch(error => {
-      alert("Error al cerrar sesión: " + error.message);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      currentUser = user;
+      cargarFeed();
+    } else {
+      location.href = "index.html";
+    }
+  });
+
+  window.logout = () => signOut(auth).then(() => location.href = 'index.html');
+
+  document.getElementById("publicarBtn").addEventListener("click", async () => {
+    const texto = document.getElementById("postInput").value.trim();
+    if (!texto) return;
+
+    // Obtener avatarURL del usuario
+    let avatarURL = "";
+    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+    if (userDoc.exists()) {
+      avatarURL = userDoc.data().avatarURL || "";
+    }
+
+    await addDoc(collection(db, "posts"), {
+      texto,
+      autor: currentUser.email,
+      avatarURL,
+      timestamp: Date.now(),
+      likes: 0,
+      retweets: 0
     });
+    document.getElementById("postInput").value = "";
+  });
+
+  async function cargarFeed() {
+    const feed = document.getElementById("feed");
+    const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    onSnapshot(q, async (snapshot) => {
+      feed.innerHTML = "";
+      for (const docSnap of snapshot.docs) {
+        const post = docSnap.data();
+        const id = docSnap.id;
+
+        const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
+        let comentariosHTML = "";
+        comentariosSnap.forEach(c => {
+          const data = c.data();
+          comentariosHTML += `<div class="comentario"><b>${data.autor}:</b> ${data.texto}</div>`;
+        });
+
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <div class="autor">
+            <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
+            <b>${post.autor}</b>
+          </div>
+          <p>${post.texto}</p>
+          <div class="acciones">
+            <button onclick="likePost('${id}')">❤️ ${post.likes}</button>
+            <button onclick="rtPost('${id}')">🔁 ${post.retweets}</button>
+            <button onclick="compartir('${post.texto.replace(/'/g, "\\'").replace(/"/g, "&quot;")}')">📤 Compartir</button>
+            ${post.autor === currentUser.email ? `<button onclick="editarPost('${id}', \`${post.texto.replace(/`/g, '\\`')}\`)">✏️ Editar</button>` : ""}
+          </div>
+          <div class="comentarios">${comentariosHTML}
+            <input type="text" placeholder="Comenta..." id="input-${id}" style="width:80%; margin-top:5px; background:#002; color:#0ff; border:1px solid #0ff;" />
+            <button onclick="comentar('${id}')">Enviar</button>
+          </div>
+        `;
+        feed.appendChild(div);
+      }
+    });
+  }
+
+  window.likePost = async (id) => {
+    await updateDoc(doc(db, "posts", id), { likes: increment(1) });
+  };
+
+  window.rtPost = async (id) => {
+    await updateDoc(doc(db, "posts", id), { retweets: increment(1) });
+  };
+
+  window.compartir = (texto) => {
+    if (navigator.share) {
+      navigator.share({ text: texto }).catch(() => alert("No se pudo compartir"));
+    } else {
+      alert("Tu navegador no soporta compartir");
+    }
+  };
+
+  window.comentar = async function(postId) {
+    const input = document.getElementById("input-" + postId);
+    if (!input) return alert("Caja de comentario no encontrada");
+    const texto = input.value.trim();
+    if (!texto) return alert("Comentario vacío");
+    await addDoc(collection(db, "posts", postId, "comentarios"), {
+      autor: currentUser.email,
+      texto,
+      timestamp: Date.now()
+    });
+    input.value = "";
+  };
+
+  window.editarPost = async function(postId, textoActual) {
+    const nuevoTexto = prompt("Editar publicación:", textoActual);
+    if (nuevoTexto && nuevoTexto !== textoActual) {
+      await updateDoc(doc(db, "posts", postId), { texto: nuevoTexto });
+      alert("Publicación actualizada");
+    }
   };
 </script>
 </body>
