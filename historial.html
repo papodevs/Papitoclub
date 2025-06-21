@@ -4,52 +4,90 @@
   <meta charset="UTF-8" />
   <title>Historial - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
+  
+<style>
+  body {
+    margin: 0;
+    background: linear-gradient(135deg, #006994, #00b88a);
+    color: #0ff;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    height: 100vh;
+    font-size: 1rem;
+  }
+
+  @media (min-width: 768px) {
     body {
-      margin: 0;
-      background: #000;
-      color: #0ff;
-      font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      height: 100vh;
-    }
-    .menu-lateral {
-      width: 70px;
-      background: #011;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 20px;
-      box-shadow: 2px 0 10px #0ff4;
-    }
-    .menu-lateral button {
-      background: none;
-      border: none;
-      color: #0ff;
-      margin: 15px 0;
-      font-size: 1.5em;
-      cursor: pointer;
-    }
-    .contenido {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
+      font-size: 1.1rem;
     }
     .post {
-      border: 1px solid #0ff3;
-      border-radius: 8px;
-      padding: 10px;
-      margin-bottom: 15px;
-      background: #011;
+      width: 120%;
+      max-width: 720px;
+      font-size: 1.1em;
     }
-    .autor {
-      font-weight: bold;
+  }
+
+  @media (max-width: 767px) {
+    .contenido {
+      padding: 15px;
+      max-width: 95%;
     }
-    .fecha {
-      font-size: 0.8em;
-      color: #8ff;
+    .post {
+      width: 100%;
+      max-width: 100%;
+      font-size: 1em;
     }
-  </style>
+  }
+
+  .menu-lateral {
+    width: 70px;
+    background: #011;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 20px;
+    box-shadow: 2px 0 10px #0ff4;
+  }
+
+  .menu-lateral button {
+    background: none;
+    border: none;
+    color: #0ff;
+    margin: 15px 0;
+    font-size: 1.5em;
+    cursor: pointer;
+  }
+
+  .contenido {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+  }
+
+  .post {
+    border: 2px solid #00e5ff;
+    border-radius: 15px;
+    padding: 10px;
+    margin-bottom: 15px;
+    background: #011;
+    box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
+    transition: transform 0.2s ease;
+  }
+
+  .post:hover {
+    transform: scale(1.02);
+  }
+
+  .autor {
+    font-weight: bold;
+  }
+
+  .fecha {
+    font-size: 0.9em;
+    color: #8ff;
+  }
+</style>
+
 </head>
 <body>
   <div class="menu-lateral">
