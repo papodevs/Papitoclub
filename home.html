@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      background: #000;
+      background: linear-gradient(135deg, #006994, #00b88a); /* azul verdoso */
       color: #0ff;
       font-family: sans-serif;
       margin: 0;
@@ -60,10 +60,15 @@
     }
     .post {
       background: #011;
-      border: 1px solid #0ff3;
+      border: 2px solid #00e5ff;
+      box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
       padding: 10px;
-      border-radius: 10px;
+      border-radius: 15px;
       margin-top: 15px;
+      transition: transform 0.2s ease;
+    }
+    .post:hover {
+      transform: scale(1.02);
     }
     .acciones button {
       background: none;
@@ -94,7 +99,74 @@
       object-fit: cover;
       margin-right: 8px;
     }
-  </style>
+
+
+    .contenido {
+      margin-left: 80px;
+      padding: 20px;
+      max-width: 660px; /* aumentado de 600px */
+    }
+    textarea {
+      width: 110%;
+      max-width: 660px;
+    }
+    .post {
+      width: 110%;
+      max-width: 660px;
+    }
+    
+
+@media (min-width: 768px) {
+  .contenido {
+    max-width: 720px; /* 600px original + 20% */
+  }
+  textarea, .post {
+    width: 120%;
+    max-width: 720px;
+  }
+}
+
+
+/* Tamaño base adaptable */
+body {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: 1.1rem;
+  }
+
+  .post, textarea {
+    font-size: 1.1em;
+  }
+
+  .comentario {
+    font-size: 1em;
+  }
+
+  button {
+    font-size: 1.05em;
+  }
+}
+
+@media (max-width: 767px) {
+  .contenido {
+    padding: 15px;
+    max-width: 95%;
+  }
+
+  textarea, .post {
+    width: 100%;
+    max-width: 100%;
+    font-size: 1em;
+  }
+
+  .comentario {
+    font-size: 0.95em;
+  }
+}
+</style>
 </head>
 <body>
   <div class="menu-lateral">
@@ -106,7 +178,8 @@
 
   <div class="contenido">
     <h2>Papoclub 🚀</h2>
-    <textarea id="postInput" placeholder="¿Qué estás pensando?"></textarea><br />
+    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400"></textarea>
+    <div id="contador" style="color:#ccc; font-size:0.9em; text-align:right;">0 / 400</div><br />
     <button id="publicarBtn">Publicar</button>
     <div id="feed"></div>
   </div>
@@ -184,43 +257,13 @@
         const post = docSnap.data();
         const id = docSnap.id;
 
-        const div = document.createElement("div");
-        div.className = "post";
-
-        div.innerHTML = \`
-          <div class="autor">
-            <img class="avatar" src="\${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
-            <b>\${post.autor}</b>
-          </div>
-          <p>\${post.texto}</p>
-          <div class="acciones">
-            <button onclick="likePost('\${id}')">❤️ \${post.likes}</button>
-            <button onclick="rtPost('\${id}')">🔁 \${post.retweets}</button>
-            <button onclick="compartir('\${post.texto.replace(/'/g, "\'").replace(/\"/g, '&quot;')}')">📤 Compartir</button>
-            \${post.autor === currentUser.email ? \`<button onclick="editarPost('\${id}', \`\${post.texto.replace(/`/g, '\\`')}\`)">✏️ Editar</button>\` : ""}
-          </div>
-          <div class="comentarios" id="comentarios-\${id}">
-            <div class="comentarios-lista">Cargando comentarios...</div>
-            <input type="text" placeholder="Comenta..." id="input-\${id}" style="width:80%; margin-top:5px; background:#002; color:#0ff; border:1px solid #0ff;" />
-            <button onclick="comentar('\${id}')">Enviar</button>
-          </div>
-        \`;
-
-        feed.appendChild(div);
-
-        const comentariosDiv = div.querySelector(".comentarios-lista");
-
-        onSnapshot(collection(db, "posts", id, "comentarios"), (comentariosSnap) => {
-          let innerHTML = "";
+        let comentariosHTML = "";
+        try {
+          const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
           comentariosSnap.forEach(c => {
             const data = c.data();
-            innerHTML += \`<div class="comentario"><b>\${data.autor}:</b> \${data.texto}</div>\`;
+            comentariosHTML += `<div class="comentario"><b>${data.autor}:</b> ${data.texto}</div>`;
           });
-          comentariosDiv.innerHTML = innerHTML;
-        });
-      }
-    });
-  });
         } catch (e) {
           console.warn("Error al cargar comentarios:", e);
         }
@@ -305,5 +348,15 @@
     }
   };
 </script>
+
+<script>
+  const postInput = document.getElementById("postInput");
+  const contador = document.getElementById("contador");
+
+  postInput.addEventListener("input", () => {
+    contador.textContent = postInput.value.length + " / 400";
+  });
+</script>
+
 </body>
 </html>
