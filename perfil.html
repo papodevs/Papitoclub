@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mi Perfil - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    .menu-lateral {
+      width: 70px;
+      background: #011;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px #0ff4;
+    }
+    .menu-lateral button {
+      background: none;
+      border: none;
+      color: #0ff;
+      margin: 15px 0;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+    .contenido {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    .avatar-container {
+      text-align: center;
+    }
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #0ff;
+      object-fit: cover;
+    }
+    .input-file {
+      display: block;
+      margin: 10px auto;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 1.1em;
+    }
+    .info label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .info input {
+      width: 100%;
+      padding: 8px;
+      background: #011;
+      border: 1px solid #0ff;
+      color: #0ff;
+      border-radius: 5px;
+    }
+    .post {
+      border: 1px solid #0ff3;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 15px;
+      background: #011;
+    }
+    .acciones button {
+      background: none;
+      border: none;
+      color: #f55;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-lateral">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">📜</button>
+    <button onclick="logout()">🚪</button>
+  </div>
+  <div class="contenido">
+    <div class="avatar-container">
+      <img id="avatar" src="default-avatar.png" class="avatar" />
+      <input type="file" id="avatarFile" class="input-file" />
+      <button onclick="subirAvatar()">Actualizar Avatar</button>
+    </div>
+    <div class="info">
+      <label>Email:</label>
+      <input id="email" readonly />
+      <label>Nombre de usuario:</label>
+      <input id="username" placeholder="Ej: devgalaxy" />
+      <label>URL personal:</label>
+      <input id="url" placeholder="https://tuweb.com" />
+      <button onclick="guardarPerfil()">Guardar Perfil</button>
+    </div>
+    <div id="misPosts">
+      <h3>Mis publicaciones</h3>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    let currentUser;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      currentUser = user;
+      document.getElementById("email").value = user.email;
+      const docSnap = await getDoc(doc(db, "users", user.uid));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        document.getElementById("username").value = data.username || "";
+        document.getElementById("url").value = data.url || "";
+        if (data.avatarURL) {
+          document.getElementById("avatar").src = data.avatarURL;
+        }
+      }
+      cargarMisPosts();
+    });
+
+    window.logout = () => signOut(auth).then(() => location.href = 'index.html');
+
+    window.subirAvatar = async () => {
+      const file = document.getElementById("avatarFile").files[0];
+      if (!file) return alert("Selecciona una imagen");
+      const storageRef = ref(storage, "avatars/" + currentUser.uid);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await updateDoc(doc(db, "users", currentUser.uid), { avatarURL: url });
+      document.getElementById("avatar").src = url;
+    };
+
+    window.guardarPerfil = async () => {
+      const username = document.getElementById("username").value;
+      const url = document.getElementById("url").value;
+      await setDoc(doc(db, "users", currentUser.uid), {
+        username,
+        url,
+        avatarURL: document.getElementById("avatar").src,
+        email: currentUser.email
+      });
+      alert("Perfil actualizado");
+    };
+
+    async function cargarMisPosts() {
+      const postsRef = collection(db, "posts");
+      const q = query(postsRef, where("autor", "==", currentUser.email));
+      const snap = await getDocs(q);
+      const container = document.getElementById("misPosts");
+      snap.forEach(postDoc => {
+        const data = postDoc.data();
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <b>${data.autor}</b>
+          <p>${data.texto}</p>
+          <div class="acciones"><button onclick="eliminarPost('${postDoc.id}')">🗑️ Borrar</button></div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    window.eliminarPost = async (id) => {
+      if (confirm("¿Estás seguro de borrar este post?")) {
+        await deleteDoc(doc(db, "posts", id));
+        location.reload();
+      }
+    };
+  </script>
+</body>
+</html>
