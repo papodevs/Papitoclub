@@ -4,129 +4,110 @@
   <meta charset="UTF-8" />
   <title>Mi Perfil - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-<style>
-  body {
-    margin: 0;
-    background: linear-gradient(135deg, #006994, #00b88a);
-    color: #0ff;
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    height: 100vh;
-    font-size: 1rem;
-  }
-
-  @media (min-width: 768px) {
+  <style>
     body {
-      font-size: 1.1rem;
+      margin: 0;
+      background: linear-gradient(135deg, #006994, #00b88a);
+      color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
+      font-size: 1rem;
     }
+
+    @media (min-width: 768px) {
+      body { font-size: 1.1rem; }
+      .contenido { max-width: 720px; }
+      .post { width: 120%; max-width: 720px; font-size: 1.1em; }
+    }
+
+    @media (max-width: 767px) {
+      .contenido { padding: 15px; max-width: 95%; }
+      .post { width: 100%; max-width: 100%; font-size: 1em; }
+    }
+
+    .menu-lateral {
+      width: 70px;
+      background: #011;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px #0ff4;
+    }
+
+    .menu-lateral button {
+      background: none;
+      border: none;
+      color: #0ff;
+      margin: 15px 0;
+      font-size: 1.5em;
+      cursor: pointer;
+    }
+
     .contenido {
-      max-width: 720px;
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
     }
-    .post {
-      width: 120%;
-      max-width: 720px;
+
+    .avatar-container { text-align: center; }
+
+    .avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 3px solid #0ff;
+      object-fit: cover;
+    }
+
+    .input-file {
+      display: block;
+      margin: 10px auto;
+    }
+
+    .info {
+      margin-top: 20px;
       font-size: 1.1em;
     }
-  }
 
-  @media (max-width: 767px) {
-    .contenido {
-      padding: 15px;
-      max-width: 95%;
+    .info label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
     }
-    .post {
+
+    .info input {
       width: 100%;
-      max-width: 100%;
-      font-size: 1em;
+      padding: 8px;
+      background: #011;
+      border: 1px solid #0ff;
+      color: #0ff;
+      border-radius: 5px;
     }
-  }
 
-  .menu-lateral {
-    width: 70px;
-    background: #011;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 20px;
-    box-shadow: 2px 0 10px #0ff4;
-  }
+    .post {
+      border: 2px solid #00e5ff;
+      border-radius: 15px;
+      padding: 10px;
+      margin-top: 15px;
+      background: #011;
+      box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
+      transition: transform 0.2s ease;
+    }
 
-  .menu-lateral button {
-    background: none;
-    border: none;
-    color: #0ff;
-    margin: 15px 0;
-    font-size: 1.5em;
-    cursor: pointer;
-  }
+    .post:hover {
+      transform: scale(1.02);
+    }
 
-  .contenido {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
-  }
-
-  .avatar-container {
-    text-align: center;
-  }
-
-  .avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 3px solid #0ff;
-    object-fit: cover;
-  }
-
-  .input-file {
-    display: block;
-    margin: 10px auto;
-  }
-
-  .info {
-    margin-top: 20px;
-    font-size: 1.1em;
-  }
-
-  .info label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-
-  .info input {
-    width: 100%;
-    padding: 8px;
-    background: #011;
-    border: 1px solid #0ff;
-    color: #0ff;
-    border-radius: 5px;
-  }
-
-  .post {
-    border: 2px solid #00e5ff;
-    border-radius: 15px;
-    padding: 10px;
-    margin-top: 15px;
-    background: #011;
-    box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
-    transition: transform 0.2s ease;
-  }
-
-  .post:hover {
-    transform: scale(1.02);
-  }
-
-  .acciones button {
-    background: none;
-    border: none;
-    color: #f55;
-    cursor: pointer;
-    font-size: 0.95em;
-  }
-</style>
-
+    .acciones button {
+      background: none;
+      border: none;
+      color: #f55;
+      cursor: pointer;
+      font-size: 0.95em;
+    }
+  </style>
 </head>
 <body>
   <div class="menu-lateral">
@@ -209,29 +190,18 @@
       document.getElementById("avatar").src = url;
     };
 
-    
-window.guardarPerfil = async () => {
-  const username = document.getElementById("username").value;
-  const url = document.getElementById("url").value;
-  const avatarURL = document.getElementById("avatar").src;
-
-  await setDoc(doc(db, "users", currentUser.uid), {
-    username,
-    url,
-    avatarURL,
-    email: currentUser.email
-  });
-
-  alert("Perfil actualizado");
-};
-
+    window.guardarPerfil = async () => {
+      const username = document.getElementById("username").value;
       const url = document.getElementById("url").value;
+      const avatarURL = document.getElementById("avatar").src;
+
       await setDoc(doc(db, "users", currentUser.uid), {
         username,
         url,
-        avatarURL: document.getElementById("avatar").src,
+        avatarURL,
         email: currentUser.email
       });
+
       alert("Perfil actualizado");
     };
 
