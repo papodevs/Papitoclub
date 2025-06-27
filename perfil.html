@@ -2,146 +2,71 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Mi Perfil - Papoclub</title>
+  <title>Perfil - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-<style>
-  body {
-    margin: 0;
-    background: linear-gradient(135deg, #006994, #00b88a);
-    color: #0ff;
-    font-family: 'Segoe UI', sans-serif;
-    display: flex;
-    height: 100vh;
-    font-size: 1rem;
-  }
-
-  @media (min-width: 768px) {
+  <style>
     body {
-      font-size: 1.1rem;
+      margin: 0;
+      background: linear-gradient(135deg, #006994, #00b88a);
+      color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      height: 100vh;
+    }
+    .menu-lateral {
+      width: 70px;
+      background: #011;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px #0ff4;
+    }
+    .menu-lateral button {
+      background: none;
+      border: none;
+      color: #0ff;
+      margin: 15px 0;
+      font-size: 1.5em;
+      cursor: pointer;
+      position: relative;
+    }
+    .menu-lateral .alerta {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: red;
+      color: white;
+      font-size: 0.7em;
+      border-radius: 50%;
+      padding: 2px 5px;
     }
     .contenido {
-      max-width: 720px;
+      flex: 1;
+      padding: 30px;
     }
-    .post {
-      width: 120%;
-      max-width: 720px;
-      font-size: 1.1em;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .contenido {
-      padding: 15px;
-      max-width: 95%;
-    }
-    .post {
+    input {
       width: 100%;
-      max-width: 100%;
-      font-size: 1em;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
     }
-  }
-
-  .menu-lateral {
-    width: 70px;
-    background: #011;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 20px;
-    box-shadow: 2px 0 10px #0ff4;
-  }
-
-  .menu-lateral button {
-    background: none;
-    border: none;
-    color: #0ff;
-    margin: 15px 0;
-    font-size: 1.5em;
-    cursor: pointer;
-  }
-
-  .contenido {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
-  }
-
-  .avatar-container {
-    text-align: center;
-  }
-
-  .avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 3px solid #0ff;
-    object-fit: cover;
-  }
-
-  .input-file {
-    display: block;
-    margin: 10px auto;
-  }
-
-  .info {
-    margin-top: 20px;
-    font-size: 1.1em;
-  }
-
-  .info label {
-    display: block;
-    margin-top: 10px;
-    font-weight: bold;
-  }
-
-  .info input {
-    width: 100%;
-    padding: 8px;
-    background: #011;
-    border: 1px solid #0ff;
-    color: #0ff;
-    border-radius: 5px;
-  }
-
-  .post {
-    border: 2px solid #00e5ff;
-    border-radius: 15px;
-    padding: 10px;
-    margin-top: 15px;
-    background: #011;
-    box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
-    transition: transform 0.2s ease;
-  }
-
-  .post:hover {
-    transform: scale(1.02);
-  }
-
-  .acciones button {
-    background: none;
-    border: none;
-    color: #f55;
-    cursor: pointer;
-    font-size: 0.95em;
-  }
-
-.menu-lateral .alerta {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: red;
-  color: white;
-  font-size: 0.7em;
-  border-radius: 50%;
-  padding: 2px 5px;
-}
-
-</style>
-
+    button {
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
+      margin-top: 15px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-  
   <div class="menu-lateral">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
@@ -153,141 +78,68 @@
   </div>
 
   <div class="contenido">
-    <div class="avatar-container">
-      <img id="avatar" src="default-avatar.png" class="avatar" />
-      <input type="file" id="avatarFile" class="input-file" />
-      <button onclick="subirAvatar()">Actualizar Avatar</button>
-    </div>
-    <div class="info">
-      <label>Email:</label>
-      <input id="email" readonly />
-      <label>Nombre de usuario:</label>
-      <input id="username" placeholder="Ej: devgalaxy" />
-      <label>URL personal:</label>
-      <input id="url" placeholder="https://tuweb.com" />
-      <button onclick="guardarPerfil()">Guardar Perfil</button>
-    </div>
-    <div id="misPosts">
-      <h3>Mis publicaciones</h3>
-    </div>
+    <h2>Editar Perfil</h2>
+    <label>Nombre de usuario</label>
+    <input type="text" id="username" placeholder="Tu nombre de usuario" />
+    <label>Email</label>
+    <input type="email" id="email" placeholder="Tu correo" disabled />
+    <label>URL del avatar</label>
+    <input type="text" id="avatarURL" placeholder="https://..." />
+    <button onclick="guardarPerfil()">Confirmar</button>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, deleteDoc
+      getFirestore, doc, setDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getStorage, ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "1016897274452",
-      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+      projectId: "papoclub-737ac"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
-    let currentUser;
+    let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
       document.getElementById("email").value = user.email;
-      const docSnap = await getDoc(doc(db, "users", user.uid));
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+      const docRef = doc(db, "users", user.uid);
+      const perfil = await getDoc(docRef);
+      if (perfil.exists()) {
+        const data = perfil.data();
         document.getElementById("username").value = data.username || "";
-        document.getElementById("url").value = data.url || "";
-        if (data.avatarURL) {
-          document.getElementById("avatar").src = data.avatarURL;
-        }
+        document.getElementById("avatarURL").value = data.avatarURL || "";
       }
-      cargarMisPosts();
     });
 
     window.logout = () => signOut(auth).then(() => location.href = 'index.html');
 
-    window.subirAvatar = async () => {
-      const file = document.getElementById("avatarFile").files[0];
-      if (!file) return alert("Selecciona una imagen");
-      const storageRef = ref(storage, "avatars/" + currentUser.uid);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, "users", currentUser.uid), { avatarURL: url });
-      document.getElementById("avatar").src = url;
-    };
+    window.guardarPerfil = async () => {
+      const username = document.getElementById("username").value.trim();
+      const avatarURL = document.getElementById("avatarURL").value.trim();
+      if (!username) return alert("El nombre de usuario es obligatorio");
 
-    
-window.guardarPerfil = async () => {
-  const username = document.getElementById("username").value;
-  const url = document.getElementById("url").value;
-  const avatarURL = document.getElementById("avatar").src;
-
-  console.log("Intentando guardar perfil...");
-  if (!username || !url || !avatarURL) {
-    alert("Completa todos los campos antes de guardar.");
-    return;
-  }
-
-  try {
-    await setDoc(doc(db, "users", currentUser.uid), {
-      username,
-      url,
-      avatarURL,
-      email: currentUser.email
-    });
-    alert("✅ Perfil actualizado correctamente.");
-    console.log("Perfil guardado:", { username, url, avatarURL });
-  } catch (e) {
-    console.error("Error al guardar perfil:", e);
-    alert("❌ No se pudo guardar el perfil.");
-  }
-};
-
-      
-    };
-
-    async function cargarMisPosts() {
-      const postsRef = collection(db, "posts");
-      const q = query(postsRef, where("autor", "==", currentUser.email));
-      const snap = await getDocs(q);
-      const container = document.getElementById("misPosts");
-      snap.forEach(postDoc => {
-        const data = postDoc.data();
-        const div = document.createElement("div");
-        div.className = "post";
-        div.innerHTML = `
-          <b>${data.autor}</b>
-          <p>${data.texto}</p>
-          <div class="acciones"><button onclick="eliminarPost('${postDoc.id}')">🗑️ Borrar</button></div>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    window.eliminarPost = async (id) => {
-      if (confirm("¿Estás seguro de borrar este post?")) {
-        await deleteDoc(doc(db, "posts", id));
-        location.reload();
+      try {
+        const docRef = doc(db, "users", currentUser.uid);
+        await setDoc(docRef, {
+          username,
+          email: currentUser.email,
+          avatarURL
+        });
+        alert("Perfil actualizado correctamente.");
+      } catch (e) {
+        console.error("Error al guardar perfil:", e);
+        alert("No se pudo guardar el perfil.");
       }
     };
   </script>
-
-<script>
-  if (location.protocol === 'file:') {
-    alert("⚠️ Esta página no funcionará correctamente si la abres directamente desde tu disco (file://). Usa Live Server o http://localhost");
-    console.warn("⚠️ Firebase requiere contexto web: estás usando file://");
-  }
-</script>
 </body>
-
 </html>
