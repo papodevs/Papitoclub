@@ -1,0 +1,257 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mensajes - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #006994, #00b88a);
+      color: #0ff;
+      font-family: sans-serif;
+      margin: 0;
+      display: flex;
+    }
+    .menu-lateral {
+      width: 70px;
+      background: #011;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      box-shadow: 2px 0 10px #0ff4;
+    }
+    .menu-lateral button {
+      background: none;
+      border: none;
+      color: #0ff;
+      font-size: 1.5em;
+      margin: 15px 0;
+      cursor: pointer;
+      position: relative;
+    }
+    .menu-lateral .alerta {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: red;
+      color: white;
+      font-size: 0.7em;
+      border-radius: 50%;
+      padding: 2px 5px;
+    }
+    .panel-central {
+      flex: 1;
+      padding: 20px;
+      max-width: 50%;
+    }
+    .panel-derecho {
+      width: 25%;
+      padding: 20px;
+      border-left: 2px solid #0ff4;
+      background: #011;
+      overflow-y: auto;
+      height: 100vh;
+    }
+    select, textarea, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+    button {
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .mensaje {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 90%;
+      font-size: 0.9em;
+    }
+    .yo {
+      background: #0ff;
+      color: #000;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+    .otro {
+      background: #033;
+      color: #0ff;
+      align-self: flex-start;
+    }
+    .detalle {
+      font-size: 0.75em;
+      margin-top: 4px;
+      text-align: right;
+    }
+    #chat {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-lateral">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">📜</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta" style="display:none;">•</span></button>
+    <button onclick="logout()">🚪</button>
+  </div>
+
+  <div class="panel-central">
+    <h2>Enviar mensaje privado</h2>
+    <label for="destinatario">Selecciona usuario:</label>
+    <select id="destinatario"><option value="">--Seleccionar--</option></select>
+    <textarea id="mensaje" rows="3" placeholder="Escribe tu mensaje..."></textarea>
+    <button onclick="enviarMensaje()">Enviar</button>
+  </div>
+
+  <div class="panel-derecho">
+    <h3>Historial</h3>
+    <div id="chat"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy,
+      onSnapshot, doc, getDoc, getDocs, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let currentUsername = null;
+    let selectedUser = null;
+    let unsubscribe = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      currentUser = user;
+      const perfilSnap = await getDoc(doc(db, "users", user.uid));
+      if (perfilSnap.exists()) {
+        currentUsername = perfilSnap.data().username;
+        cargarUsuarios();
+        verificarNotificaciones();
+      } else {
+        alert("No se pudo obtener tu nombre de usuario.");
+      }
+    });
+
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
+
+    async function cargarUsuarios() {
+      const snap = await getDocs(collection(db, "users"));
+      const select = document.getElementById("destinatario");
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.username !== currentUsername) {
+          const opt = document.createElement("option");
+          opt.value = data.username;
+          opt.textContent = "@" + data.username;
+          select.appendChild(opt);
+        }
+      });
+      select.addEventListener("change", () => {
+        selectedUser = select.value;
+        if (selectedUser) escucharMensajes(selectedUser);
+      });
+    }
+
+    function getChatId(a, b) {
+      return [a, b].sort().join("_");
+    }
+
+    function formatearHora(timestamp) {
+      const fecha = new Date(timestamp);
+      return fecha.toLocaleString("es-ES", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+    }
+
+    function escucharMensajes(destino) {
+      if (!currentUsername || !destino) return;
+      const chatId = getChatId(currentUsername, destino);
+      const mensajesRef = collection(db, "privados", chatId, "mensajes");
+      const q = query(mensajesRef, orderBy("timestamp", "asc"));
+
+      if (unsubscribe) unsubscribe();
+      unsubscribe = onSnapshot(q, async (snapshot) => {
+        const chat = document.getElementById("chat");
+        chat.innerHTML = "";
+        for (const doc of snapshot.docs) {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "mensaje " + (msg.de === currentUsername ? "yo" : "otro");
+          div.innerHTML = `
+            ${msg.texto}
+            <div class="detalle">
+              ${msg.de === currentUsername ? "📤" : "📥"} ${formatearHora(msg.timestamp)} ${msg.leido && msg.de === currentUsername ? "✅" : ""}
+            </div>
+          `;
+          chat.appendChild(div);
+
+          // Si soy el receptor y aún no está leído
+          if (msg.para === currentUsername && !msg.leido) {
+            await updateDoc(doc.ref, { leido: true });
+          }
+        }
+        chat.scrollTop = chat.scrollHeight;
+      });
+    }
+
+    window.enviarMensaje = async () => {
+      const texto = document.getElementById("mensaje").value.trim();
+      if (!selectedUser || !texto) return;
+
+      const chatId = getChatId(currentUsername, selectedUser);
+      await addDoc(collection(db, "privados", chatId, "mensajes"), {
+        de: currentUsername,
+        para: selectedUser,
+        texto,
+        timestamp: Date.now(),
+        leido: false
+      });
+
+      document.getElementById("mensaje").value = "";
+    };
+
+    async function verificarNotificaciones() {
+      const snap = await getDocs(collection(db, "privados"));
+      let tieneNuevos = false;
+      for (const chat of snap.docs) {
+        const sub = await getDocs(collection(db, "privados", chat.id, "mensajes"));
+        sub.forEach(msg => {
+          const data = msg.data();
+          if (data.para === currentUsername && !data.leido) {
+            tieneNuevos = true;
+          }
+        });
+      }
+      if (tieneNuevos) {
+        document.getElementById("noti").style.display = "inline-block";
+      }
+    }
+  </script>
+</body>
+</html>
