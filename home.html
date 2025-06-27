@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      background: linear-gradient(135deg, #006994, #00b88a); /* azul verdoso */
+      background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: sans-serif;
       margin: 0;
@@ -35,11 +35,10 @@
     .contenido {
       margin-left: 80px;
       padding: 20px;
-      max-width: 600px;
+      max-width: 660px;
     }
     textarea {
       width: 100%;
-      height: 60px;
       background: #011;
       color: #0ff;
       border: 1px solid #0ff;
@@ -70,6 +69,21 @@
     .post:hover {
       transform: scale(1.02);
     }
+    .autor {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .autor img.avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 8px;
+    }
+    .autor b {
+      color: #0ff;
+    }
     .acciones button {
       background: none;
       color: #0ff;
@@ -78,7 +92,7 @@
       font-size: 1em;
       cursor: pointer;
     }
-    .comentarios {
+    .comentarios-lista {
       margin-top: 10px;
       padding-left: 10px;
       border-left: 2px solid #0ff3;
@@ -88,85 +102,24 @@
       font-size: 0.9em;
       color: #8ff;
     }
-    .autor {
-      display: flex;
-      align-items: center;
+    #contador {
+      color: #ccc;
+      font-size: 0.9em;
+      text-align: right;
     }
-    .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-right: 8px;
+    @media (min-width: 768px) {
+      .contenido { max-width: 720px; }
+      body { font-size: 1.1rem; }
+      textarea, .post { font-size: 1.1em; }
+      .comentario { font-size: 1em; }
+      button { font-size: 1.05em; }
     }
-
-
-    .contenido {
-      margin-left: 80px;
-      padding: 20px;
-      max-width: 660px; /* aumentado de 600px */
+    @media (max-width: 767px) {
+      .contenido { padding: 15px; max-width: 95%; }
+      textarea, .post { width: 100%; max-width: 100%; font-size: 1em; }
+      .comentario { font-size: 0.95em; }
     }
-    textarea {
-      width: 110%;
-      max-width: 660px;
-    }
-    .post {
-      width: 110%;
-      max-width: 660px;
-    }
-    
-
-@media (min-width: 768px) {
-  .contenido {
-    max-width: 720px; /* 600px original + 20% */
-  }
-  textarea, .post {
-    width: 120%;
-    max-width: 720px;
-  }
-}
-
-
-/* Tamaño base adaptable */
-body {
-  font-size: 1rem;
-}
-
-@media (min-width: 768px) {
-  body {
-    font-size: 1.1rem;
-  }
-
-  .post, textarea {
-    font-size: 1.1em;
-  }
-
-  .comentario {
-    font-size: 1em;
-  }
-
-  button {
-    font-size: 1.05em;
-  }
-}
-
-@media (max-width: 767px) {
-  .contenido {
-    padding: 15px;
-    max-width: 95%;
-  }
-
-  textarea, .post {
-    width: 100%;
-    max-width: 100%;
-    font-size: 1em;
-  }
-
-  .comentario {
-    font-size: 0.95em;
-  }
-}
-</style>
+  </style>
 </head>
 <body>
   <div class="menu-lateral">
@@ -179,7 +132,7 @@ body {
   <div class="contenido">
     <h2>Papoclub 🚀</h2>
     <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400"></textarea>
-    <div id="contador" style="color:#ccc; font-size:0.9em; text-align:right;">0 / 400</div><br />
+    <div id="contador">0 / 400</div>
     <button id="publicarBtn">Publicar</button>
     <div id="feed"></div>
   </div>
@@ -189,7 +142,7 @@ body {
   import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import {
     getFirestore, collection, addDoc, query, orderBy, onSnapshot,
-    doc, updateDoc, increment, getDocs, getDoc
+    doc, getDoc, updateDoc, increment, getDocs, where
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -207,6 +160,15 @@ body {
 
   let currentUser = null;
 
+  // Helper para resolver email→username
+  async function obtenerNombreUsuario(email) {
+    if (!email.includes("@")) return email;
+    const q = query(collection(db, "users"), where("email", "==", email));
+    const res = await getDocs(q);
+    if (!res.empty) return res.docs[0].data().username || email;
+    return email;
+  }
+
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUser = user;
@@ -218,36 +180,37 @@ body {
 
   window.logout = () => signOut(auth).then(() => location.href = 'index.html');
 
-  document.getElementById("publicarBtn").addEventListener("click", async () => {
-    const texto = document.getElementById("postInput").value.trim();
-    if (!texto) return;
-
-    let avatarURL = "";
-    try {
-      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-      if (userDoc.exists()) {
-        avatarURL = userDoc.data().avatarURL || "";
-      }
-    } catch (e) {
-      console.warn("No se pudo obtener el avatar:", e);
-    }
-
-    try {
-      await addDoc(collection(db, "posts"), {
-        texto,
-        autor: currentUser.email,
-        avatarURL,
-        timestamp: Date.now(),
-        likes: 0,
-        retweets: 0
-      });
-      document.getElementById("postInput").value = "";
-    } catch (e) {
-      alert("Error al publicar: " + e.message);
-      console.error(e);
-    }
+  // Contador de caracteres
+  const postInput = document.getElementById("postInput");
+  const contador = document.getElementById("contador");
+  postInput.addEventListener("input", () => {
+    contador.textContent = `${postInput.value.length} / 400`;
   });
 
+  // Publicar con username
+  document.getElementById("publicarBtn").addEventListener("click", async () => {
+    const texto = postInput.value.trim();
+    if (!texto) return;
+
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const perfil = userSnap.exists() ? userSnap.data() : null;
+    if (!perfil) return alert("No se encontró tu perfil.");
+
+    await addDoc(collection(db, "posts"), {
+      texto,
+      autor: perfil.username,
+      avatarURL: perfil.avatarURL || "",
+      timestamp: Date.now(),
+      likes: 0,
+      retweets: 0
+    });
+
+    postInput.value = "";
+    contador.textContent = "0 / 400";
+    cargarFeed();
+  });
+
+  // Cargar feed con posts y comentarios
   async function cargarFeed() {
     const feed = document.getElementById("feed");
     const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
@@ -257,15 +220,15 @@ body {
         const post = docSnap.data();
         const id = docSnap.id;
 
+        const autorNombre = await obtenerNombreUsuario(post.autor);
+
+        // Cargar comentarios
+        const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
         let comentariosHTML = "";
-        try {
-          const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
-          comentariosSnap.forEach(c => {
-            const data = c.data();
-            comentariosHTML += `<div class="comentario"><b>${data.autor}:</b> ${data.texto}</div>`;
-          });
-        } catch (e) {
-          console.warn("Error al cargar comentarios:", e);
+        for (const c of comentariosSnap.docs) {
+          const data = c.data();
+          const autorComentario = await obtenerNombreUsuario(data.autor);
+          comentariosHTML += `<div class="comentario"><b>@${autorComentario}:</b> ${data.texto}</div>`;
         }
 
         const div = document.createElement("div");
@@ -273,90 +236,51 @@ body {
         div.innerHTML = `
           <div class="autor">
             <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
-            <b>${post.autor}</b>
+            <b>@${autorNombre}</b>
           </div>
           <p>${post.texto}</p>
           <div class="acciones">
             <button onclick="likePost('${id}')">❤️ ${post.likes}</button>
             <button onclick="rtPost('${id}')">🔁 ${post.retweets}</button>
-            <button onclick="compartir('${post.texto.replace(/'/g, "\\'").replace(/\"/g, "&quot;")}')">📤 Compartir</button>
-            ${post.autor === currentUser.email ? `<button onclick="editarPost('${id}', \`${post.texto.replace(/`/g, '\\`')}\`)">✏️ Editar</button>` : ""}
           </div>
-          <div class="comentarios">${comentariosHTML}
-            <input type="text" placeholder="Comenta..." id="input-${id}" style="width:80%; margin-top:5px; background:#002; color:#0ff; border:1px solid #0ff;" />
-            <button onclick="comentar('${id}')">Enviar</button>
-          </div>
+          <div class="comentarios-lista">${comentariosHTML}</div>
+          <input type="text" placeholder="Comenta..." id="input-${id}" />
+          <button onclick="comentar('${id}')">Enviar</button>
         `;
         feed.appendChild(div);
       }
     });
   }
 
+  window.comentar = async (postId) => {
+    const input = document.getElementById("input-" + postId);
+    const texto = input.value.trim();
+    if (!texto) return alert("Comentario vacío");
+
+    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const perfil = userSnap.exists() ? userSnap.data() : null;
+    if (!perfil) return alert("No se encontró tu perfil.");
+
+    await addDoc(collection(db, "posts", postId, "comentarios"), {
+      autor: perfil.username,
+      texto,
+      timestamp: Date.now()
+    });
+    input.value = "";
+  };
+
   window.likePost = async (id) => {
-    await updateDoc(doc(db, "posts", id), { likes: increment(1) });
+    const ref = doc(db, "posts", id);
+    const post = await getDoc(ref);
+    await updateDoc(ref, { likes: post.data().likes + 1 });
   };
 
   window.rtPost = async (id) => {
-    await updateDoc(doc(db, "posts", id), { retweets: increment(1) });
+    const ref = doc(db, "posts", id);
+    const post = await getDoc(ref);
+    await updateDoc(ref, { retweets: post.data().retweets + 1 });
   };
 
-  window.compartir = (texto) => {
-    if (navigator.share) {
-      navigator.share({ text: texto }).catch(() => alert("No se pudo compartir"));
-    } else {
-      alert("Tu navegador no soporta compartir");
-    }
-  };
-
-  window.comentar = async function(postId) {
-    try {
-      if (!currentUser) {
-        alert("Debes iniciar sesión para comentar.");
-        return;
-      }
-
-      const input = document.getElementById("input-" + postId);
-      if (!input) {
-        alert("Caja de comentario no encontrada");
-        return;
-      }
-
-      const texto = input.value.trim();
-      if (!texto) {
-        alert("Comentario vacío");
-        return;
-      }
-
-      await addDoc(collection(db, "posts", postId, "comentarios"), {
-        autor: currentUser.email,
-        texto,
-        timestamp: Date.now()
-      });
-
-      input.value = "";
-    } catch (e) {
-      console.error("Error al comentar:", e);
-      alert("No se pudo publicar el comentario.");
-    }
-  };
-
-  window.editarPost = async function(postId, textoActual) {
-    const nuevoTexto = prompt("Editar publicación:", textoActual);
-    if (nuevoTexto && nuevoTexto !== textoActual) {
-      await updateDoc(doc(db, "posts", postId), { texto: nuevoTexto });
-      alert("Publicación actualizada");
-    }
-  };
 </script>
-
-<script>
-  const postInput = document.getElementById("postInput");
-  const contador = document.getElementById("contador");
-
-  postInput.addEventListener("input", () => {
-    contador.textContent = postInput.value.length + " / 400";
-  });
-</script>
-
 </body>
 </html>
