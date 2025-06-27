@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -55,6 +54,11 @@
       overflow-y: auto;
       height: 100vh;
     }
+    @media (max-width: 767px) {
+      .panel-derecho {
+        display: none;
+      }
+    }
     select, textarea, button {
       width: 100%;
       margin-top: 10px;
@@ -104,7 +108,9 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">📜</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta" style="display:none;">•</span></button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
+      ✉️<span id="noti" class="alerta" style="display:none;">•</span>
+    </button>
     <button onclick="logout()">🚪</button>
   </div>
 
@@ -132,10 +138,7 @@
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "1016897274452",
-      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+      projectId: "papoclub-737ac"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -154,7 +157,6 @@
       if (perfilSnap.exists()) {
         currentUsername = perfilSnap.data().username;
         cargarUsuarios();
-        verificarNotificaciones();
       } else {
         alert("No se pudo obtener tu nombre de usuario.");
       }
@@ -167,7 +169,7 @@
       const select = document.getElementById("destinatario");
       snap.forEach(doc => {
         const data = doc.data();
-        if (data.username !== currentUsername) {
+        if (data.username && data.username !== currentUsername) {
           const opt = document.createElement("option");
           opt.value = data.username;
           opt.textContent = "@" + data.username;
@@ -190,7 +192,6 @@
     }
 
     function escucharMensajes(destino) {
-      if (!currentUsername || !destino) return;
       const chatId = getChatId(currentUsername, destino);
       const mensajesRef = collection(db, "privados", chatId, "mensajes");
       const q = query(mensajesRef, orderBy("timestamp", "asc"));
@@ -211,7 +212,6 @@
           `;
           chat.appendChild(div);
 
-          // Si soy el receptor y aún no está leído
           if (msg.para === currentUsername && !msg.leido) {
             await updateDoc(doc.ref, { leido: true });
           }
@@ -235,23 +235,6 @@
 
       document.getElementById("mensaje").value = "";
     };
-
-    async function verificarNotificaciones() {
-      const snap = await getDocs(collection(db, "privados"));
-      let tieneNuevos = false;
-      for (const chat of snap.docs) {
-        const sub = await getDocs(collection(db, "privados", chat.id, "mensajes"));
-        sub.forEach(msg => {
-          const data = msg.data();
-          if (data.para === currentUsername && !data.leido) {
-            tieneNuevos = true;
-          }
-        });
-      }
-      if (tieneNuevos) {
-        document.getElementById("noti").style.display = "inline-block";
-      }
-    }
   </script>
 </body>
 </html>
