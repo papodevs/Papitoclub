@@ -44,6 +44,8 @@
     .panel-central {
       flex: 1;
       padding: 20px;
+      overflow-y: auto;
+      max-height: 100vh;
     }
     select, textarea, button {
       width: 100%;
@@ -61,20 +63,24 @@
       cursor: pointer;
     }
     .mensaje-carta {
+      display: flex;
+      flex-direction: column;
       background: #011;
       border: 1px solid #0ff;
       border-radius: 12px;
       padding: 10px;
       margin: 10px 0;
       box-shadow: 0 0 10px #0ff6;
+      cursor: pointer;
     }
-    .mensaje-carta h4 {
-      margin: 0 0 5px;
+    .mensaje-carta h4, .mensaje-carta p, .mensaje-carta small {
+      margin: 5px 0;
       color: #0ff;
     }
-    .mensaje-carta p {
-      margin: 0;
-      color: #0ff;
+    .respuesta {
+      display: none;
+      flex-direction: column;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -165,7 +171,7 @@
     function escucharMensajes(destino) {
       const chatId = getChatId(currentUsername, destino);
       const mensajesRef = collection(db, "privados", chatId, "mensajes");
-      const q = query(mensajesRef, orderBy("timestamp", "asc"));
+      const q = query(mensajesRef, orderBy("timestamp", "desc"));
 
       if (unsubscribe) unsubscribe();
       unsubscribe = onSnapshot(q, async (snapshot) => {
@@ -185,28 +191,36 @@
         Object.entries(mensajesPorUsuario).forEach(([usuario, mensajes]) => {
           const grupo = document.createElement("div");
           grupo.className = "mensaje-carta";
-          grupo.innerHTML = `<h4>Conversación con @${usuario}</h4>`;
 
-          mensajes.sort((a, b) => b.timestamp - a.timestamp).forEach(msg => {
+          const resumen = document.createElement("div");
+          resumen.innerHTML = `
+            <h4>@${usuario}</h4>
+            <p>${mensajes[0].texto}</p>
+            <small>${formatearHora(mensajes[0].timestamp)}</small>
+          `;
+
+          const respuesta = document.createElement("div");
+          respuesta.className = "respuesta";
+
+          mensajes.slice().reverse().forEach(msg => {
             const p = document.createElement("p");
-            p.innerHTML = `<strong>${msg.de === currentUsername ? "Yo" : "@" + msg.de}:</strong> ${msg.texto}<br><small>${formatearHora(msg.timestamp)}</small>`;
-            grupo.appendChild(p);
+            p.innerHTML = `<strong>${msg.de === currentUsername ? "Yo" : "@" + msg.de}:</strong> ${msg.texto} <small>${formatearHora(msg.timestamp)}</small>`;
+            respuesta.appendChild(p);
 
             if (msg.para === currentUsername && !msg.leido) {
-              updateDoc(msg.ref, { leido: true }).catch(console.error);
+              updateDoc(msg.ref, { leido: true });
             }
           });
 
           const input = document.createElement("textarea");
           input.placeholder = "Responder a @" + usuario;
-          input.style.marginTop = "10px";
+          respuesta.appendChild(input);
 
           const boton = document.createElement("button");
           boton.textContent = "Responder";
           boton.onclick = async () => {
             const texto = input.value.trim();
             if (!texto) return;
-
             const chatId = getChatId(currentUsername, usuario);
             await addDoc(collection(db, "privados", chatId, "mensajes"), {
               de: currentUsername,
@@ -217,9 +231,14 @@
             });
             input.value = "";
           };
+          respuesta.appendChild(boton);
 
-          grupo.appendChild(input);
-          grupo.appendChild(boton);
+          grupo.appendChild(resumen);
+          grupo.appendChild(respuesta);
+
+          grupo.addEventListener("click", () => {
+            respuesta.style.display = respuesta.style.display === "flex" ? "none" : "flex";
+          });
 
           contenedor.appendChild(grupo);
         });
