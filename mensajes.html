@@ -33,91 +33,48 @@
     }
     .menu-lateral .alerta {
       position: absolute;
-      top: 0;
-      right: 0;
+      top: 8px;
+      right: 8px;
       background: red;
       color: white;
       font-size: 0.7em;
       border-radius: 50%;
       padding: 2px 5px;
-      transform: translate(30%, -30%);
     }
     .panel-central {
       flex: 1;
       padding: 20px;
-      overflow-y: auto;
-      max-height: 100vh;
     }
-    .conversacion {
-      margin: 20px 0;
-      border: 1px solid #0ff;
-      border-radius: 12px;
-      padding: 10px;
-      background: #011;
-      box-shadow: 0 0 10px #0ff6;
-      cursor: pointer;
-    }
-    .conversacion h3 {
-      margin: 0;
-      color: #0ff;
-      font-size: 1.1em;
-    }
-    .mensaje-chat {
-      position: fixed;
-      bottom: 0;
-      left: 70px;
-      right: 0;
-      background: #011;
-      border-top: 2px solid #0ff;
-      padding: 10px;
-      display: none;
-      flex-direction: column;
-    }
-    .mensaje-chat .titulo {
-      color: #0ff;
-      margin-bottom: 10px;
-    }
-    .mensaje-chat textarea {
-      background: #022;
-      color: #0ff;
-      border: 1px solid #0ff;
-      border-radius: 8px;
-      padding: 8px;
-      resize: none;
-      margin-bottom: 10px;
-    }
-    .mensaje-chat button {
-      background: #0ff;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      padding: 10px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    .nuevo-mensaje {
-      margin-bottom: 20px;
-      border: 1px solid #0ff;
-      padding: 10px;
-      border-radius: 12px;
-      background: #022;
-    }
-    .nuevo-mensaje select,
-    .nuevo-mensaje textarea,
-    .nuevo-mensaje button {
+    select, textarea, button {
       width: 100%;
       margin-top: 10px;
-      padding: 8px;
+      padding: 10px;
       border-radius: 8px;
       border: 1px solid #0ff;
       background: #011;
       color: #0ff;
     }
-    .nuevo-mensaje button {
+    button {
       background: #0ff;
       color: #000;
       font-weight: bold;
       cursor: pointer;
+    }
+    .mensaje-carta {
+      background: #011;
+      border: 1px solid #0ff;
+      border-radius: 12px;
+      padding: 10px;
+      margin: 10px 0;
+      box-shadow: 0 0 10px #0ff6;
+    }
+    .mensaje-carta h4 {
+      margin: 0 0 5px;
+      color: #0ff;
+    }
+    .mensaje-carta p {
+      margin: 0;
+      color: #0ff;
     }
   </style>
 </head>
@@ -133,21 +90,12 @@
   </div>
 
   <div class="panel-central">
-    <div class="nuevo-mensaje">
-      <label for="destinatario">Nuevo mensaje:</label>
-      <select id="destinatario"><option value="">--Seleccionar usuario--</option></select>
-      <textarea id="mensajeNuevo" rows="2" placeholder="Escribe un mensaje..."></textarea>
-      <button onclick="enviarNuevoMensaje()">Enviar</button>
-    </div>
-
-    <h2>Conversaciones</h2>
+    <h2>Enviar mensaje privado</h2>
+    <label for="destinatario">Selecciona usuario:</label>
+    <select id="destinatario"><option value="">--Seleccionar--</option></select>
+    <textarea id="mensaje" rows="3" placeholder="Escribe tu mensaje..."></textarea>
+    <button onclick="enviarMensaje()">Enviar</button>
     <div id="cartas"></div>
-  </div>
-
-  <div class="mensaje-chat" id="chatBox">
-    <div class="titulo" id="chatUsuario">Conversación</div>
-    <textarea id="chatTexto" rows="3" placeholder="Escribe un mensaje..."></textarea>
-    <button onclick="responderMensaje()">Enviar</button>
   </div>
 
   <script type="module">
@@ -155,7 +103,8 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, addDoc, query, orderBy,
-      getDocs, onSnapshot, doc, collectionGroup, where
+      onSnapshot, doc, getDoc, getDocs, updateDoc,
+      collectionGroup, where
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -170,30 +119,25 @@
 
     let currentUser = null;
     let currentUsername = null;
-    let usuarioDestino = null;
+    let selectedUser = null;
+    let unsubscribe = null;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
-      const perfilSnap = await doc(db, "users", user.uid).get ? await (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).getDoc(doc(db, "users", user.uid)) : null;
-      if (perfilSnap && perfilSnap.exists()) {
+      const perfilSnap = await getDoc(doc(db, "users", user.uid));
+      if (perfilSnap.exists()) {
         currentUsername = perfilSnap.data().username;
-        await cargarUsuarios();
-        escucharConversaciones();
+        cargarUsuarios();
         escucharNuevosMensajes();
       }
     });
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
 
-    function getChatId(a, b) {
-      return [a, b].sort().join("_");
-    }
-
     async function cargarUsuarios() {
-      const select = document.getElementById("destinatario");
-      select.innerHTML = '<option value="">--Seleccionar usuario--</option>';
       const snap = await getDocs(collection(db, "users"));
+      const select = document.getElementById("destinatario");
       snap.forEach(doc => {
         const data = doc.data();
         if (data.username !== currentUsername) {
@@ -203,141 +147,67 @@
           select.appendChild(opt);
         }
       });
-    }
-
-    function escucharConversaciones() {
-      const mensajesRef = collectionGroup(db, "mensajes");
-      // Consultar mensajes donde el usuario sea emisor o receptor
-      const q = query(
-        mensajesRef,
-        where("de", "in", [currentUsername]),
-      );
-
-      const q2 = query(
-        mensajesRef,
-        where("para", "==", currentUsername)
-      );
-
-      let conversacionesMap = new Map();
-
-      onSnapshot(mensajesRef, (snapshot) => {
-        conversacionesMap.clear();
-        snapshot.forEach(docSnap => {
-          const msg = docSnap.data();
-          // Sólo mensajes donde es emisor o receptor
-          if (msg.de === currentUsername || msg.para === currentUsername) {
-            // Otro usuario en la conversación
-            const otro = msg.de === currentUsername ? msg.para : msg.de;
-            const chatId = getChatId(currentUsername, otro);
-
-            if (!conversacionesMap.has(chatId)) {
-              conversacionesMap.set(chatId, []);
-            }
-            conversacionesMap.get(chatId).push({ id: docSnap.id, ...msg });
-          }
-        });
-
-        // Ordenar y mostrar sólo el último mensaje de cada conversación
-        const cartas = document.getElementById("cartas");
-        cartas.innerHTML = "";
-
-        // Array para ordenar conversaciones por último mensaje timestamp
-        const conversacionesArray = Array.from(conversacionesMap.entries()).map(([chatId, mensajes]) => {
-          mensajes.sort((a, b) => b.timestamp - a.timestamp);
-          return {
-            chatId,
-            usuario: chatId.replace(currentUsername, "").replace(/_/, ""),
-            ultimoMensaje: mensajes[0],
-            mensajes
-          };
-        });
-
-        // Orden descendente por último mensaje
-        conversacionesArray.sort((a, b) => b.ultimoMensaje.timestamp - a.ultimoMensaje.timestamp);
-
-        for (const conv of conversacionesArray) {
-          const div = document.createElement("div");
-          div.className = "conversacion";
-          div.innerHTML = `<h3>@${conv.usuario}</h3><p>${conv.ultimoMensaje.texto}</p>`;
-          div.onclick = () => abrirChat(conv.usuario);
-          cartas.appendChild(div);
-        }
+      select.addEventListener("change", () => {
+        selectedUser = select.value;
+        if (selectedUser) escucharMensajes(selectedUser);
       });
     }
 
-    function abrirChat(usuario) {
-      usuarioDestino = usuario;
-      document.getElementById("chatUsuario").textContent = `Conversación con @${usuario}`;
-      document.getElementById("chatBox").style.display = "flex";
-
-      cargarHistorial(usuario);
+    function getChatId(a, b) {
+      return [a, b].sort().join("_");
     }
 
-    async function cargarHistorial(usuario) {
-      const chatId = getChatId(currentUsername, usuario);
+    function formatearHora(timestamp) {
+      const fecha = new Date(timestamp);
+      return fecha.toLocaleString("es-ES", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+    }
+
+    function escucharMensajes(destino) {
+      const chatId = getChatId(currentUsername, destino);
       const mensajesRef = collection(db, "privados", chatId, "mensajes");
       const q = query(mensajesRef, orderBy("timestamp", "asc"));
 
-      const chatDiv = document.getElementById("chatTexto");
-      chatDiv.value = ""; // limpiar área texto (input)
+      if (unsubscribe) unsubscribe();
+      unsubscribe = onSnapshot(q, async (snapshot) => {
+        const contenedor = document.getElementById("cartas");
+        contenedor.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const msg = docSnap.data();
+          const carta = document.createElement("div");
+          carta.className = "mensaje-carta";
+          carta.innerHTML = `
+            <h4>${msg.de === currentUsername ? "Yo ➡️ @" + msg.para : "@" + msg.de + " ➡️ Yo"}</h4>
+            <p>${msg.texto}</p>
+            <small>${formatearHora(msg.timestamp)}</small>
+          `;
+          contenedor.appendChild(carta);
 
-      // Podrías agregar un div para mostrar mensajes, pero aquí solo cargamos en textarea para simplificar
-      // Si quieres mostrar historial mejor en div, házmelo saber.
-
-      const mensajesSnap = await getDocs(q);
-      let historialTexto = "";
-      mensajesSnap.forEach(docSnap => {
-        const msg = docSnap.data();
-        const quien = msg.de === currentUsername ? "Tú" : msg.de;
-        const fecha = new Date(msg.timestamp).toLocaleString();
-        historialTexto += `${quien} [${fecha}]: ${msg.texto}\n`;
+          if (msg.para === currentUsername && !msg.leido) {
+            updateDoc(docSnap.ref, { leido: true }).catch(console.error);
+          }
+        });
       });
-
-      chatDiv.value = historialTexto;
-      chatDiv.focus();
     }
 
-    window.responderMensaje = async () => {
-      const texto = document.getElementById("chatTexto").value.trim();
-      if (!usuarioDestino || !texto) return;
+    window.enviarMensaje = async () => {
+      const texto = document.getElementById("mensaje").value.trim();
+      if (!selectedUser || !texto) return;
 
-      const chatId = getChatId(currentUsername, usuarioDestino);
+      const chatId = getChatId(currentUsername, selectedUser);
       await addDoc(collection(db, "privados", chatId, "mensajes"), {
         de: currentUsername,
-        para: usuarioDestino,
+        para: selectedUser,
         texto,
         timestamp: Date.now(),
         leido: false
       });
 
-      document.getElementById("chatTexto").value = "";
-      // Actualizar lista de conversaciones
-      escucharConversaciones();
-    };
-
-    window.enviarNuevoMensaje = async () => {
-      const select = document.getElementById("destinatario");
-      const texto = document.getElementById("mensajeNuevo").value.trim();
-      const usuario = select.value;
-      if (!usuario || !texto) return;
-
-      const chatId = getChatId(currentUsername, usuario);
-      await addDoc(collection(db, "privados", chatId, "mensajes"), {
-        de: currentUsername,
-        para: usuario,
-        texto,
-        timestamp: Date.now(),
-        leido: false
-      });
-
-      document.getElementById("mensajeNuevo").value = "";
-      select.value = "";
-      escucharConversaciones();
+      document.getElementById("mensaje").value = "";
     };
 
     function escucharNuevosMensajes() {
-      const mensajesRef = collectionGroup(db, "mensajes");
-      const q = query(mensajesRef, where("para", "==", currentUsername), where("leido", "==", false));
+      const chatsRef = collectionGroup(db, "mensajes");
+      const q = query(chatsRef, where("para", "==", currentUsername), where("leido", "==", false));
 
       onSnapshot(q, (snapshot) => {
         const noti = document.getElementById("noti");
