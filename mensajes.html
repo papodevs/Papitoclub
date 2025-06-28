@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -45,20 +44,6 @@
     .panel-central {
       flex: 1;
       padding: 20px;
-      max-width: 50%;
-    }
-    .panel-derecho {
-      width: 25%;
-      padding: 20px;
-      border-left: 2px solid #0ff4;
-      background: #011;
-      overflow-y: auto;
-      height: 100vh;
-    }
-    @media (max-width: 767px) {
-      .panel-derecho {
-        display: none;
-      }
     }
     select, textarea, button {
       width: 100%;
@@ -75,32 +60,21 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .mensaje {
-      margin: 10px 0;
+    .mensaje-carta {
+      background: #011;
+      border: 1px solid #0ff;
+      border-radius: 12px;
       padding: 10px;
-      border-radius: 8px;
-      max-width: 90%;
-      font-size: 0.9em;
+      margin: 10px 0;
+      box-shadow: 0 0 10px #0ff6;
     }
-    .yo {
-      background: #0ff;
-      color: #000;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-    .otro {
-      background: #033;
+    .mensaje-carta h4 {
+      margin: 0 0 5px;
       color: #0ff;
-      align-self: flex-start;
     }
-    .detalle {
-      font-size: 0.75em;
-      margin-top: 4px;
-      text-align: right;
-    }
-    #chat {
-      display: flex;
-      flex-direction: column;
+    .mensaje-carta p {
+      margin: 0;
+      color: #0ff;
     }
   </style>
 </head>
@@ -121,11 +95,7 @@
     <select id="destinatario"><option value="">--Seleccionar--</option></select>
     <textarea id="mensaje" rows="3" placeholder="Escribe tu mensaje..."></textarea>
     <button onclick="enviarMensaje()">Enviar</button>
-  </div>
-
-  <div class="panel-derecho">
-    <h3>Historial</h3>
-    <div id="chat"></div>
+    <div id="cartas"></div>
   </div>
 
   <script type="module">
@@ -199,25 +169,60 @@
 
       if (unsubscribe) unsubscribe();
       unsubscribe = onSnapshot(q, async (snapshot) => {
-        const chat = document.getElementById("chat");
-        chat.innerHTML = "";
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          const div = document.createElement("div");
-          div.className = "mensaje " + (msg.de === currentUsername ? "yo" : "otro");
-          div.innerHTML = `
-            ${msg.texto}
-            <div class="detalle">
-              ${msg.de === currentUsername ? "📤" : "📥"} ${formatearHora(msg.timestamp)} ${msg.leido && msg.de === currentUsername ? "✅" : ""}
-            </div>
-          `;
-          chat.appendChild(div);
+        const contenedor = document.getElementById("cartas");
+        contenedor.innerHTML = "";
 
-          if (msg.para === currentUsername && !msg.leido) {
-            updateDoc(doc.ref, { leido: true });
-          }
+        const mensajesPorUsuario = {};
+
+        snapshot.forEach(docSnap => {
+          const msg = docSnap.data();
+          const usuario = msg.de === currentUsername ? msg.para : msg.de;
+
+          if (!mensajesPorUsuario[usuario]) mensajesPorUsuario[usuario] = [];
+          mensajesPorUsuario[usuario].push({ ...msg, ref: docSnap.ref });
         });
-        chat.scrollTop = chat.scrollHeight;
+
+        Object.entries(mensajesPorUsuario).forEach(([usuario, mensajes]) => {
+          const grupo = document.createElement("div");
+          grupo.className = "mensaje-carta";
+          grupo.innerHTML = `<h4>Conversación con @${usuario}</h4>`;
+
+          mensajes.sort((a, b) => b.timestamp - a.timestamp).forEach(msg => {
+            const p = document.createElement("p");
+            p.innerHTML = `<strong>${msg.de === currentUsername ? "Yo" : "@" + msg.de}:</strong> ${msg.texto}<br><small>${formatearHora(msg.timestamp)}</small>`;
+            grupo.appendChild(p);
+
+            if (msg.para === currentUsername && !msg.leido) {
+              updateDoc(msg.ref, { leido: true }).catch(console.error);
+            }
+          });
+
+          const input = document.createElement("textarea");
+          input.placeholder = "Responder a @" + usuario;
+          input.style.marginTop = "10px";
+
+          const boton = document.createElement("button");
+          boton.textContent = "Responder";
+          boton.onclick = async () => {
+            const texto = input.value.trim();
+            if (!texto) return;
+
+            const chatId = getChatId(currentUsername, usuario);
+            await addDoc(collection(db, "privados", chatId, "mensajes"), {
+              de: currentUsername,
+              para: usuario,
+              texto,
+              timestamp: Date.now(),
+              leido: false
+            });
+            input.value = "";
+          };
+
+          grupo.appendChild(input);
+          grupo.appendChild(boton);
+
+          contenedor.appendChild(grupo);
+        });
       });
     }
 
