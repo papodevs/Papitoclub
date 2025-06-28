@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -132,7 +133,8 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, addDoc, query, orderBy,
-      onSnapshot, doc, getDoc, getDocs, updateDoc
+      onSnapshot, doc, getDoc, getDocs, updateDoc,
+      collectionGroup, where
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -157,8 +159,7 @@
       if (perfilSnap.exists()) {
         currentUsername = perfilSnap.data().username;
         cargarUsuarios();
-      } else {
-        alert("No se pudo obtener tu nombre de usuario.");
+        escucharNuevosMensajes();
       }
     });
 
@@ -169,7 +170,7 @@
       const select = document.getElementById("destinatario");
       snap.forEach(doc => {
         const data = doc.data();
-        if (data.username && data.username !== currentUsername) {
+        if (data.username !== currentUsername) {
           const opt = document.createElement("option");
           opt.value = data.username;
           opt.textContent = "@" + data.username;
@@ -200,7 +201,7 @@
       unsubscribe = onSnapshot(q, async (snapshot) => {
         const chat = document.getElementById("chat");
         chat.innerHTML = "";
-        for (const doc of snapshot.docs) {
+        snapshot.forEach(doc => {
           const msg = doc.data();
           const div = document.createElement("div");
           div.className = "mensaje " + (msg.de === currentUsername ? "yo" : "otro");
@@ -213,9 +214,9 @@
           chat.appendChild(div);
 
           if (msg.para === currentUsername && !msg.leido) {
-            await updateDoc(doc.ref, { leido: true });
+            updateDoc(doc.ref, { leido: true });
           }
-        }
+        });
         chat.scrollTop = chat.scrollHeight;
       });
     }
@@ -235,6 +236,16 @@
 
       document.getElementById("mensaje").value = "";
     };
+
+    function escucharNuevosMensajes() {
+      const chatsRef = collectionGroup(db, "mensajes");
+      const q = query(chatsRef, where("para", "==", currentUsername), where("leido", "==", false));
+
+      onSnapshot(q, (snapshot) => {
+        const noti = document.getElementById("noti");
+        noti.style.display = snapshot.empty ? "none" : "inline";
+      });
+    }
   </script>
 </body>
 </html>
