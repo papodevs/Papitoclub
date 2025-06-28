@@ -155,7 +155,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, addDoc, query, orderBy,
-      getDocs, getDoc, onSnapshot, doc, where
+      getDocs, onSnapshot, doc, collectionGroup, where
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -175,11 +175,11 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
-      const perfilSnap = await getDoc(doc(db, "users", user.uid));
-      if (perfilSnap.exists()) {
+      const perfilSnap = await doc(db, "users", user.uid).get ? await (await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")).getDoc(doc(db, "users", user.uid)) : null;
+      if (perfilSnap && perfilSnap.exists()) {
         currentUsername = perfilSnap.data().username;
         await cargarUsuarios();
-        await mostrarConversaciones();
+        escucharConversaciones();
         escucharNuevosMensajes();
       }
     });
@@ -205,35 +205,63 @@
       });
     }
 
-    async function mostrarConversaciones() {
-      const cartas = document.getElementById("cartas");
-      cartas.innerHTML = "";
-      const usuariosSet = new Set();
-      const mensajes = [];
+    function escucharConversaciones() {
+      const mensajesRef = collectionGroup(db, "mensajes");
+      // Consultar mensajes donde el usuario sea emisor o receptor
+      const q = query(
+        mensajesRef,
+        where("de", "in", [currentUsername]),
+      );
 
-      const chatsSnap = await getDocs(collection(db, "privados"));
-      for (const chatDoc of chatsSnap.docs) {
-        const chatId = chatDoc.id;
-        if (!chatId.includes(currentUsername)) continue;
+      const q2 = query(
+        mensajesRef,
+        where("para", "==", currentUsername)
+      );
 
-        const mensajesSnap = await getDocs(query(collection(db, "privados", chatId, "mensajes"), orderBy("timestamp", "desc"), ));
-        if (!mensajesSnap.empty) {
-          const msg = mensajesSnap.docs[0].data();
-          const otro = msg.de === currentUsername ? msg.para : msg.de;
-          if (!usuariosSet.has(otro)) {
-            usuariosSet.add(otro);
-            mensajes.push({ usuario: otro, texto: msg.texto, timestamp: msg.timestamp });
+      let conversacionesMap = new Map();
+
+      onSnapshot(mensajesRef, (snapshot) => {
+        conversacionesMap.clear();
+        snapshot.forEach(docSnap => {
+          const msg = docSnap.data();
+          // Sólo mensajes donde es emisor o receptor
+          if (msg.de === currentUsername || msg.para === currentUsername) {
+            // Otro usuario en la conversación
+            const otro = msg.de === currentUsername ? msg.para : msg.de;
+            const chatId = getChatId(currentUsername, otro);
+
+            if (!conversacionesMap.has(chatId)) {
+              conversacionesMap.set(chatId, []);
+            }
+            conversacionesMap.get(chatId).push({ id: docSnap.id, ...msg });
           }
-        }
-      }
+        });
 
-      mensajes.sort((a, b) => b.timestamp - a.timestamp);
-      mensajes.forEach(({ usuario, texto }) => {
-        const div = document.createElement("div");
-        div.className = "conversacion";
-        div.innerHTML = `<h3>@${usuario}</h3><p>${texto}</p>`;
-        div.onclick = () => abrirChat(usuario);
-        cartas.appendChild(div);
+        // Ordenar y mostrar sólo el último mensaje de cada conversación
+        const cartas = document.getElementById("cartas");
+        cartas.innerHTML = "";
+
+        // Array para ordenar conversaciones por último mensaje timestamp
+        const conversacionesArray = Array.from(conversacionesMap.entries()).map(([chatId, mensajes]) => {
+          mensajes.sort((a, b) => b.timestamp - a.timestamp);
+          return {
+            chatId,
+            usuario: chatId.replace(currentUsername, "").replace(/_/, ""),
+            ultimoMensaje: mensajes[0],
+            mensajes
+          };
+        });
+
+        // Orden descendente por último mensaje
+        conversacionesArray.sort((a, b) => b.ultimoMensaje.timestamp - a.ultimoMensaje.timestamp);
+
+        for (const conv of conversacionesArray) {
+          const div = document.createElement("div");
+          div.className = "conversacion";
+          div.innerHTML = `<h3>@${conv.usuario}</h3><p>${conv.ultimoMensaje.texto}</p>`;
+          div.onclick = () => abrirChat(conv.usuario);
+          cartas.appendChild(div);
+        }
       });
     }
 
@@ -241,6 +269,32 @@
       usuarioDestino = usuario;
       document.getElementById("chatUsuario").textContent = `Conversación con @${usuario}`;
       document.getElementById("chatBox").style.display = "flex";
+
+      cargarHistorial(usuario);
+    }
+
+    async function cargarHistorial(usuario) {
+      const chatId = getChatId(currentUsername, usuario);
+      const mensajesRef = collection(db, "privados", chatId, "mensajes");
+      const q = query(mensajesRef, orderBy("timestamp", "asc"));
+
+      const chatDiv = document.getElementById("chatTexto");
+      chatDiv.value = ""; // limpiar área texto (input)
+
+      // Podrías agregar un div para mostrar mensajes, pero aquí solo cargamos en textarea para simplificar
+      // Si quieres mostrar historial mejor en div, házmelo saber.
+
+      const mensajesSnap = await getDocs(q);
+      let historialTexto = "";
+      mensajesSnap.forEach(docSnap => {
+        const msg = docSnap.data();
+        const quien = msg.de === currentUsername ? "Tú" : msg.de;
+        const fecha = new Date(msg.timestamp).toLocaleString();
+        historialTexto += `${quien} [${fecha}]: ${msg.texto}\n`;
+      });
+
+      chatDiv.value = historialTexto;
+      chatDiv.focus();
     }
 
     window.responderMensaje = async () => {
@@ -257,7 +311,8 @@
       });
 
       document.getElementById("chatTexto").value = "";
-      await mostrarConversaciones();
+      // Actualizar lista de conversaciones
+      escucharConversaciones();
     };
 
     window.enviarNuevoMensaje = async () => {
@@ -277,11 +332,13 @@
 
       document.getElementById("mensajeNuevo").value = "";
       select.value = "";
-      await mostrarConversaciones();
+      escucharConversaciones();
     };
 
     function escucharNuevosMensajes() {
-      const q = query(collectionGroup(db, "mensajes"), where("para", "==", currentUsername), where("leido", "==", false));
+      const mensajesRef = collectionGroup(db, "mensajes");
+      const q = query(mensajesRef, where("para", "==", currentUsername), where("leido", "==", false));
+
       onSnapshot(q, (snapshot) => {
         const noti = document.getElementById("noti");
         noti.style.display = snapshot.empty ? "none" : "inline";
