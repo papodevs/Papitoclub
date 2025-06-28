@@ -11,6 +11,7 @@
       font-family: sans-serif;
       margin: 0;
       display: flex;
+      
     }
     .menu-lateral {
       width: 70px;
@@ -95,6 +96,30 @@
       border-radius: 8px;
       cursor: pointer;
     }
+    .nuevo-mensaje {
+      margin-bottom: 20px;
+      border: 1px solid #0ff;
+      padding: 10px;
+      border-radius: 12px;
+      background: #022;
+    }
+    .nuevo-mensaje select,
+    .nuevo-mensaje textarea,
+    .nuevo-mensaje button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+    .nuevo-mensaje button {
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -109,6 +134,13 @@
   </div>
 
   <div class="panel-central">
+    <div class="nuevo-mensaje">
+      <label for="destinatario">Nuevo mensaje:</label>
+      <select id="destinatario"><option value="">--Seleccionar usuario--</option></select>
+      <textarea id="mensajeNuevo" rows="2" placeholder="Escribe un mensaje..."></textarea>
+      <button onclick="enviarNuevoMensaje()">Enviar</button>
+    </div>
+
     <h2>Conversaciones</h2>
     <div id="cartas"></div>
   </div>
@@ -124,8 +156,7 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, addDoc, query, orderBy,
-      onSnapshot, doc, getDoc, getDocs, updateDoc,
-      collectionGroup, where
+      getDocs, getDoc, collectionGroup, where, onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -148,6 +179,7 @@
       const perfilSnap = await getDoc(doc(db, "users", user.uid));
       if (perfilSnap.exists()) {
         currentUsername = perfilSnap.data().username;
+        cargarUsuarios();
         escucharConversaciones();
         escucharNuevosMensajes();
       }
@@ -159,29 +191,39 @@
       return [a, b].sort().join("_");
     }
 
-    function formatearHora(timestamp) {
-      const fecha = new Date(timestamp);
-      return fecha.toLocaleString("es-ES", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
+    async function cargarUsuarios() {
+      const snap = await getDocs(collection(db, "users"));
+      const select = document.getElementById("destinatario");
+      snap.forEach(doc => {
+        const data = doc.data();
+        if (data.username !== currentUsername) {
+          const opt = document.createElement("option");
+          opt.value = data.username;
+          opt.textContent = "@" + data.username;
+          select.appendChild(opt);
+        }
+      });
     }
 
     function escucharConversaciones() {
       const mensajesRef = collectionGroup(db, "mensajes");
-      const q = query(mensajesRef, where("de", "==", currentUsername));
+      const q1 = query(mensajesRef, where("de", "==", currentUsername));
+      const q2 = query(mensajesRef, where("para", "==", currentUsername));
 
-      onSnapshot(q, (snapshot) => {
+      Promise.all([getDocs(q1), getDocs(q2)]).then(([snap1, snap2]) => {
         const contenedor = document.getElementById("cartas");
         contenedor.innerHTML = "";
         const porUsuario = {};
 
-        snapshot.forEach(docSnap => {
+        snap1.docs.concat(snap2.docs).forEach(docSnap => {
           const msg = docSnap.data();
-          const usuario = msg.para;
-          if (!porUsuario[usuario]) porUsuario[usuario] = [];
-          porUsuario[usuario].push(msg);
+          const otro = msg.de === currentUsername ? msg.para : msg.de;
+          if (!porUsuario[otro]) porUsuario[otro] = [];
+          porUsuario[otro].push(msg);
         });
 
         Object.entries(porUsuario).forEach(([usuario, mensajes]) => {
-          const ultimos = mensajes.sort((a,b) => b.timestamp - a.timestamp).slice(0, 1);
+          const ultimos = mensajes.sort((a, b) => b.timestamp - a.timestamp).slice(0, 1);
           const div = document.createElement("div");
           div.className = "conversacion";
           div.innerHTML = `<h3>@${usuario}</h3><p>${ultimos[0].texto}</p>`;
@@ -211,6 +253,26 @@
       });
 
       document.getElementById("chatTexto").value = "";
+    }
+
+    window.enviarNuevoMensaje = async () => {
+      const select = document.getElementById("destinatario");
+      const texto = document.getElementById("mensajeNuevo").value.trim();
+      const usuario = select.value;
+      if (!usuario || !texto) return;
+
+      const chatId = getChatId(currentUsername, usuario);
+      await addDoc(collection(db, "privados", chatId, "mensajes"), {
+        de: currentUsername,
+        para: usuario,
+        texto,
+        timestamp: Date.now(),
+        leido: false
+      });
+
+      document.getElementById("mensajeNuevo").value = "";
+      select.value = "";
+      escucharConversaciones();
     }
 
     function escucharNuevosMensajes() {
