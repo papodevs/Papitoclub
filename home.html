@@ -8,49 +8,68 @@
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
-      font-family: sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      padding-top: 70px; /* espacio para menú superior fijo */
     }
 
-    /* Menú 3D futurista superior fijo */
     .menu-superior {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 60px;
-      background: #011;
+      background: linear-gradient(145deg, #00e5ff, #0099cc);
+      box-shadow:
+        0 0 8px #00e5ffaa,
+        0 0 20px #00e5ff88,
+        inset 0 2px 6px #00b8d9cc;
       display: flex;
-      justify-content: space-around;
+      justify-content: flex-end;
       align-items: center;
-      box-shadow: 0 4px 12px #0ff8, inset 0 -2px 8px #00f4;
-      z-index: 999;
+      gap: 12px;
+      padding-right: 20px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #00e5ffcc;
     }
 
     .menu-superior button {
       background: none;
       border: none;
-      color: #0ff;
-      font-size: 1.3em;
+      color: #ccf9ff;
+      font-size: 1.4em;
       cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 12px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
+      flex-shrink: 0;
+    }
+
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 0 12px #00e5ff,
+        0 0 30px #00e5ffaa;
     }
 
     .menu-superior .alerta {
       position: absolute;
-      top: -5px;
-      right: -10px;
-      background: red;
+      top: 4px;
+      right: 10px;
+      background: #ff0033;
       color: white;
-      font-size: 0.8em;
+      font-size: 0.7em;
       border-radius: 50%;
-      padding: 0px 5px;
+      padding: 2px 6px;
+      box-shadow: 0 0 8px #ff0033aa;
     }
 
     .contenido {
-      padding: 80px 20px 20px 20px;
       max-width: 700px;
-      margin: auto;
+      margin: 20px auto;
+      padding: 0 20px;
     }
 
     textarea {
@@ -64,7 +83,7 @@
       resize: none;
     }
 
-    button {
+    button.publicar {
       background: #0ff;
       color: #000;
       border: none;
@@ -73,16 +92,19 @@
       margin-top: 10px;
       border-radius: 8px;
       cursor: pointer;
+      font-weight: bold;
     }
 
     .post {
       background: #011;
       border: 2px solid #00e5ff;
       box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ff66;
-      padding: 10px;
+      padding: 15px;
       border-radius: 15px;
       margin-top: 15px;
       transition: transform 0.2s ease;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
 
     .post:hover {
@@ -92,7 +114,7 @@
     .autor {
       display: flex;
       align-items: center;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
 
     .autor img.avatar {
@@ -100,41 +122,111 @@
       height: 36px;
       border-radius: 50%;
       object-fit: cover;
-      margin-right: 8px;
+      margin-right: 10px;
+      border: 1.5px solid #0ff;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    .autor b {
+      color: #0ff;
+      font-size: 1.1em;
+    }
+
+    .acciones {
+      margin-top: 10px;
     }
 
     .acciones button {
-      margin-right: 10px;
-      font-size: 0.9em;
-      padding: 6px 12px;
+      background: none;
+      color: #0ff;
+      border: none;
+      margin-right: 15px;
+      font-size: 1em;
+      cursor: pointer;
+      font-weight: bold;
+      position: relative;
+      padding-right: 18px;
+    }
+
+    .acciones button.share-btn {
+      margin-left: 10px;
+      font-size: 1.2em;
+    }
+
+    .acciones button:disabled {
+      color: #055;
+      cursor: default;
     }
 
     .comentarios-lista {
-      margin-top: 10px;
-      padding-left: 10px;
+      margin-top: 12px;
+      padding-left: 15px;
       border-left: 2px solid #0ff3;
+      max-height: 150px;
+      overflow-y: auto;
     }
 
     .comentario {
-      margin-top: 5px;
+      margin-top: 6px;
       font-size: 0.9em;
       color: #8ff;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .input-comentar {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .input-comentar input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+      font-size: 0.95em;
+    }
+
+    .input-comentar button {
+      background: #0ff;
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
     }
 
     #contador {
       color: #ccc;
       font-size: 0.9em;
       text-align: right;
+      margin-top: 6px;
     }
 
-    @media (max-width: 768px) {
-      .contenido { padding: 80px 10px 20px 10px; max-width: 95%; }
-      .post { width: 100%; font-size: 1em; }
-      textarea, .comentario { font-size: 0.95em; }
+    @media (max-width: 767px) {
+      .contenido {
+        padding: 10px 15px 20px 15px;
+        max-width: 100%;
+      }
+      .post {
+        font-size: 1em;
+      }
+      textarea {
+        font-size: 1em;
+      }
+      .menu-superior button {
+        font-size: 1.2em;
+        padding: 6px 10px;
+      }
     }
   </style>
 </head>
 <body>
+
   <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
@@ -147,9 +239,9 @@
 
   <div class="contenido">
     <h2>Papoclub 🚀</h2>
-    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400"></textarea>
+    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400" rows="3"></textarea>
     <div id="contador">0 / 400</div>
-    <button id="publicarBtn">Publicar</button>
+    <button id="publicarBtn" class="publicar">Publicar</button>
     <div id="feed"></div>
   </div>
 
@@ -158,13 +250,16 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
       getFirestore, collection, addDoc, query, orderBy, onSnapshot,
-      doc, getDoc, updateDoc, getDocs, where, setDoc
+      doc, getDoc, updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -172,13 +267,14 @@
     const db = getFirestore(app);
 
     let currentUser = null;
+    let likedPosts = new Set();
+    let retweetedPosts = new Set();
 
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
+      if (!user) location.href = "index.html";
+      else {
         currentUser = user;
         cargarFeed();
-      } else {
-        location.href = "index.html";
       }
     });
 
@@ -186,25 +282,26 @@
 
     const postInput = document.getElementById("postInput");
     const contador = document.getElementById("contador");
+
     postInput.addEventListener("input", () => {
       contador.textContent = `${postInput.value.length} / 400`;
     });
 
     document.getElementById("publicarBtn").addEventListener("click", async () => {
       const texto = postInput.value.trim();
-      if (!texto) return;
+      if (!texto) return alert("Escribe algo para publicar.");
 
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
-      const perfil = perfilSnap.exists() ? perfilSnap.data() : null;
-      if (!perfil) return alert("No se encontró tu perfil.");
+      if (!perfilSnap.exists()) return alert("No se encontró tu perfil.");
+      const perfil = perfilSnap.data();
 
       await addDoc(collection(db, "posts"), {
         texto,
         autor: perfil.username,
         avatarURL: perfil.avatarURL || "",
         timestamp: Date.now(),
-        likes: [],
-        retweets: []
+        likes: 0,
+        retweets: 0
       });
 
       postInput.value = "";
@@ -214,81 +311,104 @@
     async function cargarFeed() {
       const feed = document.getElementById("feed");
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+
       onSnapshot(q, async (snapshot) => {
         feed.innerHTML = "";
+        likedPosts.clear();
+        retweetedPosts.clear();
+
         for (const docSnap of snapshot.docs) {
           const post = docSnap.data();
           const id = docSnap.id;
 
-          const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
+          const autorNombre = post.autor || "Anon";
+
+          const comentariosCol = collection(db, "posts", id, "comentarios");
+          const comentariosSnap = await getDocs(comentariosCol);
           let comentariosHTML = "";
-          comentariosSnap.forEach(c => {
-            const d = c.data();
-            comentariosHTML += `<div class="comentario"><b>@${d.autor}:</b> ${d.texto}</div>`;
-          });
+          for (const c of comentariosSnap.docs) {
+            const data = c.data();
+            comentariosHTML += `<div class="comentario"><b>@${data.autor}:</b> ${data.texto}</div>`;
+          }
 
           const div = document.createElement("div");
           div.className = "post";
           div.innerHTML = `
             <div class="autor">
-              <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" />
-              <b>@${post.autor}</b>
+              <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
+              <b>@${autorNombre}</b>
             </div>
             <p>${post.texto}</p>
             <div class="acciones">
-              <button onclick="likePost('${id}')">❤️ ${post.likes.length}</button>
-              <button onclick="retweetPost('${id}')">🔁 ${post.retweets.length}</button>
-              <button onclick="compartirPost('${post.texto.replace(/'/g, "\\'")}')">📤</button>
+              <button id="like-${id}" ${likedPosts.has(id) ? "disabled" : ""} title="Me gusta ❤️">❤️ ${post.likes}</button>
+              <button id="rt-${id}" ${retweetedPosts.has(id) ? "disabled" : ""} title="Retweet 🔁">🔁 ${post.retweets}</button>
+              <button id="share-${id}" class="share-btn" title="Compartir fuera">🔗</button>
             </div>
             <div class="comentarios-lista">${comentariosHTML}</div>
-            <input type="text" placeholder="Comenta..." id="input-${id}" />
-            <button onclick="comentar('${id}')">Enviar</button>
+            <div class="input-comentar">
+              <input type="text" id="input-${id}" placeholder="Comenta..." />
+              <button id="btn-comentar-${id}">Enviar</button>
+            </div>
           `;
+
           feed.appendChild(div);
+
+          document.getElementById(`like-${id}`).onclick = async () => {
+            if (likedPosts.has(id)) return;
+            likedPosts.add(id);
+
+            const ref = doc(db, "posts", id);
+            const snapPost = await getDoc(ref);
+            await updateDoc(ref, { likes: (snapPost.data().likes || 0) + 1 });
+
+            cargarFeed();
+          };
+
+          document.getElementById(`rt-${id}`).onclick = async () => {
+            if (retweetedPosts.has(id)) return;
+            retweetedPosts.add(id);
+
+            const ref = doc(db, "posts", id);
+            const snapPost = await getDoc(ref);
+            await updateDoc(ref, { retweets: (snapPost.data().retweets || 0) + 1 });
+
+            cargarFeed();
+          };
+
+          document.getElementById(`share-${id}`).onclick = () => {
+            const url = window.location.href + `#post-${id}`;
+            if (navigator.share) {
+              navigator.share({
+                title: `Post de @${autorNombre}`,
+                text: post.texto,
+                url
+              }).catch(console.error);
+            } else {
+              navigator.clipboard.writeText(url);
+              alert("Enlace copiado para compartir.");
+            }
+          };
+
+          document.getElementById(`btn-comentar-${id}`).onclick = async () => {
+            const input = document.getElementById(`input-${id}`);
+            const texto = input.value.trim();
+            if (!texto) return alert("Comentario vacío.");
+
+            const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+            if (!perfilSnap.exists()) return alert("No se encontró tu perfil.");
+            const perfil = perfilSnap.data();
+
+            await addDoc(collection(db, "posts", id, "comentarios"), {
+              autor: perfil.username,
+              texto,
+              timestamp: Date.now()
+            });
+            input.value = "";
+            cargarFeed();
+          };
         }
       });
     }
-
-    window.comentar = async (postId) => {
-      const input = document.getElementById("input-" + postId);
-      const texto = input.value.trim();
-      if (!texto) return;
-
-      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
-      const perfil = perfilSnap.exists() ? perfilSnap.data() : null;
-      if (!perfil) return alert("No se encontró tu perfil.");
-
-      await addDoc(collection(db, "posts", postId, "comentarios"), {
-        autor: perfil.username,
-        texto,
-        timestamp: Date.now()
-      });
-      input.value = "";
-    };
-
-    window.likePost = async (id) => {
-      const ref = doc(db, "posts", id);
-      const post = (await getDoc(ref)).data();
-      if (!post.likes.includes(currentUser.uid)) {
-        post.likes.push(currentUser.uid);
-        await updateDoc(ref, { likes: post.likes });
-      }
-    };
-
-    window.retweetPost = async (id) => {
-      const ref = doc(db, "posts", id);
-      const post = (await getDoc(ref)).data();
-      if (!post.retweets.includes(currentUser.uid)) {
-        post.retweets.push(currentUser.uid);
-        await updateDoc(ref, { retweets: post.retweets });
-      }
-    };
-
-    window.compartirPost = (texto) => {
-      navigator.clipboard.writeText(texto).then(() => {
-        alert("Texto copiado para compartir.");
-      });
-    };
   </script>
 </body>
 </html>
