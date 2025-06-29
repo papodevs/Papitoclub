@@ -6,15 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      margin: 0;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: sans-serif;
-      margin: 0;
       padding-top: 80px; /* espacio para menú fijo */
       height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
     .menu-superior {
       position: fixed;
@@ -76,6 +76,9 @@
       flex: 1;
       padding: 20px;
       overflow-y: auto;
+      max-width: 700px;
+      margin: auto;
+      width: 100%;
     }
     select, textarea, button {
       width: 100%;
@@ -85,6 +88,8 @@
       border: 1px solid #0ff;
       background: #011;
       color: #0ff;
+      font-family: inherit;
+      font-size: 1rem;
     }
     button {
       background: #0ff;
@@ -107,6 +112,12 @@
     .mensaje-carta p {
       margin: 0;
       color: #0ff;
+    }
+    .mensaje-carta small {
+      color: #8ff;
+      font-size: 0.8em;
+      display: block;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -223,7 +234,7 @@
 
     window.enviarMensaje = async () => {
       const texto = document.getElementById("mensaje").value.trim();
-      if (!selectedUser || !texto) return;
+      if (!selectedUser || !texto) return alert("Selecciona un usuario y escribe un mensaje");
 
       const chatId = getChatId(currentUsername, selectedUser);
       await addDoc(collection(db, "privados", chatId, "mensajes"), {
