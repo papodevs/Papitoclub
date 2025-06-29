@@ -12,9 +12,9 @@
       font-family: 'Segoe UI', sans-serif;
       padding-top: 80px; /* espacio para menú fijo */
       height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
     .menu-superior {
       position: fixed;
@@ -76,6 +76,9 @@
       flex: 1;
       padding: 30px;
       overflow-y: auto;
+      max-width: 700px;
+      margin: auto;
+      width: 100%;
     }
     input {
       width: 100%;
@@ -85,6 +88,8 @@
       border: 1px solid #0ff;
       background: #011;
       color: #0ff;
+      font-family: inherit;
+      font-size: 1rem;
     }
     button {
       background: #0ff;
@@ -95,6 +100,8 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      font-family: inherit;
+      font-size: 1rem;
     }
   </style>
 </head>
