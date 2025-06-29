@@ -10,73 +10,84 @@
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: 'Segoe UI', sans-serif;
+      padding-top: 80px; /* espacio para menú fijo */
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
       font-size: 1rem;
     }
 
+    @media (min-width: 768px) {
+      .post { width: 120%; max-width: 720px; font-size: 1.1em; }
+    }
+
+    @media (max-width: 767px) {
+      .contenido { padding: 15px; max-width: 95%; }
+      .post { width: 100%; max-width: 100%; font-size: 1em; }
+    }
+
     .menu-superior {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60px;
-  background: linear-gradient(145deg, #0ff, #005f5f);
-  box-shadow:
-    inset 0 0 15px #0ff,
-    0 3px 15px #00f8ff99,
-    0 0 20px #00f8ffcc;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-  z-index: 1000;
-  backdrop-filter: blur(6px);
-  border-bottom: 2px solid #00ffffaa;
-  transition: background 0.3s ease;
-}
-
-.menu-superior button {
-  background: linear-gradient(135deg, #00ffffaa, #005f5f);
-  border: none;
-  font-size: 1.8em;
-  color: #0ff;
-  cursor: pointer;
-  width: 50px;
-  height: 50px;
-  border-radius: 15px;
-  box-shadow:
-    0 4px 8px #00fffca0,
-    inset 0 -2px 6px #0ff8,
-    0 0 15px #00ffffcc;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.menu-superior button:hover {
-  transform: translateY(-5px) scale(1.1);
-  box-shadow:
-    0 6px 12px #00fffcc0,
-    inset 0 -3px 8px #0fff,
-    0 0 25px #00ffffee;
-  color: #0ff;
-}
-
-.menu-superior .alerta {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background: red;
-  color: white;
-  font-size: 0.8em;
-  border-radius: 50%;
-  padding: 0px 5px;
-}
-
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: linear-gradient(145deg, #0ff, #005f5f);
+      box-shadow:
+        inset 0 0 15px #0ff,
+        0 3px 15px #00f8ff99,
+        0 0 20px #00f8ffcc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(6px);
+      border-bottom: 2px solid #00ffffaa;
+      transition: background 0.3s ease;
+    }
+    .menu-superior button {
+      background: linear-gradient(135deg, #00ffffaa, #005f5f);
+      border: none;
+      font-size: 1.8em;
+      color: #0ff;
+      cursor: pointer;
+      width: 50px;
+      height: 50px;
+      border-radius: 15px;
+      box-shadow:
+        0 4px 8px #00fffca0,
+        inset 0 -2px 6px #0ff8,
+        0 0 15px #00ffffcc;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+    .menu-superior button:hover {
+      transform: translateY(-5px) scale(1.1);
+      box-shadow:
+        0 6px 12px #00fffcc0,
+        inset 0 -3px 8px #0fff,
+        0 0 25px #00ffffee;
+      color: #0ff;
+    }
+    .menu-superior .alerta {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background: red;
+      color: white;
+      font-size: 0.8em;
+      border-radius: 50%;
+      padding: 0px 5px;
+    }
 
     .contenido {
-      max-width: 720px;
-      margin: auto;
-      padding: 80px 30px 30px 30px; /* padding top por menú fijo */
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
     }
 
     .post {
@@ -93,22 +104,11 @@
 
     .autor { font-weight: bold; }
     .fecha { font-size: 0.9em; color: #8ff; }
-
-    @media (min-width: 768px) {
-      body { font-size: 1.1rem; }
-      .post { font-size: 1.1em; }
-    }
-
-    @media (max-width: 767px) {
-      .contenido { padding: 80px 15px 30px; }
-      .post { font-size: 1em; }
-    }
   </style>
 </head>
 <body>
 
-  <!-- Menú superior fijo -->
-  <div class="menu-superior">
+  <nav class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">📜</button>
@@ -116,21 +116,17 @@
       ✉️<span id="noti" class="alerta" style="display:none;">•</span>
     </button>
     <button onclick="logout()">🚪</button>
-  </div>
+  </nav>
 
-  <!-- Contenido -->
-  <div class="contenido">
+  <main class="contenido">
     <h2>Historial de Publicaciones</h2>
     <div id="historial"></div>
-  </div>
+  </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, collection, query, where, getDocs,
-      collectionGroup, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const app = initializeApp({
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -141,32 +137,22 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentUser = null;
-    let currentUsername = null;
+    let currentUser;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
-      await cargarHistorial();
-      await obtenerUsername();
-      escucharNuevosMensajes();
+      cargarHistorial();
     });
 
     window.logout = () => signOut(auth).then(() => location.href = 'index.html');
-
-    async function obtenerUsername() {
-      const snap = await getDocs(collection(db, "users"));
-      snap.forEach(doc => {
-        if (doc.data().email === currentUser.email) {
-          currentUsername = doc.data().username;
-        }
-      });
-    }
 
     async function cargarHistorial() {
       const historial = document.getElementById("historial");
       const q = query(collection(db, "posts"), where("autor", "==", currentUser.email));
       const snapshot = await getDocs(q);
+
+      historial.innerHTML = ""; // limpiar antes de mostrar
 
       snapshot.forEach(doc => {
         const post = doc.data();
@@ -174,21 +160,11 @@
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
-          <div class="autor">@${post.autor}</div>
+          <div class="autor">${post.autor}</div>
           <div class="fecha">${fecha}</div>
           <p>${post.texto}</p>
         `;
         historial.appendChild(div);
-      });
-    }
-
-    function escucharNuevosMensajes() {
-      const chatsRef = collectionGroup(db, "mensajes");
-      const q = query(chatsRef, where("para", "==", currentUsername), where("leido", "==", false));
-
-      onSnapshot(q, (snapshot) => {
-        const noti = document.getElementById("noti");
-        noti.style.display = snapshot.empty ? "none" : "inline";
       });
     }
   </script>
