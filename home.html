@@ -6,63 +6,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: sans-serif;
-      padding-top: 80px; /* espacio para menú fijo */
-      display: flex;
-      justify-content: center;
-      font-size: 1rem;
-      min-height: 100vh;
-      overflow-y: auto;
+      margin: 0;
     }
+
+    /* Menú superior fijo */
     .menu-superior {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 60px;
-      background: linear-gradient(145deg, #0ff, #005f5f);
-      box-shadow:
-        inset 0 0 15px #0ff,
-        0 3px 15px #00f8ff99,
-        0 0 20px #00f8ffcc;
+      background: #011;
       display: flex;
       justify-content: space-around;
       align-items: center;
       z-index: 1000;
-      backdrop-filter: blur(6px);
-      border-bottom: 2px solid #00ffffaa;
-      transition: background 0.3s ease;
+      box-shadow: 0 2px 8px #0ff4;
     }
+
     .menu-superior button {
-      background: linear-gradient(135deg, #00ffffaa, #005f5f);
+      background: none;
       border: none;
-      font-size: 1.8em;
       color: #0ff;
+      font-size: 1.5em;
       cursor: pointer;
-      width: 50px;
-      height: 50px;
-      border-radius: 15px;
-      box-shadow:
-        0 4px 8px #00fffca0,
-        inset 0 -2px 6px #0ff8,
-        0 0 15px #00ffffcc;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      display: flex;
-      justify-content: center;
-      align-items: center;
       position: relative;
     }
-    .menu-superior button:hover {
-      transform: translateY(-5px) scale(1.1);
-      box-shadow:
-        0 6px 12px #00fffcc0,
-        inset 0 -3px 8px #0fff,
-        0 0 25px #00ffffee;
-      color: #0ff;
-    }
+
     .menu-superior .alerta {
       position: absolute;
       top: -5px;
@@ -73,11 +46,13 @@
       border-radius: 50%;
       padding: 0px 5px;
     }
-    .contenido {
-      width: 100%;
+
+    .panel-central {
+      padding: 80px 20px 20px 20px;
       max-width: 700px;
-      padding: 20px;
+      margin: auto;
     }
+
     textarea {
       width: 100%;
       background: #011;
@@ -87,9 +62,9 @@
       padding: 10px;
       font-size: 1em;
       resize: none;
-      font-family: sans-serif;
     }
-    button#publicarBtn {
+
+    button {
       background: #0ff;
       color: #000;
       border: none;
@@ -98,13 +73,8 @@
       margin-top: 10px;
       border-radius: 8px;
       cursor: pointer;
-      font-family: sans-serif;
-      font-weight: bold;
-      transition: background-color 0.3s ease;
     }
-    button#publicarBtn:hover {
-      background-color: #00cccc;
-    }
+
     .post {
       background: #011;
       border: 2px solid #00e5ff;
@@ -113,16 +83,18 @@
       border-radius: 15px;
       margin-top: 15px;
       transition: transform 0.2s ease;
-      font-family: sans-serif;
     }
+
     .post:hover {
       transform: scale(1.02);
     }
+
     .autor {
       display: flex;
       align-items: center;
       margin-bottom: 5px;
     }
+
     .autor img.avatar {
       width: 36px;
       height: 36px;
@@ -130,40 +102,28 @@
       object-fit: cover;
       margin-right: 8px;
     }
-    .autor b {
-      color: #0ff;
-    }
-    .acciones button {
-      background: none;
-      color: #0ff;
-      border: none;
-      margin-right: 10px;
-      font-size: 1em;
-      cursor: pointer;
-      font-family: sans-serif;
-    }
+
     .comentarios-lista {
       margin-top: 10px;
       padding-left: 10px;
       border-left: 2px solid #0ff3;
-      font-family: sans-serif;
     }
+
     .comentario {
       margin-top: 5px;
       font-size: 0.9em;
       color: #8ff;
-      font-family: sans-serif;
     }
+
     #contador {
       color: #ccc;
       font-size: 0.9em;
       text-align: right;
-      font-family: sans-serif;
     }
   </style>
 </head>
 <body>
-  <nav class="menu-superior">
+  <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">📜</button>
@@ -171,153 +131,148 @@
       ✉️<span id="noti" class="alerta" style="display:none;">•</span>
     </button>
     <button onclick="logout()">🚪</button>
-  </nav>
+  </div>
 
-  <div class="contenido">
+  <div class="panel-central">
     <h2>Papoclub 🚀</h2>
-    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400" rows="4"></textarea>
+    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400"></textarea>
     <div id="contador">0 / 400</div>
     <button id="publicarBtn">Publicar</button>
     <div id="feed"></div>
   </div>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import {
-    getFirestore, collection, addDoc, query, orderBy, onSnapshot,
-    doc, getDoc, updateDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot,
+      doc, getDoc, updateDoc, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-    authDomain: "papoclub-737ac.firebaseapp.com",
-    projectId: "papoclub-737ac",
-    storageBucket: "papoclub-737ac.appspot.com",
-    messagingSenderId: "1016897274452",
-    appId: "1:1016897274452:web:9b096128cbb136357763c1"
-  };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-  let currentUser = null;
+    let currentUser = null;
 
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
       currentUser = user;
       cargarFeed();
-      escucharNuevosMensajes();
-    } else {
-      location.href = "index.html";
-    }
-  });
-
-  window.logout = () => signOut(auth).then(() => location.href = 'index.html');
-
-  const postInput = document.getElementById("postInput");
-  const contador = document.getElementById("contador");
-
-  postInput.addEventListener("input", () => {
-    contador.textContent = `${postInput.value.length} / 400`;
-  });
-
-  document.getElementById("publicarBtn").addEventListener("click", async () => {
-    const texto = postInput.value.trim();
-    if (!texto) return;
-
-    // Obtener perfil del usuario actual para username y avatarURL
-    const userSnap = await getDoc(doc(db, "users", currentUser.uid));
-    const perfil = userSnap.exists() ? userSnap.data() : null;
-    if (!perfil) return alert("No se encontró tu perfil.");
-
-    await addDoc(collection(db, "posts"), {
-      texto,
-      autor: perfil.username,
-      avatarURL: perfil.avatarURL || "",
-      timestamp: Date.now(),
-      likes: 0,
-      retweets: 0
     });
 
-    postInput.value = "";
-    contador.textContent = "0 / 400";
-  });
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
 
-  async function cargarFeed() {
-    const feed = document.getElementById("feed");
-    const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-    onSnapshot(q, async (snapshot) => {
-      feed.innerHTML = "";
-      for (const docSnap of snapshot.docs) {
-        const post = docSnap.data();
-        const id = docSnap.id;
+    const postInput = document.getElementById("postInput");
+    const contador = document.getElementById("contador");
 
-        // Cargar comentarios para cada post
-        const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
-        let comentariosHTML = "";
-        for (const c of comentariosSnap.docs) {
-          const data = c.data();
-          comentariosHTML += `<div class="comentario"><b>@${data.autor}:</b> ${data.texto}</div>`;
+    postInput.addEventListener("input", () => {
+      contador.textContent = `${postInput.value.length} / 400`;
+    });
+
+    document.getElementById("publicarBtn").addEventListener("click", async () => {
+      const texto = postInput.value.trim();
+      if (!texto) return;
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      if (!perfilSnap.exists()) return alert("Completa tu perfil primero.");
+
+      const perfil = perfilSnap.data();
+      const autor = perfil.username || currentUser.email;
+
+      await addDoc(collection(db, "posts"), {
+        texto,
+        autor,
+        avatarURL: perfil.avatarURL || "",
+        timestamp: Date.now(),
+        likes: 0,
+        retweets: 0
+      });
+
+      postInput.value = "";
+      contador.textContent = "0 / 400";
+    });
+
+    async function cargarFeed() {
+      const feed = document.getElementById("feed");
+      const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+
+      onSnapshot(q, async (snapshot) => {
+        feed.innerHTML = "";
+        for (const docSnap of snapshot.docs) {
+          const post = docSnap.data();
+          const id = docSnap.id;
+
+          if (!post.texto || !post.autor) continue;
+
+          const comentariosSnap = await getDocs(collection(db, "posts", id, "comentarios"));
+          let comentariosHTML = "";
+          comentariosSnap.forEach(c => {
+            const data = c.data();
+            comentariosHTML += `<div class="comentario"><b>@${data.autor}:</b> ${data.texto}</div>`;
+          });
+
+          const div = document.createElement("div");
+          div.className = "post";
+          div.innerHTML = `
+            <div class="autor">
+              <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
+              <b>@${post.autor}</b>
+            </div>
+            <p>${post.texto}</p>
+            <div class="acciones">
+              <button onclick="likePost('${id}')">❤️ ${post.likes}</button>
+              <button onclick="rtPost('${id}')">🔁 ${post.retweets}</button>
+            </div>
+            <div class="comentarios-lista">${comentariosHTML}</div>
+            <input type="text" placeholder="Comenta..." id="input-${id}" />
+            <button onclick="comentar('${id}')">Enviar</button>
+          `;
+          feed.appendChild(div);
         }
+      });
+    }
 
-        const div = document.createElement("div");
-        div.className = "post";
-        div.innerHTML = `
-          <div class="autor">
-            <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
-            <b>@${post.autor}</b>
-          </div>
-          <p>${post.texto}</p>
-          <div class="acciones">
-            <button onclick="likePost('${id}')">❤️ ${post.likes}</button>
-            <button onclick="rtPost('${id}')">🔁 ${post.retweets}</button>
-          </div>
-          <div class="comentarios-lista">${comentariosHTML}</div>
-          <input type="text" placeholder="Comenta..." id="input-${id}" />
-          <button onclick="comentar('${id}')">Enviar</button>
-        `;
-        feed.appendChild(div);
-      }
-    });
-  }
+    window.comentar = async (postId) => {
+      const input = document.getElementById("input-" + postId);
+      const texto = input.value.trim();
+      if (!texto) return;
 
-  window.comentar = async (postId) => {
-    const input = document.getElementById("input-" + postId);
-    const texto = input.value.trim();
-    if (!texto) return alert("Comentario vacío");
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      if (!perfilSnap.exists()) return;
 
-    await addDoc(collection(db, "posts", postId, "comentarios"), {
-      autor: currentUser.email,
-      texto,
-      timestamp: Date.now()
-    });
-    input.value = "";
-  };
+      const perfil = perfilSnap.data();
+      const autor = perfil.username || currentUser.email;
 
-  window.likePost = async (id) => {
-    const ref = doc(db, "posts", id);
-    const post = await getDoc(ref);
-    await updateDoc(ref, { likes: post.data().likes + 1 });
-  };
+      await addDoc(collection(db, "posts", postId, "comentarios"), {
+        autor,
+        texto,
+        timestamp: Date.now()
+      });
 
-  window.rtPost = async (id) => {
-    const ref = doc(db, "posts", id);
-    const post = await getDoc(ref);
-    await updateDoc(ref, { retweets: post.data().retweets + 1 });
-  };
+      input.value = "";
+    };
 
-  // Notificación de mensajes nuevos
-  function escucharNuevosMensajes() {
-    import { collectionGroup, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    const chatsRef = collectionGroup(db, "mensajes");
-    const q = query(chatsRef, where("para", "==", currentUser.email), where("leido", "==", false));
-    onSnapshot(q, (snapshot) => {
-      const noti = document.getElementById("noti");
-      noti.style.display = snapshot.empty ? "none" : "inline";
-    });
-  }
-</script>
+    window.likePost = async (id) => {
+      const ref = doc(db, "posts", id);
+      const post = await getDoc(ref);
+      await updateDoc(ref, { likes: (post.data().likes || 0) + 1 });
+    };
+
+    window.rtPost = async (id) => {
+      const ref = doc(db, "posts", id);
+      const post = await getDoc(ref);
+      await updateDoc(ref, { retweets: (post.data().retweets || 0) + 1 });
+    };
+  </script>
 </body>
 </html>
