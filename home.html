@@ -12,7 +12,6 @@
       margin: 0;
       padding-top: 70px;
     }
-
     .menu-superior {
       position: fixed;
       top: 0;
@@ -30,7 +29,6 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
-
     .menu-superior button {
       background: none;
       border: none;
@@ -42,18 +40,15 @@
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
     }
-
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
-
     .contenido {
       max-width: 700px;
       margin: 20px auto;
       padding: 0 20px;
     }
-
     textarea {
       width: 100%;
       background: #011;
@@ -64,7 +59,6 @@
       font-size: 1em;
       resize: none;
     }
-
     button.publicar {
       background: #0ff;
       color: #000;
@@ -76,7 +70,6 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     .post {
       background: #011;
       border: 2px solid #00e5ff;
@@ -84,14 +77,13 @@
       padding: 15px;
       border-radius: 15px;
       margin-top: 15px;
+      user-select: none;
     }
-
     .autor {
       display: flex;
       align-items: center;
       margin-bottom: 8px;
     }
-
     .autor img.avatar {
       width: 36px;
       height: 36px;
@@ -101,32 +93,75 @@
       border: 1.5px solid #0ff;
       box-shadow: 0 0 6px #0ff;
     }
-
+    .autor b {
+      font-weight: bold;
+    }
+    .fecha {
+      font-size: 0.85em;
+      color: #55ffffaa;
+      margin-left: auto;
+      user-select: text;
+    }
     .acciones {
       margin-top: 10px;
+      display: flex;
+      gap: 18px;
     }
-
     .acciones button {
       background: none;
       color: #0ff;
       border: none;
-      margin-right: 15px;
-      font-size: 1em;
       cursor: pointer;
       font-weight: bold;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+      transition: color 0.3s ease;
     }
-
-    .fecha-hora {
-      font-size: 0.8em;
-      color: #88f;
-      margin-top: 5px;
+    .acciones button:hover {
+      color: #33ffff;
     }
-
-    #contador {
-      color: #ccc;
-      font-size: 0.9em;
-      text-align: right;
-      margin-top: 6px;
+    .acciones button:disabled {
+      color: #006677aa;
+      cursor: default;
+    }
+    .share-menu {
+      position: relative;
+      display: inline-block;
+    }
+    .share-options {
+      display: none;
+      position: absolute;
+      bottom: 120%;
+      left: 0;
+      background: #022;
+      border: 1px solid #0ff;
+      border-radius: 10px;
+      padding: 6px 8px;
+      box-shadow: 0 0 10px #0ff;
+      z-index: 100;
+    }
+    .share-options a {
+      margin: 0 6px;
+      cursor: pointer;
+      display: inline-block;
+    }
+    .share-options a img {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      filter: drop-shadow(0 0 1px #00ffffaa);
+    }
+    .share-menu:hover .share-options {
+      display: block;
+    }
+    .firma-share {
+      font-size: 0.7em;
+      color: #0ff;
+      margin-left: 6px;
+      user-select: none;
     }
   </style>
 </head>
@@ -155,22 +190,29 @@
       collection,
       addDoc,
       getDocs,
-      getDoc,
-      doc,
       query,
-      orderBy
+      orderBy,
+      doc,
+      getDoc,
+      updateDoc,
+      arrayUnion
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const app = initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
-    });
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
 
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
     let currentUser = null;
+    let currentUserData = null;
 
     const postInput = document.getElementById("postInput");
     const contador = document.getElementById("contador");
@@ -179,20 +221,9 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
-      cargarPosts();
-    });
-
-    document.getElementById("publicarBtn").addEventListener("click", async () => {
-      const texto = postInput.value.trim();
-      if (!texto) return;
-
-      await addDoc(collection(db, "posts"), {
-        texto,
-        autor: currentUser.uid,
-        timestamp: Date.now()
-      });
-      postInput.value = "";
-      contador.textContent = "0 / 400";
+      // Cargar datos adicionales para mostrar avatar y username
+      const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+      currentUserData = userDoc.exists() ? userDoc.data() : null;
       cargarPosts();
     });
 
@@ -200,41 +231,181 @@
       contador.textContent = `${postInput.value.length} / 400`;
     });
 
+    document.getElementById("publicarBtn").addEventListener("click", async () => {
+      const texto = postInput.value.trim();
+      if (!texto) return alert("Escribe algo para publicar.");
+
+      await addDoc(collection(db, "posts"), {
+        texto,
+        autorUid: currentUser.uid,
+        autor: currentUser.email,
+        timestamp: Date.now(),
+        likes: [],
+        retweets: []
+      });
+      postInput.value = "";
+      contador.textContent = "0 / 400";
+      cargarPosts();
+    });
+
     async function cargarPosts() {
       feed.innerHTML = "";
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-      const snapshot = await getDocs(q);
+      const querySnapshot = await getDocs(q);
 
-      for (const docSnap of snapshot.docs) {
+      for (const docSnap of querySnapshot.docs) {
         const post = docSnap.data();
-        const fecha = new Date(post.timestamp).toLocaleString("es-ES");
-        const userDoc = await getDoc(doc(db, "users", post.autor));
-        const usuario = userDoc.exists() ? userDoc.data() : { username: "Usuario", avatarURL: "default-avatar.png" };
+        const postId = docSnap.id;
+
+        // Cargar datos del autor para avatar y username
+        let autorAvatar = "default-avatar.png";
+        let autorNombre = post.autor || "Anon";
+
+        if (post.autorUid) {
+          try {
+            const userDoc = await getDoc(doc(db, "users", post.autorUid));
+            if (userDoc.exists()) {
+              const udata = userDoc.data();
+              autorAvatar = udata.avatarURL || autorAvatar;
+              autorNombre = udata.username || autorNombre;
+            }
+          } catch {
+            // ignorar error
+          }
+        }
+
+        const fecha = new Date(post.timestamp);
+        const fechaStr = fecha.toLocaleString("es-ES", {
+          year: "numeric", month: "short", day: "numeric",
+          hour: "2-digit", minute: "2-digit"
+        });
+
+        // Botones like y retweet con estado
+        const liked = post.likes.includes(currentUser.uid);
+        const retweeted = post.retweets.includes(currentUser.uid);
 
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
           <div class="autor">
-            <img class="avatar" src="${usuario.avatarURL || "default-avatar.png"}" />
-            <b>${usuario.username || "Usuario"}</b>
+            <img class="avatar" src="${autorAvatar}" alt="avatar" />
+            <b>${autorNombre}</b>
+            <span class="fecha">${fechaStr}</span>
           </div>
-          <p>${post.texto}</p>
-          <div class="fecha-hora">${fecha}</div>
+          <p>${escapeHtml(post.texto)}</p>
           <div class="acciones">
-            <button onclick="compartir('${post.texto.replace(/'/g, "\\'")}')">🔗 Compartir</button>
+            <button class="like-btn" ${liked ? "disabled" : ""} title="Me gusta">
+              👍 ${post.likes.length || 0}
+            </button>
+            <button class="retweet-btn" ${retweeted ? "disabled" : ""} title="Retweet">
+              🔁 ${post.retweets.length || 0}
+            </button>
+            <div class="share-menu" title="Compartir">
+              <button>🔗</button>
+              <div class="share-options">
+                <a href="#" data-platform="x" title="Compartir en X">
+                  <img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" alt="X" />
+                </a>
+                <a href="#" data-platform="facebook" title="Compartir en Facebook">
+                  <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" alt="Facebook" />
+                </a>
+                <a href="#" data-platform="telegram" title="Compartir en Telegram">
+                  <img src="https://cdn-icons-png.flaticon.com/512/2111/2111646.png" alt="Telegram" />
+                </a>
+                <a href="#" data-platform="whatsapp" title="Compartir en WhatsApp">
+                  <img src="https://cdn-icons-png.flaticon.com/512/733/733585.png" alt="WhatsApp" />
+                </a>
+              </div>
+              <span class="firma-share">(by.Papoclub/socialmedia)</span>
+            </div>
           </div>
         `;
+
         feed.appendChild(div);
+
+        // Eventos botones
+        div.querySelector(".like-btn").onclick = () => likePost(postId);
+        div.querySelector(".retweet-btn").onclick = () => retweetPost(postId);
+
+        // Compartir
+        const shareLinks = div.querySelectorAll(".share-options a");
+        shareLinks.forEach(link => {
+          link.onclick = (e) => {
+            e.preventDefault();
+            const platform = link.getAttribute("data-platform");
+            sharePost(platform, post.texto, autorNombre);
+          };
+        });
       }
     }
 
-    window.compartir = (texto) => {
-      const mensaje = encodeURIComponent(`${texto}\n\n(by. Papoclub/socialmedia)`);
-      const url = `https://api.whatsapp.com/send?text=${mensaje}`;
-      window.open(url, "_blank");
-    };
+    async function likePost(postId) {
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+      const data = postSnap.data();
+
+      if (data.likes.includes(currentUser.uid)) return; // ya dio like
+
+      await updateDoc(postRef, {
+        likes: arrayUnion(currentUser.uid)
+      });
+      cargarPosts();
+    }
+
+    async function retweetPost(postId) {
+      const postRef = doc(db, "posts", postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+      const data = postSnap.data();
+
+      if (data.retweets.includes(currentUser.uid)) return; // ya retuiteó
+
+      await updateDoc(postRef, {
+        retweets: arrayUnion(currentUser.uid)
+      });
+      cargarPosts();
+    }
+
+    function sharePost(platform, texto, autor) {
+      const urlActual = location.href;
+      const textFirma = ` (by.Papoclub/socialmedia)`;
+      const text = encodeURIComponent(`${texto}${textFirma}`);
+      let shareUrl = "";
+
+      switch(platform) {
+        case "x":
+          shareUrl = `https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(urlActual)}`;
+          break;
+        case "facebook":
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(urlActual)}&quote=${text}`;
+          break;
+        case "telegram":
+          shareUrl = `https://telegram.me/share/url?url=${encodeURIComponent(urlActual)}&text=${text}`;
+          break;
+        case "whatsapp":
+          shareUrl = `https://wa.me/?text=${text}%20${encodeURIComponent(urlActual)}`;
+          break;
+      }
+      window.open(shareUrl, "Compartir", "width=600,height=400");
+    }
+
+    // Protección básica para evitar inyección de HTML en posts
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, (match) => {
+        const map = {
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        };
+        return map[match];
+      });
+    }
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
+
   </script>
 </body>
 </html>
