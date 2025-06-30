@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
@@ -12,7 +12,6 @@
       margin: 0;
       padding-top: 70px;
     }
-
     .menu-superior {
       position: fixed;
       top: 0;
@@ -30,7 +29,6 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
-
     .menu-superior button {
       background: none;
       border: none;
@@ -42,18 +40,15 @@
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
     }
-
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
-
     .contenido {
       max-width: 700px;
       margin: 20px auto;
       padding: 0 20px;
     }
-
     textarea {
       width: 100%;
       background: #011;
@@ -64,7 +59,6 @@
       font-size: 1em;
       resize: none;
     }
-
     button.publicar {
       background: #0ff;
       color: #000;
@@ -76,7 +70,6 @@
       cursor: pointer;
       font-weight: bold;
     }
-
     .post {
       background: #011;
       border: 2px solid #00e5ff;
@@ -84,19 +77,12 @@
       padding: 15px;
       border-radius: 15px;
       margin-top: 15px;
-      transition: transform 0.3s ease;
     }
-
-    .post:hover {
-      transform: scale(1.01);
-    }
-
     .autor {
       display: flex;
       align-items: center;
       margin-bottom: 8px;
     }
-
     .autor img.avatar {
       width: 36px;
       height: 36px;
@@ -105,8 +91,8 @@
       margin-right: 10px;
       border: 1.5px solid #0ff;
       box-shadow: 0 0 6px #0ff;
+      background: #022;
     }
-
     .acciones button {
       background: none;
       color: #0ff;
@@ -115,19 +101,92 @@
       font-size: 1em;
       cursor: pointer;
       font-weight: bold;
-      transition: transform 0.2s, text-shadow 0.3s;
     }
-
-    .acciones button:hover {
-      transform: translateY(-2px);
-      text-shadow: 0 0 6px #0ff;
+    .comentarios-container {
+      margin-top: 12px;
+      border-top: 1px solid #00e5ff44;
+      padding-top: 12px;
     }
-
-    #contador {
-      color: #ccc;
+    .comentario {
       font-size: 0.9em;
-      text-align: right;
+      color: #8ff;
+      border: 1px solid #0ff4;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      background: #022;
+      position: relative;
+    }
+    .comentario .autor-comentario {
+      font-weight: bold;
+      color: #0ff;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .comentario .autor-comentario img.avatar-comment {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid #0ff;
+      box-shadow: 0 0 4px #0ff;
+      background: #022;
+    }
+    .comentario .fecha-comentario {
+      font-size: 0.75em;
+      color: #66ffffaa;
+      position: absolute;
+      right: 10px;
+      top: 8px;
+      user-select: none;
+    }
+    .comentario .texto-comentario {
+      white-space: pre-wrap;
+    }
+    .respuesta-container {
+      margin-left: 30px;
       margin-top: 6px;
+    }
+    .input-comentar {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .input-comentar input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+    .input-comentar button {
+      background: #0ff;
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-responder {
+      background: none;
+      border: none;
+      color: #0ff;
+      font-size: 0.85em;
+      cursor: pointer;
+      margin-top: 4px;
+      padding: 0;
+      user-select: none;
+    }
+    small.fecha-post {
+      display: block;
+      color: #66ffffcc;
+      margin-top: 8px;
+      font-size: 0.85em;
+      user-select: none;
     }
   </style>
 </head>
@@ -160,20 +219,25 @@
       orderBy,
       updateDoc,
       doc,
-      getDoc
+      getDoc,
+      where,
+      collectionGroup,
+      serverTimestamp,
+      onSnapshot
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-    const app = initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
       projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com"
-    });
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
 
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     let currentUser = null;
 
@@ -187,88 +251,322 @@
       cargarPosts();
     });
 
+    postInput.addEventListener("input", () => {
+      contador.textContent = `${postInput.value.length} / 400`;
+    });
+
     document.getElementById("publicarBtn").addEventListener("click", async () => {
       const texto = postInput.value.trim();
-      if (!texto) return;
+      if (!texto) return alert("El mensaje está vacío");
 
       await addDoc(collection(db, "posts"), {
         texto,
-        autor: currentUser.email,
-        uid: currentUser.uid,
-        timestamp: Date.now(),
+        autorUID: currentUser.uid,
+        autorEmail: currentUser.email,
+        timestamp: serverTimestamp(),
         likes: [],
         retweets: []
       });
       postInput.value = "";
       contador.textContent = "0 / 400";
+      // Refrescar posts
       cargarPosts();
     });
 
-    postInput.addEventListener("input", () => {
-      contador.textContent = `${postInput.value.length} / 400`;
-    });
+    // Función para cargar avatar del usuario por UID
+    async function obtenerAvatarYNombre(uid) {
+      try {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          return {
+            avatar: data.avatarURL || "default-avatar.png",
+            nombre: data.username || data.email || "Usuario"
+          };
+        }
+      } catch {
+        // fallback
+      }
+      return { avatar: "default-avatar.png", nombre: "Usuario" };
+    }
 
+    // Cargar posts con comentarios y respuestas
     async function cargarPosts() {
       feed.innerHTML = "";
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
 
+      // Precargar datos usuarios para optimizar
+      const usuariosCache = {};
+
       for (const docSnap of querySnapshot.docs) {
         const post = docSnap.data();
         const postId = docSnap.id;
-        const fecha = new Date(post.timestamp).toLocaleString();
 
-        let avatarURL = "default-avatar.png";
-        const userDoc = await getDoc(doc(db, "users", post.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          if (userData.avatarURL) avatarURL = userData.avatarURL;
+        // Cargar autor
+        if (!usuariosCache[post.autorUID]) {
+          usuariosCache[post.autorUID] = await obtenerAvatarYNombre(post.autorUID);
+        }
+        const autor = usuariosCache[post.autorUID];
+
+        // Formatear fecha
+        let fechaStr = "";
+        if (post.timestamp?.toDate) {
+          fechaStr = post.timestamp.toDate().toLocaleString();
+        } else if (post.timestamp) {
+          fechaStr = new Date(post.timestamp).toLocaleString();
+        } else {
+          fechaStr = "";
         }
 
+        // Likes y retweets
+        const yaLike = post.likes?.includes(currentUser.uid);
+        const yaRT = post.retweets?.includes(currentUser.uid);
+
+        // Crear contenedor post
         const div = document.createElement("div");
         div.className = "post";
+
+        // HTML base post
         div.innerHTML = `
           <div class="autor">
-            <img class="avatar" src="${avatarURL}" />
-            <b>${post.autor}</b>
+            <img class="avatar" src="${autor.avatar}" alt="avatar" />
+            <b>${autor.nombre}</b>
           </div>
-          <p>${post.texto}</p>
-          <small>${fecha}</small>
+          <p>${escapeHTML(post.texto)}</p>
+          <small class="fecha-post">${fechaStr}</small>
           <div class="acciones">
-            <button onclick="likePost('${postId}')">❤️ ${post.likes?.length || 0}</button>
-            <button onclick="retweetPost('${postId}')">🔁 ${post.retweets?.length || 0}</button>
-            <button onclick="sharePost('${encodeURIComponent(post.texto)}')">📤 Compartir</button>
+            <button class="btn-like" style="color:${yaLike ? '#f00' : '#0ff'}" data-id="${postId}">❤️ ${post.likes?.length || 0}</button>
+            <button class="btn-retweet" style="color:${yaRT ? '#0f0' : '#0ff'}" data-id="${postId}">🔁 ${post.retweets?.length || 0}</button>
+            <button class="btn-share" data-text="${encodeURIComponent(post.texto)}">📤 Compartir</button>
+          </div>
+          <div class="comentarios-container" id="comentarios-${postId}">
+            <strong>Comentarios:</strong>
+            <div class="lista-comentarios"></div>
+            <div class="input-comentar">
+              <input type="text" placeholder="Escribe un comentario..." data-postid="${postId}" />
+              <button data-postid="${postId}">Enviar</button>
+            </div>
           </div>
         `;
+
         feed.appendChild(div);
+
+        // Cargar comentarios para este post
+        cargarComentarios(postId, usuariosCache);
+      }
+
+      // Asignar eventos para botones
+      asignarEventos();
+    }
+
+    // Escapar HTML para evitar XSS
+    function escapeHTML(str) {
+      if (!str) return "";
+      return str.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
+      });
+    }
+
+    // Cargar comentarios y respuestas 1 nivel para un post
+    async function cargarComentarios(postId, usuariosCache) {
+      const contenedor = document.getElementById(`comentarios-${postId}`);
+      if (!contenedor) return;
+
+      const listaComentarios = contenedor.querySelector(".lista-comentarios");
+      listaComentarios.innerHTML = "";
+
+      const comentariosQuery = query(
+        collection(db, "posts", postId, "comments"),
+        orderBy("timestamp", "asc")
+      );
+      const comentariosSnapshot = await getDocs(comentariosQuery);
+
+      // Para cada comentario (nivel 0)
+      for (const docC of comentariosSnapshot.docs) {
+        const comentario = docC.data();
+        const comentarioId = docC.id;
+
+        // Cargar autor comentario
+        if (!usuariosCache[comentario.autorUID]) {
+          usuariosCache[comentario.autorUID] = await obtenerAvatarYNombre(comentario.autorUID);
+        }
+        const autorComentario = usuariosCache[comentario.autorUID];
+
+        // Formatear fecha comentario
+        let fechaComentarioStr = "";
+        if (comentario.timestamp?.toDate) {
+          fechaComentarioStr = comentario.timestamp.toDate().toLocaleString();
+        } else if (comentario.timestamp) {
+          fechaComentarioStr = new Date(comentario.timestamp).toLocaleString();
+        }
+
+        // Crear contenedor comentario
+        const divComentario = document.createElement("div");
+        divComentario.className = "comentario";
+        divComentario.id = `comentario-${postId}-${comentarioId}`;
+
+        divComentario.innerHTML = `
+          <div class="autor-comentario">
+            <img class="avatar-comment" src="${autorComentario.avatar}" alt="avatar" />
+            <span>${autorComentario.nombre}</span>
+            <span class="fecha-comentario">${fechaComentarioStr}</span>
+          </div>
+          <div class="texto-comentario">${escapeHTML(comentario.texto)}</div>
+          <button class="btn-responder" data-postid="${postId}" data-comid="${comentarioId}">Responder</button>
+          <div class="respuesta-container" id="respuestas-${postId}-${comentarioId}"></div>
+        `;
+
+        listaComentarios.appendChild(divComentario);
+
+        // Cargar respuestas (nivel 1)
+        await cargarRespuestas(postId, comentarioId, usuariosCache);
       }
     }
 
-    window.likePost = async function (id) {
-      const ref = doc(db, "posts", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      if (!data.likes.includes(currentUser.uid)) {
-        await updateDoc(ref, { likes: [...data.likes, currentUser.uid] });
-        cargarPosts();
+    // Cargar respuestas (nivel 1) para un comentario
+    async function cargarRespuestas(postId, comentarioId, usuariosCache) {
+      const contenedorRespuestas = document.getElementById(`respuestas-${postId}-${comentarioId}`);
+      if (!contenedorRespuestas) return;
+      contenedorRespuestas.innerHTML = "";
+
+      const respuestasQuery = query(
+        collection(db, "posts", postId, "comments", comentarioId, "replies"),
+        orderBy("timestamp", "asc")
+      );
+      const respuestasSnapshot = await getDocs(respuestasQuery);
+
+      for (const docR of respuestasSnapshot.docs) {
+        const respuesta = docR.data();
+        const respuestaId = docR.id;
+
+        if (!usuariosCache[respuesta.autorUID]) {
+          usuariosCache[respuesta.autorUID] = await obtenerAvatarYNombre(respuesta.autorUID);
+        }
+        const autorRespuesta = usuariosCache[respuesta.autorUID];
+
+        let fechaRespuestaStr = "";
+        if (respuesta.timestamp?.toDate) {
+          fechaRespuestaStr = respuesta.timestamp.toDate().toLocaleString();
+        } else if (respuesta.timestamp) {
+          fechaRespuestaStr = new Date(respuesta.timestamp).toLocaleString();
+        }
+
+        const divRespuesta = document.createElement("div");
+        divRespuesta.className = "comentario";
+        divRespuesta.style.marginLeft = "20px";
+        divRespuesta.innerHTML = `
+          <div class="autor-comentario">
+            <img class="avatar-comment" src="${autorRespuesta.avatar}" alt="avatar" />
+            <span>${autorRespuesta.nombre}</span>
+            <span class="fecha-comentario">${fechaRespuestaStr}</span>
+          </div>
+          <div class="texto-comentario">${escapeHTML(respuesta.texto)}</div>
+        `;
+
+        contenedorRespuestas.appendChild(divRespuesta);
       }
     }
 
-    window.retweetPost = async function (id) {
-      const ref = doc(db, "posts", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      if (!data.retweets.includes(currentUser.uid)) {
-        await updateDoc(ref, { retweets: [...data.retweets, currentUser.uid] });
-        cargarPosts();
-      }
-    }
+    // Asignar eventos a botones dinámicos
+    function asignarEventos() {
+      // Likes
+      document.querySelectorAll(".btn-like").forEach(btn => {
+        btn.onclick = async () => {
+          const postId = btn.dataset.id;
+          const ref = doc(db, "posts", postId);
+          const snap = await getDoc(ref);
+          const data = snap.data();
+          if (!data.likes.includes(currentUser.uid)) {
+            await updateDoc(ref, { likes: [...data.likes, currentUser.uid] });
+            cargarPosts();
+          }
+        };
+      });
+      // Retweets
+      document.querySelectorAll(".btn-retweet").forEach(btn => {
+        btn.onclick = async () => {
+          const postId = btn.dataset.id;
+          const ref = doc(db, "posts", postId);
+          const snap = await getDoc(ref);
+          const data = snap.data();
+          if (!data.retweets.includes(currentUser.uid)) {
+            await updateDoc(ref, { retweets: [...data.retweets, currentUser.uid] });
+            cargarPosts();
+          }
+        };
+      });
+      // Compartir
+      document.querySelectorAll(".btn-share").forEach(btn => {
+        btn.onclick = () => {
+          const texto = decodeURIComponent(btn.dataset.text);
+          const mensaje = `${texto}\n\n(by.Papoclub/socialmedia)`;
+          const url = encodeURIComponent(mensaje);
+          const compartirURL = `https://x.com/intent/tweet?text=${url}`;
+          window.open(compartirURL, "_blank", "width=600,height=400");
+        };
+      });
+      // Enviar comentario
+      document.querySelectorAll(".input-comentar button").forEach(btn => {
+        btn.onclick = async () => {
+          const postId = btn.dataset.postid;
+          const input = btn.previousElementSibling;
+          const texto = input.value.trim();
+          if (!texto) return alert("El comentario está vacío");
+          input.value = "";
+          await addDoc(collection(db, "posts", postId, "comments"), {
+            texto,
+            autorUID: currentUser.uid,
+            timestamp: serverTimestamp()
+          });
+          cargarPosts();
+        };
+      });
+      // Botones responder comentarios
+      document.querySelectorAll(".btn-responder").forEach(btn => {
+        btn.onclick = () => {
+          const postId = btn.dataset.postid;
+          const comId = btn.dataset.comid;
 
-    window.sharePost = function (texto) {
-      const mensaje = decodeURIComponent(texto) + "\n\n(by.Papoclub/socialmedia)";
-      const url = encodeURIComponent(mensaje);
-      const compartirURL = `https://x.com/intent/tweet?text=${url}`;
-      window.open(compartirURL, "_blank", "width=600,height=400");
+          // Evitar que se abran varios inputs
+          const existingInput = document.getElementById(`input-reply-${postId}-${comId}`);
+          if (existingInput) {
+            existingInput.remove();
+            return;
+          }
+
+          const comentarioDiv = btn.parentElement;
+          const replyDiv = document.createElement("div");
+          replyDiv.className = "input-comentar";
+          replyDiv.id = `input-reply-${postId}-${comId}`;
+          replyDiv.innerHTML = `
+            <input type="text" placeholder="Escribe una respuesta..." />
+            <button>Enviar</button>
+          `;
+          comentarioDiv.appendChild(replyDiv);
+
+          const inputReply = replyDiv.querySelector("input");
+          const btnEnviar = replyDiv.querySelector("button");
+
+          btnEnviar.onclick = async () => {
+            const texto = inputReply.value.trim();
+            if (!texto) return alert("La respuesta está vacía");
+            await addDoc(collection(db, "posts", postId, "comments", comId, "replies"), {
+              texto,
+              autorUID: currentUser.uid,
+              timestamp: serverTimestamp()
+            });
+            replyDiv.remove();
+            cargarPosts();
+          };
+        };
+      });
     }
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
