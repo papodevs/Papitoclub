@@ -2,22 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Mensajes - Papoclub</title>
+  <title>Historial - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
-      padding-top: 70px; /* espacio para menú superior fijo */
+      padding-top: 70px;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-height: 100vh;
     }
 
-    /* Menú superior 3D neón azul */
     .menu-superior {
       position: fixed;
       top: 0;
@@ -25,10 +24,7 @@
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow:
-        0 0 8px #00e5ffaa,
-        0 0 20px #00e5ff88,
-        inset 0 2px 6px #00b8d9cc;
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
       justify-content: flex-end;
       align-items: center;
@@ -54,127 +50,60 @@
 
     .menu-superior button:hover {
       transform: translateY(-3px);
-      box-shadow:
-        0 0 12px #00e5ff,
-        0 0 30px #00e5ffaa;
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    /* Contenido */
-    .contenido {
+    main.contenido {
       max-width: 700px;
       width: 100%;
       padding: 20px;
       box-sizing: border-box;
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
     }
 
-    label, select, textarea, button {
-      font-size: 1rem;
+    h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      text-align: center;
     }
 
-    label {
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-
-    select, textarea {
-      width: 100%;
-      background: #011;
-      color: #0ff;
-      border: 1px solid #0ff;
-      border-radius: 8px;
-      padding: 10px;
-      box-sizing: border-box;
-      resize: none;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    select {
-      height: 38px;
-    }
-
-    textarea {
-      min-height: 80px;
-    }
-
-    button.enviar {
-      background: #0ff;
-      color: #000;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      padding: 10px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-      user-select: none;
-    }
-
-    button.enviar:disabled {
-      background: #055;
-      cursor: not-allowed;
-      color: #088;
-    }
-
-    /* Mensajes */
-    #mensajesContainer {
+    .historial-lista {
       background: #011;
       border: 2px solid #00e5ff;
-      border-radius: 12px;
-      padding: 10px;
-      max-height: 400px;
-      overflow-y: auto;
+      border-radius: 15px;
       box-shadow: 0 0 15px #00e5ff66;
-    }
-
-    .mensaje {
-      background: #022;
-      border: 1px solid #00e5ffaa;
-      border-radius: 10px;
-      padding: 8px 12px;
-      margin-bottom: 8px;
-      box-shadow: 0 0 8px #00e5ff99;
-      word-wrap: break-word;
-    }
-
-    .mensaje.own {
-      background: #004466;
-      border-color: #00ffffcc;
-      align-self: flex-end;
-      box-shadow: 0 0 10px #00ffffee;
-    }
-
-    .mensaje .autor {
-      font-weight: bold;
+      padding: 15px;
+      max-height: 500px;
+      overflow-y: auto;
       color: #0ff;
+    }
+
+    .historial-item {
+      border-bottom: 1px solid #00e5ff44;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .enviado {
+      background-color: #fff;
+      color: #000;
+    }
+
+    .recibido {
+      background-color: #0099cc;
+      color: #fff;
+    }
+
+    .fecha {
+      font-size: 0.85em;
+      opacity: 0.8;
       margin-bottom: 4px;
-      user-select: text;
-    }
-
-    .mensaje .fecha {
-      font-size: 0.75rem;
-      color: #66ffffaa;
-      text-align: right;
-      user-select: text;
-    }
-
-    @media (max-width: 480px) {
-      .contenido {
-        max-width: 100%;
-        padding: 15px;
-      }
-
-      .menu-superior button {
-        font-size: 1.1em;
-        padding: 6px 8px;
-      }
     }
   </style>
 </head>
 <body>
-
   <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
@@ -184,26 +113,14 @@
   </div>
 
   <main class="contenido">
-    <h2>Mensajes Privados</h2>
-
-    <label for="destinatario">Selecciona usuario:</label>
-    <select id="destinatario">
-      <option value="" disabled selected>-- Selecciona un usuario --</option>
-    </select>
-
-    <textarea id="mensaje" placeholder="Escribe tu mensaje..." maxlength="400"></textarea>
-    <button id="enviarBtn" class="enviar" disabled>Enviar</button>
-
-    <div id="mensajesContainer"></div>
+    <h2>Historial de Mensajes</h2>
+    <div class="historial-lista" id="historialLista">Cargando historial...</div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, collection, query, where, getDocs,
-      addDoc, orderBy, onSnapshot, doc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -218,136 +135,45 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let currentUser = null;
-    let usuariosList = [];
+    const historialLista = document.getElementById("historialLista");
 
-    const selectDest = document.getElementById("destinatario");
-    const mensajeInput = document.getElementById("mensaje");
-    const enviarBtn = document.getElementById("enviarBtn");
-    const mensajesContainer = document.getElementById("mensajesContainer");
-
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, user => {
       if (!user) {
         location.href = "index.html";
         return;
       }
-      currentUser = user;
 
-      await cargarUsuarios();
-      configurarEventos();
+      const mensajesRef = collection(db, "mensajes");
+      const q = query(mensajesRef, where("participantes", "array-contains", user.uid), orderBy("timestamp", "desc"));
+
+      onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          historialLista.textContent = "No hay mensajes.";
+          return;
+        }
+
+        historialLista.innerHTML = "";
+        snapshot.docs.forEach(docSnap => {
+          const data = docSnap.data();
+          const fecha = new Date(data.timestamp);
+          const fechaStr = fecha.toLocaleString("es-ES", {
+            year: "numeric", month: "short", day: "numeric",
+            hour: "2-digit", minute: "2-digit"
+          });
+
+          const div = document.createElement("div");
+          div.className = `historial-item ${data.de === user.uid ? 'enviado' : 'recibido'}`;
+          div.innerHTML = `<div class="fecha">${fechaStr}</div><div><strong>${data.de === user.uid ? 'Tú' : 'Otro'}:</strong> ${data.texto}</div>`;
+          historialLista.appendChild(div);
+        });
+      });
     });
 
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
-
-    // Carga todos los usuarios (excepto el actual) para el select
-    async function cargarUsuarios() {
-      usuariosList = [];
-      const q = query(collection(db, "users"));
-      const snapshot = await getDocs(q);
-      selectDest.innerHTML = '<option value="" disabled selected>-- Selecciona un usuario --</option>';
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (docSnap.id !== currentUser.uid) {
-          usuariosList.push({ uid: docSnap.id, username: data.username });
-          const option = document.createElement("option");
-          option.value = docSnap.id;
-          option.textContent = data.username;
-          selectDest.appendChild(option);
-        }
+    window.logout = () => {
+      signOut(auth).then(() => {
+        location.href = "index.html";
       });
-    }
-
-    // Escuchar cambios en destinatario para cargar mensajes
-    function configurarEventos() {
-      selectDest.addEventListener("change", () => {
-        mensajesContainer.innerHTML = "";
-        if (selectDest.value) {
-          cargarMensajes(selectDest.value);
-          enviarBtn.disabled = false;
-        } else {
-          enviarBtn.disabled = true;
-        }
-      });
-
-      enviarBtn.addEventListener("click", async () => {
-        const texto = mensajeInput.value.trim();
-        const destinatarioUid = selectDest.value;
-
-        if (!texto) {
-          alert("Escribe un mensaje.");
-          return;
-        }
-        if (!destinatarioUid) {
-          alert("Selecciona un destinatario.");
-          return;
-        }
-
-        // Guardar mensaje en Firestore en ambas colecciones para sender y receiver
-        const timestamp = Date.now();
-
-        // Mensajes: guardamos con doc ids basados en uid ordenados para tener única colección
-        const chatId = obtenerChatId(currentUser.uid, destinatarioUid);
-
-        const mensajesCol = collection(db, "chats", chatId, "mensajes");
-        await addDoc(mensajesCol, {
-          texto,
-          remitente: currentUser.uid,
-          destinatario: destinatarioUid,
-          timestamp
-        });
-
-        mensajeInput.value = "";
-      });
-    }
-
-    // ID único para chat entre dos usuarios ordenado (para evitar duplicados)
-    function obtenerChatId(uid1, uid2) {
-      return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
-    }
-
-    // Escuchar mensajes en tiempo real para chat actual
-    function cargarMensajes(destUid) {
-      const chatId = obtenerChatId(currentUser.uid, destUid);
-      const mensajesCol = collection(db, "chats", chatId, "mensajes");
-      const q = query(mensajesCol, orderBy("timestamp", "asc"));
-
-      // Limpiar listener anterior si existiera
-      if (window.mensajesListener) {
-        window.mensajesListener();
-      }
-
-      window.mensajesListener = onSnapshot(q, (snapshot) => {
-        mensajesContainer.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const msg = docSnap.data();
-          const esPropio = msg.remitente === currentUser.uid;
-          const div = document.createElement("div");
-          div.className = "mensaje";
-          if (esPropio) div.classList.add("own");
-          const fecha = new Date(msg.timestamp).toLocaleString();
-          div.innerHTML = `
-            <div class="autor">${esPropio ? "Tú" : getUsernameByUid(msg.remitente)}</div>
-            <div class="texto">${escapeHtml(msg.texto)}</div>
-            <div class="fecha">${fecha}</div>
-          `;
-          mensajesContainer.appendChild(div);
-          mensajesContainer.scrollTop = mensajesContainer.scrollHeight;
-        });
-      });
-    }
-
-    // Obtener username desde UID
-    function getUsernameByUid(uid) {
-      const user = usuariosList.find(u => u.uid === uid);
-      return user ? user.username : uid;
-    }
-
-    // Escape para evitar XSS básico
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      return div.innerHTML;
-    }
+    };
   </script>
 </body>
 </html>
