@@ -10,7 +10,7 @@
       color: #0ff;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding-top: 70px; /* espacio para menú superior fijo */
+      padding-top: 70px;
     }
 
     .menu-superior {
@@ -20,10 +20,7 @@
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow:
-        0 0 8px #00e5ffaa,
-        0 0 20px #00e5ff88,
-        inset 0 2px 6px #00b8d9cc;
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
       justify-content: flex-end;
       align-items: center;
@@ -44,26 +41,11 @@
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
-      flex-shrink: 0;
     }
 
     .menu-superior button:hover {
       transform: translateY(-3px);
-      box-shadow:
-        0 0 12px #00e5ff,
-        0 0 30px #00e5ffaa;
-    }
-
-    .menu-superior .alerta {
-      position: absolute;
-      top: 4px;
-      right: 10px;
-      background: #ff0033;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 6px;
-      box-shadow: 0 0 8px #ff0033aa;
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
     .contenido {
@@ -102,13 +84,6 @@
       padding: 15px;
       border-radius: 15px;
       margin-top: 15px;
-      transition: transform 0.2s ease;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-
-    .post:hover {
-      transform: scale(1.02);
     }
 
     .autor {
@@ -127,15 +102,6 @@
       box-shadow: 0 0 6px #0ff;
     }
 
-    .autor b {
-      color: #0ff;
-      font-size: 1.1em;
-    }
-
-    .acciones {
-      margin-top: 10px;
-    }
-
     .acciones button {
       background: none;
       color: #0ff;
@@ -144,34 +110,11 @@
       font-size: 1em;
       cursor: pointer;
       font-weight: bold;
-      position: relative;
-      padding-right: 18px;
-    }
-
-    .acciones button.share-btn {
-      margin-left: 10px;
-      font-size: 1.2em;
-    }
-
-    .acciones button:disabled {
-      color: #055;
-      cursor: default;
-    }
-
-    .comentarios-lista {
-      margin-top: 12px;
-      padding-left: 15px;
-      border-left: 2px solid #0ff3;
-      max-height: 150px;
-      overflow-y: auto;
     }
 
     .comentario {
-      margin-top: 6px;
       font-size: 0.9em;
       color: #8ff;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
     }
 
     .input-comentar {
@@ -187,7 +130,6 @@
       border: 1px solid #0ff;
       background: #011;
       color: #0ff;
-      font-size: 0.95em;
     }
 
     .input-comentar button {
@@ -206,209 +148,25 @@
       text-align: right;
       margin-top: 6px;
     }
-
-    @media (max-width: 767px) {
-      .contenido {
-        padding: 10px 15px 20px 15px;
-        max-width: 100%;
-      }
-      .post {
-        font-size: 1em;
-      }
-      textarea {
-        font-size: 1em;
-      }
-      .menu-superior button {
-        font-size: 1.2em;
-        padding: 6px 10px;
-      }
-    }
   </style>
 </head>
 <body>
-
   <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">📜</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
-      ✉️<span id="noti" class="alerta" style="display:none;">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
   <div class="contenido">
     <h2>Papoclub 🚀</h2>
-    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400" rows="3"></textarea>
+    <textarea id="postInput" placeholder="¿Qué estás pensando?" maxlength="400"></textarea>
     <div id="contador">0 / 400</div>
     <button id="publicarBtn" class="publicar">Publicar</button>
     <div id="feed"></div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, collection, addDoc, query, orderBy, onSnapshot,
-      doc, getDoc, updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "1016897274452",
-      appId: "1:1016897274452:web:9b096128cbb136357763c1"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let currentUser = null;
-    let likedPosts = new Set();
-    let retweetedPosts = new Set();
-
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) location.href = "index.html";
-      else {
-        currentUser = user;
-        cargarFeed();
-      }
-    });
-
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
-
-    const postInput = document.getElementById("postInput");
-    const contador = document.getElementById("contador");
-
-    postInput.addEventListener("input", () => {
-      contador.textContent = `${postInput.value.length} / 400`;
-    });
-
-    document.getElementById("publicarBtn").addEventListener("click", async () => {
-      const texto = postInput.value.trim();
-      if (!texto) return alert("Escribe algo para publicar.");
-
-      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
-      if (!perfilSnap.exists()) return alert("No se encontró tu perfil.");
-      const perfil = perfilSnap.data();
-
-      await addDoc(collection(db, "posts"), {
-        texto,
-        autor: perfil.username,
-        avatarURL: perfil.avatarURL || "",
-        timestamp: Date.now(),
-        likes: 0,
-        retweets: 0
-      });
-
-      postInput.value = "";
-      contador.textContent = "0 / 400";
-    });
-
-    async function cargarFeed() {
-      const feed = document.getElementById("feed");
-      const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-
-      onSnapshot(q, async (snapshot) => {
-        feed.innerHTML = "";
-        likedPosts.clear();
-        retweetedPosts.clear();
-
-        for (const docSnap of snapshot.docs) {
-          const post = docSnap.data();
-          const id = docSnap.id;
-
-          const autorNombre = post.autor || "Anon";
-
-          const comentariosCol = collection(db, "posts", id, "comentarios");
-          const comentariosSnap = await getDocs(comentariosCol);
-          let comentariosHTML = "";
-          for (const c of comentariosSnap.docs) {
-            const data = c.data();
-            comentariosHTML += `<div class="comentario"><b>@${data.autor}:</b> ${data.texto}</div>`;
-          }
-
-          const div = document.createElement("div");
-          div.className = "post";
-          div.innerHTML = `
-            <div class="autor">
-              <img class="avatar" src="${post.avatarURL || 'default-avatar.png'}" alt="avatar" />
-              <b>@${autorNombre}</b>
-            </div>
-            <p>${post.texto}</p>
-            <div class="acciones">
-              <button id="like-${id}" ${likedPosts.has(id) ? "disabled" : ""} title="Me gusta ❤️">❤️ ${post.likes}</button>
-              <button id="rt-${id}" ${retweetedPosts.has(id) ? "disabled" : ""} title="Retweet 🔁">🔁 ${post.retweets}</button>
-              <button id="share-${id}" class="share-btn" title="Compartir fuera">🔗</button>
-            </div>
-            <div class="comentarios-lista">${comentariosHTML}</div>
-            <div class="input-comentar">
-              <input type="text" id="input-${id}" placeholder="Comenta..." />
-              <button id="btn-comentar-${id}">Enviar</button>
-            </div>
-          `;
-
-          feed.appendChild(div);
-
-          document.getElementById(`like-${id}`).onclick = async () => {
-            if (likedPosts.has(id)) return;
-            likedPosts.add(id);
-
-            const ref = doc(db, "posts", id);
-            const snapPost = await getDoc(ref);
-            await updateDoc(ref, { likes: (snapPost.data().likes || 0) + 1 });
-
-            cargarFeed();
-          };
-
-          document.getElementById(`rt-${id}`).onclick = async () => {
-            if (retweetedPosts.has(id)) return;
-            retweetedPosts.add(id);
-
-            const ref = doc(db, "posts", id);
-            const snapPost = await getDoc(ref);
-            await updateDoc(ref, { retweets: (snapPost.data().retweets || 0) + 1 });
-
-            cargarFeed();
-          };
-
-          document.getElementById(`share-${id}`).onclick = () => {
-            const url = window.location.href + `#post-${id}`;
-            if (navigator.share) {
-              navigator.share({
-                title: `Post de @${autorNombre}`,
-                text: post.texto,
-                url
-              }).catch(console.error);
-            } else {
-              navigator.clipboard.writeText(url);
-              alert("Enlace copiado para compartir.");
-            }
-          };
-
-          document.getElementById(`btn-comentar-${id}`).onclick = async () => {
-            const input = document.getElementById(`input-${id}`);
-            const texto = input.value.trim();
-            if (!texto) return alert("Comentario vacío.");
-
-            const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
-            if (!perfilSnap.exists()) return alert("No se encontró tu perfil.");
-            const perfil = perfilSnap.data();
-
-            await addDoc(collection(db, "posts", id, "comentarios"), {
-              autor: perfil.username,
-              texto,
-              timestamp: Date.now()
-            });
-            input.value = "";
-            cargarFeed();
-          };
-        }
-      });
-    }
-  </script>
+  <script type="module" src="feed.js"></script>
 </body>
 </html>
