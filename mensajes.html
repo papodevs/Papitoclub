@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mensajes - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
+      padding-top: 70px; /* espacio para menú superior fijo */
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
-      font-family: sans-serif;
-      padding-top: 80px; /* espacio para menú fijo */
-      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      align-items: center;
+      min-height: 100vh;
     }
+
+    /* Menú superior 3D neón azul */
     .menu-superior {
       position: fixed;
       top: 0;
@@ -30,8 +32,8 @@
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 12px;
-      padding-right: 20px;
+      gap: 8px;
+      padding-right: 15px;
       z-index: 1000;
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
@@ -41,9 +43,9 @@
       background: none;
       border: none;
       color: #ccf9ff;
-      font-size: 1.4em;
+      font-size: 1.3em;
       cursor: pointer;
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
@@ -57,99 +59,159 @@
         0 0 30px #00e5ffaa;
     }
 
-    .menu-superior .alerta {
-      position: absolute;
-      top: 4px;
-      right: 10px;
-      background: #ff0033;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 6px;
-      box-shadow: 0 0 8px #ff0033aa;
-    }
-    .panel-central {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
+    /* Contenido */
+    .contenido {
       max-width: 700px;
-      margin: auto;
       width: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
     }
-    select, textarea, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #0ff;
-      background: #011;
-      color: #0ff;
-      font-family: inherit;
+
+    label, select, textarea, button {
       font-size: 1rem;
     }
-    button {
+
+    label {
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    select, textarea {
+      width: 100%;
+      background: #011;
+      color: #0ff;
+      border: 1px solid #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      box-sizing: border-box;
+      resize: none;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    select {
+      height: 38px;
+    }
+
+    textarea {
+      min-height: 80px;
+    }
+
+    button.enviar {
       background: #0ff;
       color: #000;
       font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
       cursor: pointer;
+      transition: background-color 0.2s ease;
+      user-select: none;
     }
-    .mensaje-carta {
+
+    button.enviar:disabled {
+      background: #055;
+      cursor: not-allowed;
+      color: #088;
+    }
+
+    /* Mensajes */
+    #mensajesContainer {
       background: #011;
-      border: 1px solid #0ff;
+      border: 2px solid #00e5ff;
       border-radius: 12px;
       padding: 10px;
-      margin: 10px 0;
-      box-shadow: 0 0 10px #0ff6;
+      max-height: 400px;
+      overflow-y: auto;
+      box-shadow: 0 0 15px #00e5ff66;
     }
-    .mensaje-carta h4 {
-      margin: 0 0 5px;
+
+    .mensaje {
+      background: #022;
+      border: 1px solid #00e5ffaa;
+      border-radius: 10px;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 0 8px #00e5ff99;
+      word-wrap: break-word;
+    }
+
+    .mensaje.own {
+      background: #004466;
+      border-color: #00ffffcc;
+      align-self: flex-end;
+      box-shadow: 0 0 10px #00ffffee;
+    }
+
+    .mensaje .autor {
+      font-weight: bold;
       color: #0ff;
+      margin-bottom: 4px;
+      user-select: text;
     }
-    .mensaje-carta p {
-      margin: 0;
-      color: #0ff;
+
+    .mensaje .fecha {
+      font-size: 0.75rem;
+      color: #66ffffaa;
+      text-align: right;
+      user-select: text;
     }
-    .mensaje-carta small {
-      color: #8ff;
-      font-size: 0.8em;
-      display: block;
-      margin-top: 4px;
+
+    @media (max-width: 480px) {
+      .contenido {
+        max-width: 100%;
+        padding: 15px;
+      }
+
+      .menu-superior button {
+        font-size: 1.1em;
+        padding: 6px 8px;
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="menu-superior">
+
+  <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">📜</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
-      ✉️<span id="noti" class="alerta" style="display:none;">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
-  </nav>
+  </div>
 
-  <main class="panel-central">
-    <h2>Enviar mensaje privado</h2>
+  <main class="contenido">
+    <h2>Mensajes Privados</h2>
+
     <label for="destinatario">Selecciona usuario:</label>
-    <select id="destinatario"><option value="">--Seleccionar--</option></select>
-    <textarea id="mensaje" rows="3" placeholder="Escribe tu mensaje..."></textarea>
-    <button onclick="enviarMensaje()">Enviar</button>
-    <div id="cartas"></div>
+    <select id="destinatario">
+      <option value="" disabled selected>-- Selecciona un usuario --</option>
+    </select>
+
+    <textarea id="mensaje" placeholder="Escribe tu mensaje..." maxlength="400"></textarea>
+    <button id="enviarBtn" class="enviar" disabled>Enviar</button>
+
+    <div id="mensajesContainer"></div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, collection, addDoc, query, orderBy,
-      onSnapshot, doc, getDoc, getDocs, updateDoc,
-      collectionGroup, where
+      getFirestore, collection, query, where, getDocs,
+      addDoc, orderBy, onSnapshot, doc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -157,101 +219,134 @@
     const db = getFirestore(app);
 
     let currentUser = null;
-    let currentUsername = null;
-    let selectedUser = null;
-    let unsubscribe = null;
+    let usuariosList = [];
+
+    const selectDest = document.getElementById("destinatario");
+    const mensajeInput = document.getElementById("mensaje");
+    const enviarBtn = document.getElementById("enviarBtn");
+    const mensajesContainer = document.getElementById("mensajesContainer");
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = "index.html";
-      currentUser = user;
-      const perfilSnap = await getDoc(doc(db, "users", user.uid));
-      if (perfilSnap.exists()) {
-        currentUsername = perfilSnap.data().username;
-        cargarUsuarios();
-        escucharNuevosMensajes();
+      if (!user) {
+        location.href = "index.html";
+        return;
       }
+      currentUser = user;
+
+      await cargarUsuarios();
+      configurarEventos();
     });
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
 
+    // Carga todos los usuarios (excepto el actual) para el select
     async function cargarUsuarios() {
-      const snap = await getDocs(collection(db, "users"));
-      const select = document.getElementById("destinatario");
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.username !== currentUsername) {
-          const opt = document.createElement("option");
-          opt.value = data.username;
-          opt.textContent = "@" + data.username;
-          select.appendChild(opt);
+      usuariosList = [];
+      const q = query(collection(db, "users"));
+      const snapshot = await getDocs(q);
+      selectDest.innerHTML = '<option value="" disabled selected>-- Selecciona un usuario --</option>';
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (docSnap.id !== currentUser.uid) {
+          usuariosList.push({ uid: docSnap.id, username: data.username });
+          const option = document.createElement("option");
+          option.value = docSnap.id;
+          option.textContent = data.username;
+          selectDest.appendChild(option);
         }
       });
-      select.addEventListener("change", () => {
-        selectedUser = select.value;
-        if (selectedUser) escucharMensajes(selectedUser);
+    }
+
+    // Escuchar cambios en destinatario para cargar mensajes
+    function configurarEventos() {
+      selectDest.addEventListener("change", () => {
+        mensajesContainer.innerHTML = "";
+        if (selectDest.value) {
+          cargarMensajes(selectDest.value);
+          enviarBtn.disabled = false;
+        } else {
+          enviarBtn.disabled = true;
+        }
+      });
+
+      enviarBtn.addEventListener("click", async () => {
+        const texto = mensajeInput.value.trim();
+        const destinatarioUid = selectDest.value;
+
+        if (!texto) {
+          alert("Escribe un mensaje.");
+          return;
+        }
+        if (!destinatarioUid) {
+          alert("Selecciona un destinatario.");
+          return;
+        }
+
+        // Guardar mensaje en Firestore en ambas colecciones para sender y receiver
+        const timestamp = Date.now();
+
+        // Mensajes: guardamos con doc ids basados en uid ordenados para tener única colección
+        const chatId = obtenerChatId(currentUser.uid, destinatarioUid);
+
+        const mensajesCol = collection(db, "chats", chatId, "mensajes");
+        await addDoc(mensajesCol, {
+          texto,
+          remitente: currentUser.uid,
+          destinatario: destinatarioUid,
+          timestamp
+        });
+
+        mensajeInput.value = "";
       });
     }
 
-    function getChatId(a, b) {
-      return [a, b].sort().join("_");
+    // ID único para chat entre dos usuarios ordenado (para evitar duplicados)
+    function obtenerChatId(uid1, uid2) {
+      return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
     }
 
-    function formatearHora(timestamp) {
-      const fecha = new Date(timestamp);
-      return fecha.toLocaleString("es-ES", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-    }
+    // Escuchar mensajes en tiempo real para chat actual
+    function cargarMensajes(destUid) {
+      const chatId = obtenerChatId(currentUser.uid, destUid);
+      const mensajesCol = collection(db, "chats", chatId, "mensajes");
+      const q = query(mensajesCol, orderBy("timestamp", "asc"));
 
-    function escucharMensajes(destino) {
-      const chatId = getChatId(currentUsername, destino);
-      const mensajesRef = collection(db, "privados", chatId, "mensajes");
-      const q = query(mensajesRef, orderBy("timestamp", "asc"));
+      // Limpiar listener anterior si existiera
+      if (window.mensajesListener) {
+        window.mensajesListener();
+      }
 
-      if (unsubscribe) unsubscribe();
-      unsubscribe = onSnapshot(q, async (snapshot) => {
-        const contenedor = document.getElementById("cartas");
-        contenedor.innerHTML = "";
+      window.mensajesListener = onSnapshot(q, (snapshot) => {
+        mensajesContainer.innerHTML = "";
         snapshot.forEach(docSnap => {
           const msg = docSnap.data();
-          const carta = document.createElement("div");
-          carta.className = "mensaje-carta";
-          carta.innerHTML = `
-            <h4>${msg.de === currentUsername ? "Yo ➡️ @" + msg.para : "@" + msg.de + " ➡️ Yo"}</h4>
-            <p>${msg.texto}</p>
-            <small>${formatearHora(msg.timestamp)}</small>
+          const esPropio = msg.remitente === currentUser.uid;
+          const div = document.createElement("div");
+          div.className = "mensaje";
+          if (esPropio) div.classList.add("own");
+          const fecha = new Date(msg.timestamp).toLocaleString();
+          div.innerHTML = `
+            <div class="autor">${esPropio ? "Tú" : getUsernameByUid(msg.remitente)}</div>
+            <div class="texto">${escapeHtml(msg.texto)}</div>
+            <div class="fecha">${fecha}</div>
           `;
-          contenedor.appendChild(carta);
-
-          if (msg.para === currentUsername && !msg.leido) {
-            updateDoc(docSnap.ref, { leido: true }).catch(console.error);
-          }
+          mensajesContainer.appendChild(div);
+          mensajesContainer.scrollTop = mensajesContainer.scrollHeight;
         });
       });
     }
 
-    window.enviarMensaje = async () => {
-      const texto = document.getElementById("mensaje").value.trim();
-      if (!selectedUser || !texto) return alert("Selecciona un usuario y escribe un mensaje");
+    // Obtener username desde UID
+    function getUsernameByUid(uid) {
+      const user = usuariosList.find(u => u.uid === uid);
+      return user ? user.username : uid;
+    }
 
-      const chatId = getChatId(currentUsername, selectedUser);
-      await addDoc(collection(db, "privados", chatId, "mensajes"), {
-        de: currentUsername,
-        para: selectedUser,
-        texto,
-        timestamp: Date.now(),
-        leido: false
-      });
-
-      document.getElementById("mensaje").value = "";
-    };
-
-    function escucharNuevosMensajes() {
-      const chatsRef = collectionGroup(db, "mensajes");
-      const q = query(chatsRef, where("para", "==", currentUsername), where("leido", "==", false));
-
-      onSnapshot(q, (snapshot) => {
-        const noti = document.getElementById("noti");
-        noti.style.display = snapshot.empty ? "none" : "inline";
-      });
+    // Escape para evitar XSS básico
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
     }
   </script>
 </body>
