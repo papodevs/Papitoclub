@@ -2,19 +2,15 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Historial - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mensajes - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
-      padding-top: 70px;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding-top: 70px;
     }
 
     .menu-superior {
@@ -45,135 +41,6 @@
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
-      flex-shrink: 0;
     }
 
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
-    }
-
-    main.contenido {
-      max-width: 700px;
-      width: 100%;
-      padding: 20px;
-      box-sizing: border-box;
-      flex: 1;
-    }
-
-    h2 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      text-align: center;
-    }
-
-    .historial-lista {
-      background: #011;
-      border: 2px solid #00e5ff;
-      border-radius: 15px;
-      box-shadow: 0 0 15px #00e5ff66;
-      padding: 15px;
-      max-height: 500px;
-      overflow-y: auto;
-      color: #0ff;
-    }
-
-    .historial-item {
-      border-bottom: 1px solid #00e5ff44;
-      padding: 10px;
-      font-size: 1em;
-      border-radius: 8px;
-      margin-bottom: 8px;
-    }
-
-    .enviado {
-      background-color: #fff;
-      color: #000;
-    }
-
-    .recibido {
-      background-color: #0099cc;
-      color: #fff;
-    }
-
-    .fecha {
-      font-size: 0.85em;
-      opacity: 0.8;
-      margin-bottom: 4px;
-    }
-  </style>
-</head>
-<body>
-  <div class="menu-superior">
-    <button onclick="location.href='home.html'">🏠</button>
-    <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">📜</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
-    <button onclick="logout()">🚪</button>
-  </div>
-
-  <main class="contenido">
-    <h2>Historial de Mensajes</h2>
-    <div class="historial-lista" id="historialLista">Cargando historial...</div>
-  </main>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "1016897274452",
-      appId: "1:1016897274452:web:9b096128cbb136357763c1"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const historialLista = document.getElementById("historialLista");
-
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        location.href = "index.html";
-        return;
-      }
-
-      const mensajesRef = collection(db, "mensajes");
-      const q = query(mensajesRef, where("participantes", "array-contains", user.uid), orderBy("timestamp", "desc"));
-
-      onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
-          historialLista.textContent = "No hay mensajes.";
-          return;
-        }
-
-        historialLista.innerHTML = "";
-        snapshot.docs.forEach(docSnap => {
-          const data = docSnap.data();
-          const fecha = new Date(data.timestamp);
-          const fechaStr = fecha.toLocaleString("es-ES", {
-            year: "numeric", month: "short", day: "numeric",
-            hour: "2-digit", minute: "2-digit"
-          });
-
-          const div = document.createElement("div");
-          div.className = `historial-item ${data.de === user.uid ? 'enviado' : 'recibido'}`;
-          div.innerHTML = `<div class="fecha">${fechaStr}</div><div><strong>${data.de === user.uid ? 'Tú' : 'Otro'}:</strong> ${data.texto}</div>`;
-          historialLista.appendChild(div);
-        });
-      });
-    });
-
-    window.logout = () => {
-      signOut(auth).then(() => {
-        location.href = "index.html";
-      });
-    };
-  </script>
-</body>
-</html>
+    .menu-superior
