@@ -84,6 +84,11 @@
       padding: 15px;
       border-radius: 15px;
       margin-top: 15px;
+      transition: transform 0.3s ease;
+    }
+
+    .post:hover {
+      transform: scale(1.01);
     }
 
     .autor {
@@ -110,36 +115,12 @@
       font-size: 1em;
       cursor: pointer;
       font-weight: bold;
+      transition: transform 0.2s, text-shadow 0.3s;
     }
 
-    .comentario {
-      font-size: 0.9em;
-      color: #8ff;
-    }
-
-    .input-comentar {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-    }
-
-    .input-comentar input {
-      flex: 1;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #0ff;
-      background: #011;
-      color: #0ff;
-    }
-
-    .input-comentar button {
-      background: #0ff;
-      color: #000;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
+    .acciones button:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 0 6px #0ff;
     }
 
     #contador {
@@ -181,15 +162,18 @@
       doc,
       getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const app = initializeApp({
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com"
     });
 
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     let currentUser = null;
 
@@ -210,6 +194,7 @@
       await addDoc(collection(db, "posts"), {
         texto,
         autor: currentUser.email,
+        uid: currentUser.uid,
         timestamp: Date.now(),
         likes: [],
         retweets: []
@@ -228,17 +213,23 @@
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
 
-      querySnapshot.forEach((docSnap) => {
+      for (const docSnap of querySnapshot.docs) {
         const post = docSnap.data();
         const postId = docSnap.id;
         const fecha = new Date(post.timestamp).toLocaleString();
-        const yaLike = post.likes?.includes(currentUser.uid);
-        const yaRT = post.retweets?.includes(currentUser.uid);
+
+        let avatarURL = "default-avatar.png";
+        const userDoc = await getDoc(doc(db, "users", post.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.avatarURL) avatarURL = userData.avatarURL;
+        }
+
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
           <div class="autor">
-            <img class="avatar" src="default-avatar.png" />
+            <img class="avatar" src="${avatarURL}" />
             <b>${post.autor}</b>
           </div>
           <p>${post.texto}</p>
@@ -250,7 +241,7 @@
           </div>
         `;
         feed.appendChild(div);
-      });
+      }
     }
 
     window.likePost = async function (id) {
