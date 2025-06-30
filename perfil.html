@@ -71,11 +71,11 @@
       gap: 15px;
     }
 
-    h2 {
+    h2, h3 {
       margin-top: 0;
     }
 
-    .perfil-info {
+    .perfil-info, .perfil-editar {
       background: #011;
       border: 2px solid #00e5ff;
       border-radius: 15px;
@@ -109,7 +109,7 @@
       color: #66ffffcc;
     }
 
-    button.cerrar-sesion {
+    button.cerrar-sesion, button.guardar-cambios {
       align-self: center;
       background: #0ff;
       color: #000;
@@ -122,8 +122,56 @@
       user-select: none;
     }
 
-    button.cerrar-sesion:hover {
+    button.cerrar-sesion:hover, button.guardar-cambios:hover {
       background: #33ffff;
+    }
+
+    /* Formulario edición */
+    .perfil-editar form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .perfil-editar label {
+      font-weight: bold;
+      color: #0ff;
+      margin-bottom: 4px;
+    }
+
+    .perfil-editar input[type="text"],
+    .perfil-editar textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+      font-size: 1em;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+
+    .perfil-editar textarea {
+      min-height: 80px;
+    }
+
+    .perfil-editar input[type="file"] {
+      border: none;
+      padding: 4px;
+      background: #011;
+      color: #0ff;
+      border-radius: 8px;
+      font-size: 1em;
+    }
+
+    .mensaje-estado {
+      font-size: 0.9em;
+      color: #0ff;
+      text-align: center;
+      min-height: 1.2em;
+      user-select: none;
     }
 
     @media (max-width: 480px) {
@@ -167,12 +215,38 @@
     </section>
 
     <button class="cerrar-sesion" onclick="logout()">Cerrar sesión</button>
+
+    <!-- Nueva tarjeta para editar perfil -->
+    <section class="perfil-editar">
+      <h3>Editar Perfil</h3>
+      <form id="formEditarPerfil">
+        <label for="inputNick">Nick (Usuario):</label>
+        <input type="text" id="inputNick" name="nick" maxlength="30" placeholder="Tu nick de usuario" />
+
+        <label for="inputAvatarURL">URL Foto de Perfil (opcional):</label>
+        <input type="text" id="inputAvatarURL" name="avatarURL" placeholder="URL de tu avatar" />
+
+        <label for="inputAvatarFile">O subir imagen de perfil:</label>
+        <input type="file" id="inputAvatarFile" accept="image/*" />
+
+        <label for="inputBio">Biografía:</label>
+        <textarea id="inputBio" name="bio" maxlength="200" placeholder="Pequeña descripción o biografía"></textarea>
+
+        <label for="inputURL">URL Personal:</label>
+        <input type="text" id="inputURL" name="urlPersonal" placeholder="Tu página personal o redes" />
+
+        <div class="mensaje-estado" id="mensajeEstado"></div>
+
+        <button type="submit" class="guardar-cambios">Guardar Cambios</button>
+      </form>
+    </section>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -186,16 +260,28 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     const avatarEl = document.getElementById("avatar");
     const nombreEl = document.getElementById("nombreUsuario");
     const emailEl = document.getElementById("emailUsuario");
+
+    const inputNick = document.getElementById("inputNick");
+    const inputAvatarURL = document.getElementById("inputAvatarURL");
+    const inputAvatarFile = document.getElementById("inputAvatarFile");
+    const inputBio = document.getElementById("inputBio");
+    const inputURL = document.getElementById("inputURL");
+    const formEditarPerfil = document.getElementById("formEditarPerfil");
+    const mensajeEstado = document.getElementById("mensajeEstado");
+
+    let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         location.href = "index.html";
         return;
       }
+      currentUser = user;
 
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -204,6 +290,11 @@
           avatarEl.src = data.avatarURL || "default-avatar.png";
           nombreEl.textContent = data.username || user.email || "Usuario";
           emailEl.textContent = user.email || "";
+
+          inputNick.value = data.username || "";
+          inputAvatarURL.value = data.avatarURL || "";
+          inputBio.value = data.bio || "";
+          inputURL.value = data.urlPersonal || "";
         } else {
           nombreEl.textContent = user.email || "Usuario";
           emailEl.textContent = "";
@@ -212,6 +303,54 @@
       } catch (error) {
         console.error("Error al cargar perfil:", error);
         nombreEl.textContent = "Error al cargar perfil";
+      }
+    });
+
+    formEditarPerfil.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      mensajeEstado.textContent = "";
+      if (!currentUser) return alert("No estás autenticado.");
+
+      const nuevoNick = inputNick.value.trim();
+      const urlAvatarManual = inputAvatarURL.value.trim();
+      const archivoAvatar = inputAvatarFile.files[0];
+      const nuevaBio = inputBio.value.trim();
+      const nuevaURL = inputURL.value.trim();
+
+      if (!nuevoNick) {
+        alert("El nick no puede estar vacío.");
+        return;
+      }
+
+      mensajeEstado.textContent = "Guardando cambios...";
+
+      try {
+        let avatarURLFinal = urlAvatarManual || null;
+
+        // Si hay archivo de imagen para subir, subirlo y obtener URL
+        if (archivoAvatar) {
+          const storageRef = ref(storage, `avatars/${currentUser.uid}/${archivoAvatar.name}`);
+          await uploadBytes(storageRef, archivoAvatar);
+          avatarURLFinal = await getDownloadURL(storageRef);
+        }
+
+        // Guardar en Firestore
+        await setDoc(doc(db, "users", currentUser.uid), {
+          username: nuevoNick,
+          avatarURL: avatarURLFinal,
+          bio: nuevaBio,
+          urlPersonal: nuevaURL
+        }, { merge: true });
+
+        // Actualizar UI
+        nombreEl.textContent = nuevoNick;
+        avatarEl.src = avatarURLFinal || "default-avatar.png";
+        inputAvatarURL.value = avatarURLFinal || "";
+        inputAvatarFile.value = "";
+        mensajeEstado.textContent = "Perfil actualizado con éxito.";
+      } catch (error) {
+        console.error("Error al guardar perfil:", error);
+        mensajeEstado.textContent = "Error al guardar perfil.";
       }
     });
 
