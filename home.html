@@ -175,6 +175,8 @@
       collection,
       addDoc,
       getDocs,
+      getDoc,
+      doc,
       query,
       orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -207,6 +209,7 @@
       await addDoc(collection(db, "posts"), {
         texto,
         autor: currentUser.email,
+        uid: currentUser.uid,
         timestamp: Date.now()
       });
       postInput.value = "";
@@ -223,19 +226,96 @@
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
       const querySnapshot = await getDocs(q);
 
-      querySnapshot.forEach((doc) => {
-        const post = doc.data();
+      for (const docSnap of querySnapshot.docs) {
+        const post = docSnap.data();
+        const userDoc = await getDoc(doc(db, "users", post.uid));
+        const avatarURL = userDoc.exists() ? userDoc.data().avatarURL || "default-avatar.png" : "default-avatar.png";
+        const fecha = new Date(post.timestamp).toLocaleString("es-ES");
+
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
-          <div class="autor"><img class="avatar" src="default-avatar.png" /><b>${post.autor}</b></div>
+          <div class="autor">
+            <img class="avatar" src="${avatarURL}" />
+            <b>${post.autor}</b>
+          </div>
           <p>${post.texto}</p>
+          <div style="font-size: 0.8em; color: #88f;">${fecha}</div>
+          <div class="acciones">
+            <button onclick="compartir('${encodeURIComponent(post.texto)}')">📤 Compartir</button>
+          </div>
         `;
         feed.appendChild(div);
-      });
+      }
     }
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
+
+    window.compartir = (texto) => {
+      const mensaje = decodeURIComponent(texto) + "\n\n(by. Papoclub/socialmedia)";
+      const urlActual = window.location.href;
+      const shareUrl = encodeURIComponent(mensaje + "\n\n" + urlActual);
+
+      const ventana = window.open("", "_blank", "width=360,height=520");
+
+      if (ventana) {
+        ventana.document.write(`
+          <html><head><title>Compartir</title>
+            <style>
+              body {
+                background: linear-gradient(135deg, #011, #044);
+                color: #0ff;
+                font-family: 'Segoe UI', sans-serif;
+                text-align: center;
+                padding: 25px;
+              }
+              h3 {
+                margin-bottom: 20px;
+              }
+              .icono {
+                display: inline-block;
+                width: 80px;
+                height: 80px;
+                margin: 12px;
+                border-radius: 18px;
+                box-shadow: 0 0 10px #0ff88a;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.2em;
+                cursor: pointer;
+                transition: transform 0.2s ease, box-shadow 0.3s ease;
+                text-decoration: none;
+              }
+              .icono:hover {
+                transform: scale(1.1);
+                box-shadow: 0 0 20px #0ff, 0 0 30px #0ff88a;
+              }
+              .twitter { background: #1DA1F2; color: white; }
+              .facebook { background: #3b5998; color: white; }
+              .telegram { background: #0088cc; color: white; }
+              .whatsapp { background: #25D366; color: white; }
+              p.firma {
+                font-size: 0.85em;
+                margin-top: 25px;
+                color: #88f;
+              }
+            </style>
+          </head>
+          <body>
+            <h3>Compartir en redes</h3>
+            <a class="icono twitter" href="https://twitter.com/intent/tweet?text=${shareUrl}" target="_blank" title="Compartir en X">X</a>
+            <a class="icono facebook" href="https://www.facebook.com/sharer/sharer.php?u=${urlActual}&quote=${shareUrl}" target="_blank" title="Compartir en Facebook">f</a>
+            <a class="icono telegram" href="https://t.me/share/url?url=${urlActual}&text=${shareUrl}" target="_blank" title="Compartir en Telegram">✈️</a>
+            <a class="icono whatsapp" href="https://api.whatsapp.com/send?text=${shareUrl}" target="_blank" title="Compartir en WhatsApp">💬</a>
+            <p class="firma">(by. Papoclub/socialmedia)</p>
+          </body>
+          </html>
+        `);
+      } else {
+        alert("No se pudo abrir la ventana emergente.");
+      }
+    };
   </script>
 </body>
 </html>
