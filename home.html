@@ -102,6 +102,10 @@
       box-shadow: 0 0 6px #0ff;
     }
 
+    .acciones {
+      margin-top: 10px;
+    }
+
     .acciones button {
       background: none;
       color: #0ff;
@@ -112,34 +116,10 @@
       font-weight: bold;
     }
 
-    .comentario {
-      font-size: 0.9em;
-      color: #8ff;
-    }
-
-    .input-comentar {
-      margin-top: 8px;
-      display: flex;
-      gap: 6px;
-    }
-
-    .input-comentar input {
-      flex: 1;
-      padding: 8px;
-      border-radius: 6px;
-      border: 1px solid #0ff;
-      background: #011;
-      color: #0ff;
-    }
-
-    .input-comentar button {
-      background: #0ff;
-      color: #000;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
+    .fecha-hora {
+      font-size: 0.8em;
+      color: #88f;
+      margin-top: 5px;
     }
 
     #contador {
@@ -208,8 +188,7 @@
 
       await addDoc(collection(db, "posts"), {
         texto,
-        autor: currentUser.email,
-        uid: currentUser.uid,
+        autor: currentUser.uid,
         timestamp: Date.now()
       });
       postInput.value = "";
@@ -224,98 +203,38 @@
     async function cargarPosts() {
       feed.innerHTML = "";
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-      const querySnapshot = await getDocs(q);
+      const snapshot = await getDocs(q);
 
-      for (const docSnap of querySnapshot.docs) {
+      for (const docSnap of snapshot.docs) {
         const post = docSnap.data();
-        const userDoc = await getDoc(doc(db, "users", post.uid));
-        const avatarURL = userDoc.exists() ? userDoc.data().avatarURL || "default-avatar.png" : "default-avatar.png";
         const fecha = new Date(post.timestamp).toLocaleString("es-ES");
+        const userDoc = await getDoc(doc(db, "users", post.autor));
+        const usuario = userDoc.exists() ? userDoc.data() : { username: "Usuario", avatarURL: "default-avatar.png" };
 
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
           <div class="autor">
-            <img class="avatar" src="${avatarURL}" />
-            <b>${post.autor}</b>
+            <img class="avatar" src="${usuario.avatarURL || "default-avatar.png"}" />
+            <b>${usuario.username || "Usuario"}</b>
           </div>
           <p>${post.texto}</p>
-          <div style="font-size: 0.8em; color: #88f;">${fecha}</div>
+          <div class="fecha-hora">${fecha}</div>
           <div class="acciones">
-            <button onclick="compartir('${encodeURIComponent(post.texto)}')">📤 Compartir</button>
+            <button onclick="compartir('${post.texto.replace(/'/g, "\\'")}')">🔗 Compartir</button>
           </div>
         `;
         feed.appendChild(div);
       }
     }
 
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
-
     window.compartir = (texto) => {
-      const mensaje = decodeURIComponent(texto) + "\n\n(by. Papoclub/socialmedia)";
-      const urlActual = window.location.href;
-      const shareUrl = encodeURIComponent(mensaje + "\n\n" + urlActual);
-
-      const ventana = window.open("", "_blank", "width=360,height=520");
-
-      if (ventana) {
-        ventana.document.write(`
-          <html><head><title>Compartir</title>
-            <style>
-              body {
-                background: linear-gradient(135deg, #011, #044);
-                color: #0ff;
-                font-family: 'Segoe UI', sans-serif;
-                text-align: center;
-                padding: 25px;
-              }
-              h3 {
-                margin-bottom: 20px;
-              }
-              .icono {
-                display: inline-block;
-                width: 80px;
-                height: 80px;
-                margin: 12px;
-                border-radius: 18px;
-                box-shadow: 0 0 10px #0ff88a;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 2.2em;
-                cursor: pointer;
-                transition: transform 0.2s ease, box-shadow 0.3s ease;
-                text-decoration: none;
-              }
-              .icono:hover {
-                transform: scale(1.1);
-                box-shadow: 0 0 20px #0ff, 0 0 30px #0ff88a;
-              }
-              .twitter { background: #1DA1F2; color: white; }
-              .facebook { background: #3b5998; color: white; }
-              .telegram { background: #0088cc; color: white; }
-              .whatsapp { background: #25D366; color: white; }
-              p.firma {
-                font-size: 0.85em;
-                margin-top: 25px;
-                color: #88f;
-              }
-            </style>
-          </head>
-          <body>
-            <h3>Compartir en redes</h3>
-            <a class="icono twitter" href="https://twitter.com/intent/tweet?text=${shareUrl}" target="_blank" title="Compartir en X">X</a>
-            <a class="icono facebook" href="https://www.facebook.com/sharer/sharer.php?u=${urlActual}&quote=${shareUrl}" target="_blank" title="Compartir en Facebook">f</a>
-            <a class="icono telegram" href="https://t.me/share/url?url=${urlActual}&text=${shareUrl}" target="_blank" title="Compartir en Telegram">✈️</a>
-            <a class="icono whatsapp" href="https://api.whatsapp.com/send?text=${shareUrl}" target="_blank" title="Compartir en WhatsApp">💬</a>
-            <p class="firma">(by. Papoclub/socialmedia)</p>
-          </body>
-          </html>
-        `);
-      } else {
-        alert("No se pudo abrir la ventana emergente.");
-      }
+      const mensaje = encodeURIComponent(`${texto}\n\n(by. Papoclub/socialmedia)`);
+      const url = `https://api.whatsapp.com/send?text=${mensaje}`;
+      window.open(url, "_blank");
     };
+
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
   </script>
 </body>
 </html>
