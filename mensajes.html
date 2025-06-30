@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <title>Mensajes - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
+      padding-top: 70px;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       font-family: 'Segoe UI', sans-serif;
-      padding-top: 70px;
     }
 
     .menu-superior {
@@ -40,7 +40,200 @@
       padding: 6px 12px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
 
-    .menu-superior
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    select, textarea, button {
+      width: 100%;
+      font-size: 1em;
+      margin-top: 10px;
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+
+    button.enviar {
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .mensajes {
+      margin-top: 20px;
+      background: #011;
+      border: 2px solid #00e5ff;
+      border-radius: 12px;
+      padding: 15px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .mensaje {
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .enviado {
+      background: #00f2ff33;
+      text-align: right;
+    }
+
+    .recibido {
+      background: #ffffff22;
+      text-align: left;
+    }
+
+    .fecha {
+      font-size: 0.8em;
+      color: #aaa;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="menu-superior">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">📜</button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="logout()">🚪</button>
+  </div>
+
+  <div class="container">
+    <h2>Mensajes Privados</h2>
+    <select id="destinatarioSelect">
+      <option disabled selected>Selecciona un destinatario</option>
+    </select>
+    <textarea id="mensajeInput" placeholder="Escribe tu mensaje..."></textarea>
+    <button class="enviar" onclick="enviarMensaje()">Enviar</button>
+
+    <div class="mensajes" id="mensajeContainer">
+      <!-- Aquí se cargan los mensajes -->
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      query,
+      where,
+      orderBy,
+      onSnapshot,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "1016897274452",
+      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let usuarioActual = null;
+
+    const mensajeInput = document.getElementById("mensajeInput");
+    const destinatarioSelect = document.getElementById("destinatarioSelect");
+    const mensajeContainer = document.getElementById("mensajeContainer");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      usuarioActual = user;
+      cargarUsuarios();
+    });
+
+    async function cargarUsuarios() {
+      const usersSnap = await getDocs(collection(db, "users"));
+      usersSnap.forEach(doc => {
+        if (doc.id !== usuarioActual.uid) {
+          const data = doc.data();
+          const option = document.createElement("option");
+          option.value = doc.id;
+          option.textContent = data.username || data.email || "Usuario";
+          destinatarioSelect.appendChild(option);
+        }
+      });
+
+      destinatarioSelect.addEventListener("change", () => {
+        mensajeContainer.innerHTML = "";
+        cargarMensajes(destinatarioSelect.value);
+      });
+    }
+
+    async function enviarMensaje() {
+      const texto = mensajeInput.value.trim();
+      const destinatario = destinatarioSelect.value;
+      if (!texto || !destinatario) return;
+
+      await addDoc(collection(db, "mensajesPrivados"), {
+        texto,
+        de: usuarioActual.uid,
+        para: destinatario,
+        timestamp: Date.now()
+      });
+
+      mensajeInput.value = "";
+    }
+
+    function cargarMensajes(destinatarioID) {
+      const q = query(
+        collection(db, "mensajesPrivados"),
+        where("de", "in", [usuarioActual.uid, destinatarioID]),
+        orderBy("timestamp", "asc")
+      );
+
+      onSnapshot(q, snapshot => {
+        mensajeContainer.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const esParaMi = data.para === usuarioActual.uid && data.de === destinatarioID;
+          const esMio = data.de === usuarioActual.uid && data.para === destinatarioID;
+
+          if (esParaMi || esMio) {
+            const div = document.createElement("div");
+            div.className = `mensaje ${esMio ? 'enviado' : 'recibido'}`;
+            const fecha = new Date(data.timestamp).toLocaleString("es-ES");
+            div.innerHTML = `<div>${data.texto}</div><div class="fecha">${fecha}</div>`;
+            mensajeContainer.appendChild(div);
+          }
+        });
+
+        mensajeContainer.scrollTop = mensajeContainer.scrollHeight;
+      });
+    }
+
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
+  </script>
+</body>
+</html>
