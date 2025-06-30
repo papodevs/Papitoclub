@@ -40,6 +40,7 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
     }
 
     .menu-superior button:hover {
@@ -101,24 +102,44 @@
       box-shadow: 0 0 6px #0ff;
     }
 
-    .acciones {
-      margin-top: 10px;
-      display: flex;
-      gap: 15px;
-    }
-
     .acciones button {
       background: none;
-      border: none;
       color: #0ff;
-      cursor: pointer;
+      border: none;
+      margin-right: 15px;
       font-size: 1em;
+      cursor: pointer;
+      font-weight: bold;
     }
 
-    .fecha {
-      font-size: 0.8em;
-      color: #88ffffaa;
+    .comentario {
+      font-size: 0.9em;
+      color: #8ff;
+    }
+
+    .input-comentar {
       margin-top: 8px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .input-comentar input {
+      flex: 1;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+
+    .input-comentar button {
+      background: #0ff;
+      color: #000;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
     }
 
     #contador {
@@ -148,11 +169,17 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getFirestore, collection, addDoc, getDocs, query, orderBy, doc, updateDoc, getDoc
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      updateDoc,
+      doc,
+      getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const app = initializeApp({
@@ -164,18 +191,19 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    let currentUser = null;
+
     const postInput = document.getElementById("postInput");
     const contador = document.getElementById("contador");
     const feed = document.getElementById("feed");
-    let currentUser = null;
 
-    onAuthStateChanged(auth, async user => {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
       cargarPosts();
     });
 
-    document.getElementById("publicarBtn").onclick = async () => {
+    document.getElementById("publicarBtn").addEventListener("click", async () => {
       const texto = postInput.value.trim();
       if (!texto) return;
 
@@ -186,11 +214,10 @@
         likes: [],
         retweets: []
       });
-
       postInput.value = "";
       contador.textContent = "0 / 400";
       cargarPosts();
-    };
+    });
 
     postInput.addEventListener("input", () => {
       contador.textContent = `${postInput.value.length} / 400`;
@@ -199,21 +226,14 @@
     async function cargarPosts() {
       feed.innerHTML = "";
       const q = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-      const posts = await getDocs(q);
+      const querySnapshot = await getDocs(q);
 
-      for (const docSnap of posts.docs) {
+      querySnapshot.forEach((docSnap) => {
         const post = docSnap.data();
         const postId = docSnap.id;
-
-        const fecha = new Date(post.timestamp);
-        const fechaStr = fecha.toLocaleString("es-ES", {
-          year: "numeric", month: "short", day: "numeric",
-          hour: "2-digit", minute: "2-digit"
-        });
-
-        const liked = post.likes?.includes(currentUser.uid);
-        const retweeted = post.retweets?.includes(currentUser.uid);
-
+        const fecha = new Date(post.timestamp).toLocaleString();
+        const yaLike = post.likes?.includes(currentUser.uid);
+        const yaRT = post.retweets?.includes(currentUser.uid);
         const div = document.createElement("div");
         div.className = "post";
         div.innerHTML = `
@@ -222,55 +242,43 @@
             <b>${post.autor}</b>
           </div>
           <p>${post.texto}</p>
-          <div class="fecha">${fechaStr}</div>
+          <small>${fecha}</small>
           <div class="acciones">
             <button onclick="likePost('${postId}')">❤️ ${post.likes?.length || 0}</button>
             <button onclick="retweetPost('${postId}')">🔁 ${post.retweets?.length || 0}</button>
-            <button onclick="sharePost('${post.texto}')">📤</button>
+            <button onclick="sharePost('${encodeURIComponent(post.texto)}')">📤 Compartir</button>
           </div>
         `;
         feed.appendChild(div);
+      });
+    }
+
+    window.likePost = async function (id) {
+      const ref = doc(db, "posts", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      if (!data.likes.includes(currentUser.uid)) {
+        await updateDoc(ref, { likes: [...data.likes, currentUser.uid] });
+        cargarPosts();
       }
     }
 
-    window.likePost = async (postId) => {
-      const ref = doc(db, "posts", postId);
-      const docSnap = await getDoc(ref);
-      const data = docSnap.data();
-      const likes = data.likes || [];
-      if (!likes.includes(currentUser.uid)) {
-        likes.push(currentUser.uid);
-        await updateDoc(ref, { likes });
+    window.retweetPost = async function (id) {
+      const ref = doc(db, "posts", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      if (!data.retweets.includes(currentUser.uid)) {
+        await updateDoc(ref, { retweets: [...data.retweets, currentUser.uid] });
         cargarPosts();
       }
-    };
+    }
 
-    window.retweetPost = async (postId) => {
-      const ref = doc(db, "posts", postId);
-      const docSnap = await getDoc(ref);
-      const data = docSnap.data();
-      const retweets = data.retweets || [];
-      if (!retweets.includes(currentUser.uid)) {
-        retweets.push(currentUser.uid);
-        await updateDoc(ref, { retweets });
-        cargarPosts();
-      }
-    };
-
-    window.sharePost = (texto) => {
-      const firma = "\n(by.Papoclub/socialmedia)";
-      const mensaje = encodeURIComponent(`${texto} ${firma}`);
-      const url = encodeURIComponent(window.location.href);
-
-      const opciones = `
-        <a href="https://twitter.com/intent/tweet?text=${mensaje}" target="_blank">X</a> |
-        <a href="https://www.facebook.com/sharer/sharer.php?u=${url}" target="_blank">Facebook</a> |
-        <a href="https://t.me/share/url?url=${url}&text=${mensaje}" target="_blank">Telegram</a> |
-        <a href="https://api.whatsapp.com/send?text=${mensaje}" target="_blank">WhatsApp</a>
-      `;
-      const win = window.open("", "Compartir", "width=400,height=300");
-      win.document.write(`<h3>Compartir publicación</h3><p>${opciones}</p>`);
-    };
+    window.sharePost = function (texto) {
+      const mensaje = decodeURIComponent(texto) + "\n\n(by.Papoclub/socialmedia)";
+      const url = encodeURIComponent(mensaje);
+      const compartirURL = `https://x.com/intent/tweet?text=${url}`;
+      window.open(compartirURL, "_blank", "width=600,height=400");
+    }
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
   </script>
