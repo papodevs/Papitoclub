@@ -17,7 +17,6 @@
       min-height: 100vh;
     }
 
-    /* Menú superior 3D neón azul */
     .menu-superior {
       position: fixed;
       top: 0;
@@ -59,7 +58,6 @@
         0 0 30px #00e5ffaa;
     }
 
-    /* Contenido perfil */
     main.contenido {
       max-width: 700px;
       width: 100%;
@@ -86,6 +84,11 @@
       align-items: center;
       gap: 15px;
       user-select: none;
+    }
+
+    .perfil-editar {
+      /* Oculto por defecto, se muestra solo para el usuario autenticado */
+      display: none;
     }
 
     .avatar {
@@ -126,7 +129,6 @@
       background: #33ffff;
     }
 
-    /* Formulario edición */
     .perfil-editar form {
       width: 100%;
       display: flex;
@@ -212,12 +214,14 @@
       <img id="avatar" class="avatar" src="default-avatar.png" alt="Avatar" />
       <div class="usuario-nombre" id="nombreUsuario">Cargando...</div>
       <div class="usuario-email" id="emailUsuario"></div>
+      <div id="bioUsuario" style="color:#66ffffcc; margin-top:8px; max-width:90%; text-align:center;"></div>
+      <a id="urlPersonal" href="#" target="_blank" rel="noopener" style="color:#0ff; font-weight:bold; margin-top:8px; display:none;"></a>
     </section>
 
     <button class="cerrar-sesion" onclick="logout()">Cerrar sesión</button>
 
-    <!-- Nueva tarjeta para editar perfil -->
-    <section class="perfil-editar">
+    <!-- Solo se muestra al usuario autenticado -->
+    <section class="perfil-editar" id="seccionEditarPerfil">
       <h3>Editar Perfil</h3>
       <form id="formEditarPerfil">
         <label for="inputNick">Nick (Usuario):</label>
@@ -265,6 +269,10 @@
     const avatarEl = document.getElementById("avatar");
     const nombreEl = document.getElementById("nombreUsuario");
     const emailEl = document.getElementById("emailUsuario");
+    const bioEl = document.getElementById("bioUsuario");
+    const urlPersonalEl = document.getElementById("urlPersonal");
+
+    const seccionEditarPerfil = document.getElementById("seccionEditarPerfil");
 
     const inputNick = document.getElementById("inputNick");
     const inputAvatarURL = document.getElementById("inputAvatarURL");
@@ -287,18 +295,40 @@
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
+
+          // Actualizar tarjeta de perfil
           avatarEl.src = data.avatarURL || "default-avatar.png";
           nombreEl.textContent = data.username || user.email || "Usuario";
           emailEl.textContent = user.email || "";
+          bioEl.textContent = data.bio || "";
+          if (data.urlPersonal) {
+            urlPersonalEl.href = data.urlPersonal;
+            urlPersonalEl.textContent = data.urlPersonal;
+            urlPersonalEl.style.display = "block";
+          } else {
+            urlPersonalEl.style.display = "none";
+          }
 
-          inputNick.value = data.username || "";
-          inputAvatarURL.value = data.avatarURL || "";
-          inputBio.value = data.bio || "";
-          inputURL.value = data.urlPersonal || "";
+          // Rellenar inputs sólo si es el usuario autenticado
+          if (user.uid === currentUser.uid) {
+            seccionEditarPerfil.style.display = "flex";
+
+            inputNick.value = data.username || "";
+            inputAvatarURL.value = data.avatarURL || "";
+            inputBio.value = data.bio || "";
+            inputURL.value = data.urlPersonal || "";
+          } else {
+            seccionEditarPerfil.style.display = "none";
+          }
+
         } else {
+          // Perfil sin datos adicionales
+          avatarEl.src = "default-avatar.png";
           nombreEl.textContent = user.email || "Usuario";
           emailEl.textContent = "";
-          avatarEl.src = "default-avatar.png";
+          bioEl.textContent = "";
+          urlPersonalEl.style.display = "none";
+          seccionEditarPerfil.style.display = "flex"; // En este caso perfil propio también visible
         }
       } catch (error) {
         console.error("Error al cargar perfil:", error);
@@ -327,14 +357,12 @@
       try {
         let avatarURLFinal = urlAvatarManual || null;
 
-        // Si hay archivo de imagen para subir, subirlo y obtener URL
         if (archivoAvatar) {
           const storageRef = ref(storage, `avatars/${currentUser.uid}/${archivoAvatar.name}`);
           await uploadBytes(storageRef, archivoAvatar);
           avatarURLFinal = await getDownloadURL(storageRef);
         }
 
-        // Guardar en Firestore
         await setDoc(doc(db, "users", currentUser.uid), {
           username: nuevoNick,
           avatarURL: avatarURLFinal,
@@ -342,9 +370,18 @@
           urlPersonal: nuevaURL
         }, { merge: true });
 
-        // Actualizar UI
-        nombreEl.textContent = nuevoNick;
+        // Actualizar tarjeta de perfil inmediatamente
         avatarEl.src = avatarURLFinal || "default-avatar.png";
+        nombreEl.textContent = nuevoNick;
+        bioEl.textContent = nuevaBio;
+        if (nuevaURL) {
+          urlPersonalEl.href = nuevaURL;
+          urlPersonalEl.textContent = nuevaURL;
+          urlPersonalEl.style.display = "block";
+        } else {
+          urlPersonalEl.style.display = "none";
+        }
+
         inputAvatarURL.value = avatarURLFinal || "";
         inputAvatarFile.value = "";
         mensajeEstado.textContent = "Perfil actualizado con éxito.";
