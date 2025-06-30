@@ -2,18 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Historial - Papoclub</title>
+  <title>Historial de Mensajes - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
       padding-top: 70px;
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh;
     }
 
     .menu-superior {
@@ -23,14 +24,15 @@
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
       padding-right: 15px;
       z-index: 1000;
-      border-bottom: 1px solid #00e5ffcc;
       backdrop-filter: blur(10px);
+      border-bottom: 1px solid #00e5ffcc;
     }
 
     .menu-superior button {
@@ -41,6 +43,12 @@
       cursor: pointer;
       padding: 6px 12px;
       border-radius: 12px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
     main {
@@ -52,32 +60,47 @@
 
     h2 {
       text-align: center;
+      margin-bottom: 15px;
     }
 
     .mensaje {
-      margin: 10px 0;
-      padding: 12px;
-      border-radius: 12px;
-      white-space: pre-wrap;
-      box-shadow: 0 0 10px #00e5ff88;
+      margin-bottom: 15px;
+      padding: 15px;
+      border-radius: 15px;
+      border: 2px solid #00e5ff;
+      box-shadow: 0 0 10px #00e5ff44;
+      background: #011;
     }
 
-    .enviado {
-      background: #fff;
+    .mensaje.enviado {
+      background-color: #fff;
       color: #000;
-      align-self: flex-end;
     }
 
-    .recibido {
-      background: #007ca6;
+    .mensaje.recibido {
+      background-color: #0099cc;
       color: #fff;
-      align-self: flex-start;
     }
 
     .fecha {
-      font-size: 0.8em;
-      color: #ccc;
-      margin-top: 4px;
+      font-size: 0.85em;
+      color: #55ffffaa;
+      margin-top: 6px;
+    }
+
+    .boton-responder {
+      margin-top: 10px;
+      background: #0ff;
+      color: #000;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .boton-responder:hover {
+      background: #66ffff;
     }
   </style>
 </head>
@@ -92,13 +115,13 @@
 
   <main>
     <h2>Historial de Mensajes Privados</h2>
-    <div id="mensajes"></div>
+    <div id="listaMensajes">Cargando mensajes...</div>
   </main>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -112,42 +135,47 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const contenedor = document.getElementById("listaMensajes");
 
-    const mensajesDiv = document.getElementById("mensajes");
-
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, (user) => {
       if (!user) return location.href = "index.html";
 
-      const mensajesRef = collection(db, "mensajes");
-      const q = query(mensajesRef, orderBy("timestamp", "desc"));
+      const q = query(
+        collection(db, "mensajes_privados"),
+        where("participantes", "array-contains", user.uid),
+        orderBy("timestamp", "desc")
+      );
 
-      onSnapshot(q, snapshot => {
-        mensajesDiv.innerHTML = "";
+      onSnapshot(q, (snapshot) => {
+        if (snapshot.empty) {
+          contenedor.innerHTML = "<p>No hay mensajes privados.</p>";
+          return;
+        }
+
+        contenedor.innerHTML = "";
         snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.para !== user.email && data.de !== user.email) return;
+          const msg = doc.data();
+          const esEnviado = msg.de === user.uid;
+          const clase = esEnviado ? "enviado" : "recibido";
+          const fechaStr = new Date(msg.timestamp).toLocaleString();
 
           const div = document.createElement("div");
-          div.className = `mensaje ${data.de === user.email ? "enviado" : "recibido"}`;
-
-          const fecha = new Date(data.timestamp);
-          const fechaStr = fecha.toLocaleString("es-ES", {
-            year: "numeric", month: "short", day: "numeric",
-            hour: "2-digit", minute: "2-digit"
-          });
-
+          div.className = `mensaje ${clase}`;
           div.innerHTML = `
-            <strong>${data.de === user.email ? "Tú" : data.de}</strong>: ${data.texto}
+            <div><strong>${esEnviado ? "Tú" : msg.nombreDe}</strong>: ${msg.texto}</div>
             <div class="fecha">${fechaStr}</div>
+            <button class="boton-responder" onclick="responder('${msg.de}', '${msg.nombreDe}')">Responder</button>
           `;
-          mensajesDiv.appendChild(div);
+          contenedor.appendChild(div);
         });
-
-        if (mensajesDiv.innerHTML.trim() === "") {
-          mensajesDiv.innerHTML = "<p>No hay mensajes privados enviados o recibidos.</p>";
-        }
       });
     });
+
+    window.responder = (uid, nombre) => {
+      localStorage.setItem("responderUid", uid);
+      localStorage.setItem("responderNombre", nombre);
+      location.href = "mensajes.html";
+    };
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
   </script>
