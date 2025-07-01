@@ -39,7 +39,6 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
     .menu-superior button:hover {
       transform: translateY(-3px);
@@ -187,30 +186,34 @@
       });
       mensajeInput.value = "";
       userSelect.value = "";
+      alert("Mensaje enviado.");
     });
 
     function cargarMensajes() {
-      const q = query(
-        collection(db, "privateMessages"),
-        where("senderUID", "==", currentUser.uid),
-        orderBy("timestamp", "desc")
-      );
+      const q = query(collection(db, "privateMessages"), orderBy("timestamp", "desc"));
 
       onSnapshot(q, (snapshot) => {
         listaMensajes.innerHTML = "";
-        if (snapshot.empty) {
-          listaMensajes.innerHTML = "<p>No hay mensajes enviados aún.</p>";
-          return;
-        }
+        let hayMensajes = false;
 
         snapshot.forEach(doc => {
           const data = doc.data();
           const fecha = data.timestamp?.toDate().toLocaleString() || "(sin fecha)";
-          const div = document.createElement("div");
-          div.className = "mensaje";
-          div.innerHTML = `<strong>Para:</strong> ${data.receiverUID}<br><strong>Mensaje:</strong> ${data.texto}<br><time>${fecha}</time>`;
-          listaMensajes.appendChild(div);
+          if (data.senderUID === currentUser.uid || data.receiverUID === currentUser.uid) {
+            hayMensajes = true;
+            const paraQuien = data.senderUID === currentUser.uid
+              ? `👉 <b>Para:</b> ${data.receiverUID}`
+              : `👈 <b>De:</b> ${data.senderUID}`;
+            const div = document.createElement("div");
+            div.className = "mensaje";
+            div.innerHTML = `${paraQuien}<br><b>Mensaje:</b> ${data.texto}<br><time>${fecha}</time>`;
+            listaMensajes.appendChild(div);
+          }
         });
+
+        if (!hayMensajes) {
+          listaMensajes.innerHTML = "<p>No hay mensajes privados aún.</p>";
+        }
       });
     }
 
