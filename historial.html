@@ -3,150 +3,119 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Historial de Mensajes - Papoclub</title>
-  <link rel="stylesheet" href="estilos.css"> <!-- Asegúrate de usar tu CSS con estilo original -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import {
-      getFirestore, collection, query, where,
-      onSnapshot, orderBy
-    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "SENDER_ID",
-      appId: "APP_ID"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    const historialContainer = document.getElementById("historial");
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        const currentUser = user.email;
-        const mensajesRef = collection(db, "privateMessages");
-
-        const q = query(mensajesRef,
-          where("receiver", "==", currentUser),
-          orderBy("timestamp", "desc")
-        );
-
-        onSnapshot(q, snapshot => {
-          historialContainer.innerHTML = "";
-          if (snapshot.empty) {
-            historialContainer.innerHTML = `<p style="text-align:center;color:white">No hay mensajes privados aún.</p>`;
-            return;
-          }
-
-          const usuarios = new Map();
-
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            const sender = data.sender;
-
-            if (!usuarios.has(sender)) {
-              usuarios.set(sender, {
-                mensaje: data.text,
-                timestamp: data.timestamp?.toDate()
-              });
-            }
-          });
-
-          usuarios.forEach((info, sender) => {
-            const fecha = info.timestamp?.toLocaleDateString("es-ES", { day: '2-digit', month: 'short', year: '2-digit' });
-            const hora = info.timestamp?.toLocaleTimeString("es-ES", { hour: '2-digit', minute: '2-digit' });
-
-            const tarjeta = document.createElement("div");
-            tarjeta.className = "mensaje-tarjeta";
-            tarjeta.innerHTML = `
-              <div class="avatar-circle">${sender[0].toUpperCase()}</div>
-              <div class="mensaje-info">
-                <div class="nombre-usuario">${sender}</div>
-                <div class="mensaje-texto">${info.mensaje}</div>
-                <div class="mensaje-fecha">${fecha} ${hora}</div>
-              </div>
-            `;
-            tarjeta.addEventListener("click", () => {
-              localStorage.setItem("chatReceptor", sender);
-              window.location.href = "mensajes.html";
-            });
-            historialContainer.appendChild(tarjeta);
-          });
-        });
-      } else {
-        historialContainer.innerHTML = `<p style="color:white;text-align:center">Inicia sesión para ver tu historial.</p>`;
-      }
-    });
-  </script>
+  <title>Sección de Juegos - Papoclub</title>
   <style>
     body {
       margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: white;
+      padding: 20px;
     }
     h1 {
       text-align: center;
-      padding: 15px;
-      font-size: 1.6rem;
-      text-shadow: 1px 1px 2px #000;
+      margin-bottom: 20px;
     }
-    .mensaje-tarjeta {
-      display: flex;
-      align-items: center;
+    .formulario-juego {
       background: rgba(0,0,0,0.6);
-      margin: 10px;
-      padding: 12px;
+      padding: 15px;
       border-radius: 12px;
       border: 1px solid cyan;
       box-shadow: 0 0 10px cyan;
+      max-width: 500px;
+      margin: 0 auto 30px auto;
+    }
+    .formulario-juego input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #0ff;
+      background: #011;
+      color: #0ff;
+    }
+    .formulario-juego button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: #0ff;
+      color: #000;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
     }
-    .mensaje-tarjeta:hover {
-      background: rgba(0,0,0,0.75);
+    .tarjeta-juego {
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #0ff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px cyan;
+      padding: 15px;
+      margin-bottom: 20px;
     }
-    .avatar-circle {
-      width: 45px;
-      height: 45px;
-      background: cyan;
-      border-radius: 50%;
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: black;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 12px;
+    .tarjeta-juego img {
+      width: 100%;
+      max-width: 200px;
+      border-radius: 8px;
+      margin-bottom: 10px;
     }
-    .mensaje-info {
-      flex: 1;
-    }
-    .nombre-usuario {
-      font-weight: bold;
-      color: #00f0ff;
-    }
-    .mensaje-texto {
-      font-size: 0.95rem;
-      color: white;
-    }
-    .mensaje-fecha {
-      font-size: 0.75rem;
-      color: #aaa;
+    .comentarios textarea {
+      width: 100%;
+      background: #022;
+      color: #0ff;
+      border: 1px solid #0ff;
+      border-radius: 8px;
+      padding: 8px;
+      resize: vertical;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Historial de Mensajes</h1>
-  <div id="historial">
-    <p style="text-align:center;color:white">Cargando historial...</p>
+  <h1>Publicar un Juego</h1>
+
+  <div class="formulario-juego">
+    <input type="text" id="nombreJuego" placeholder="Nombre del juego">
+    <input type="url" id="imagenJuego" placeholder="URL de la imagen del juego (1)">
+    <input type="url" id="paginaJuego" placeholder="Página web del juego">
+    <input type="text" id="telegramJuego" placeholder="Cuenta de Telegram">
+    <input type="text" id="discordJuego" placeholder="Cuenta de Discord">
+    <button onclick="guardarJuego()">Guardar información</button>
   </div>
+
+  <div id="publicaciones"></div>
+
+  <script>
+    const publicaciones = document.getElementById('publicaciones');
+
+    function guardarJuego() {
+      const nombre = document.getElementById('nombreJuego').value;
+      const imagen = document.getElementById('imagenJuego').value;
+      const pagina = document.getElementById('paginaJuego').value;
+      const telegram = document.getElementById('telegramJuego').value;
+      const discord = document.getElementById('discordJuego').value;
+
+      const div = document.createElement('div');
+      div.className = 'tarjeta-juego';
+      div.innerHTML = `
+        <h3>${nombre}</h3>
+        <img src="${imagen}" alt="Imagen del juego">
+        <p><strong>Página:</strong> <a href="${pagina}" target="_blank">${pagina}</a></p>
+        <p><strong>Telegram:</strong> ${telegram}</p>
+        <p><strong>Discord:</strong> ${discord}</p>
+        <div class="comentarios">
+          <textarea rows="2" placeholder="Escribe un comentario..."></textarea>
+        </div>
+      `;
+
+      publicaciones.prepend(div);
+
+      // limpiar
+      document.getElementById('nombreJuego').value = "";
+      document.getElementById('imagenJuego').value = "";
+      document.getElementById('paginaJuego').value = "";
+      document.getElementById('telegramJuego').value = "";
+      document.getElementById('discordJuego').value = "";
+    }
+  </script>
 </body>
 </html>
