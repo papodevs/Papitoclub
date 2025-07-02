@@ -131,10 +131,8 @@
   <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">📜</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
-      ✉️<span id="noti" class="alerta" style="display:none;">•</span>
-    </button>
+    <button onclick="location.href='historial.html'">🎮</button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
@@ -161,13 +159,12 @@
       onSnapshot, doc, getDoc, getDocs, updateDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
+    const app = initializeApp({
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
       projectId: "papoclub-737ac"
-    };
+    });
 
-    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
@@ -187,6 +184,7 @@
     });
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
+    window.enviarMensaje = enviarMensaje;
 
     async function cargarUsuarios() {
       const snap = await getDocs(collection(db, "users"));
@@ -200,10 +198,20 @@
           select.appendChild(opt);
         }
       });
+
       select.addEventListener("change", () => {
         selectedUser = select.value;
         if (selectedUser) escucharMensajes(selectedUser);
       });
+
+      // Autoseleccionar si viene de notificación
+      const chatReceptor = localStorage.getItem("chatReceptor");
+      if (chatReceptor) {
+        select.value = chatReceptor;
+        selectedUser = chatReceptor;
+        escucharMensajes(chatReceptor);
+        localStorage.removeItem("chatReceptor");
+      }
     }
 
     function getChatId(a, b) {
@@ -244,7 +252,7 @@
       });
     }
 
-    window.enviarMensaje = async () => {
+    async function enviarMensaje() {
       const texto = document.getElementById("mensaje").value.trim();
       if (!selectedUser || !texto) return;
 
@@ -258,7 +266,7 @@
       });
 
       document.getElementById("mensaje").value = "";
-    };
+    }
   </script>
 </body>
 </html>
