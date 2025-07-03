@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
@@ -15,10 +15,8 @@
 
     .menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
+      top: 0; left: 0;
+      width: 100%; height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
       box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
@@ -135,6 +133,43 @@
       padding: 6px 10px;
       margin-top: 5px;
     }
+
+    .comentario .autor {
+      margin-bottom: 4px;
+    }
+
+    .comentario .interacciones {
+      font-size: 0.8em;
+      margin-top: 4px;
+      justify-content: flex-start;
+      gap: 12px;
+    }
+
+    .comentario textarea {
+      width: 100%;
+      height: 50px;
+      border-radius: 8px;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.9em;
+      resize: none;
+      background: #003840;
+      color: #0ff;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .comentario button {
+      background: #00e5ff;
+      border: none;
+      color: #003;
+      padding: 5px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.8em;
+      margin-top: 4px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -157,7 +192,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc, Timestamp, arrayUnion
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc, Timestamp, arrayUnion, arrayRemove
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -197,6 +232,42 @@
       document.getElementById("nuevoMensaje").value = "";
     }
 
+    async function toggleLike(postId, isComment = false, commentId = null) {
+      if (!currentUser) return;
+      const ref = isComment
+        ? doc(db, `publicaciones/${postId}/comentarios`, commentId)
+        : doc(db, "publicaciones", postId);
+
+      const docSnap = await getDoc(ref);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+
+      const liked = data.likes?.includes(currentUser.uid);
+      if (liked) {
+        await updateDoc(ref, { likes: arrayRemove(currentUser.uid) });
+      } else {
+        await updateDoc(ref, { likes: arrayUnion(currentUser.uid) });
+      }
+    }
+
+    async function toggleRetweet(postId, isComment = false, commentId = null) {
+      if (!currentUser) return;
+      const ref = isComment
+        ? doc(db, `publicaciones/${postId}/comentarios`, commentId)
+        : doc(db, "publicaciones", postId);
+
+      const docSnap = await getDoc(ref);
+      if (!docSnap.exists()) return;
+      const data = docSnap.data();
+
+      const retweeted = data.retweets?.includes(currentUser.uid);
+      if (retweeted) {
+        await updateDoc(ref, { retweets: arrayRemove(currentUser.uid) });
+      } else {
+        await updateDoc(ref, { retweets: arrayUnion(currentUser.uid) });
+      }
+    }
+
     async function comentar(postId, texto) {
       if (!texto || !currentUser) return;
       const userRef = doc(db, "users", currentUser.uid);
@@ -207,7 +278,9 @@
         autor: userData.username || "Usuario",
         avatar: userData.avatar || "https://via.placeholder.com/40",
         uid: currentUser.uid,
-        fecha: Timestamp.now()
+        fecha: Timestamp.now(),
+        likes: [],
+        retweets: []
       };
       await addDoc(collection(db, `publicaciones/${postId}/comentarios`), comentario);
     }
@@ -218,10 +291,42 @@
         contenedor.innerHTML = "";
         snap.forEach(doc => {
           const c = doc.data();
+          const id = doc.id;
           const div = document.createElement("div");
           div.className = "comentario";
-          div.innerHTML = `<strong>${c.autor}</strong>: ${c.texto}`;
+          div.innerHTML = `
+            <div class="autor">
+              <img src="${c.avatar}" alt="avatar">
+              <strong>${c.autor}</strong>
+            </div>
+            <p>${c.texto}</p>
+            <div class="interacciones">
+              <span class="btn-like" data-postid="${postId}" data-commentid="${id}">❤️ Like (${c.likes?.length || 0})</span>
+              <span class="btn-retweet" data-postid="${postId}" data-commentid="${id}">🔁 Retweet (${c.retweets?.length || 0})</span>
+            </div>
+            <textarea placeholder="Escribe un comentario..." class="input-comentario" style="display:none;"></textarea>
+            <button class="btn-comentar-en-comentario" style="display:none;">Responder</button>
+          `;
           contenedor.appendChild(div);
+
+          // Añadir eventos likes y retweets comentarios
+          const btnLike = div.querySelector(".btn-like");
+          const btnRetweet = div.querySelector(".btn-retweet");
+          const textarea = div.querySelector("textarea");
+          const btnResponder = div.querySelector("button");
+
+          btnLike.onclick = async () => {
+            await toggleLike(postId, true, id);
+          };
+          btnRetweet.onclick = async () => {
+            await toggleRetweet(postId, true, id);
+          };
+
+          // Mostrar textarea y botón responder al hacer clic en Like o Retweet en comentario (opcional)
+          // O bien podrías crear otro botón para abrir caja comentario anidada si quieres.
+
+          // Aquí ocultamos textarea y botón responder inicialmente,
+          // podrías mostrarlo con otro botón si quieres anidación profunda.
         });
       });
     }
@@ -249,40 +354,69 @@
               <span class="btn-comentar" data-id="${id}">💬 Comentar</span>
               <span class="btn-share" data-id="${id}">📤 Compartir</span>
             </div>
-            <div class="comentarios" id="comentarios-${id}"></div>
-            <div class="nueva-publicacion">
-              <textarea placeholder="Escribe un comentario..." id="input-comentario-${id}"></textarea>
-              <button onclick="comentarPost('${id}')">Responder</button>
-            </div>
+            <div class="comentarios" id="comentarios-${id}" style="display:none;"></div>
+            <textarea class="input-comentario" placeholder="Escribe un comentario..." style="display:none;"></textarea>
+            <button class="btn-enviar-comentario" style="display:none;">Enviar</button>
           `;
-
-          tarjeta.querySelector(".btn-retweet").addEventListener("click", async (e) => {
-            const postId = e.currentTarget.dataset.id;
-            const ref = doc(db, "publicaciones", postId);
-            await updateDoc(ref, {
-              retweets: arrayUnion(currentUser.uid)
-            });
-          });
-
-          tarjeta.querySelector(".btn-share").addEventListener("click", () => {
-            const url = window.location.href + "#" + id;
-            navigator.clipboard.writeText(url).then(() => alert("¡Enlace copiado!"));
-          });
-
-          cargarComentarios(id, tarjeta.querySelector(`#comentarios-${id}`));
           contenedor.appendChild(tarjeta);
+
+          // Eventos botones del post
+          const btnLike = tarjeta.querySelector(".btn-like");
+          const btnRetweet = tarjeta.querySelector(".btn-retweet");
+          const btnComentar = tarjeta.querySelector(".btn-comentar");
+          const btnShare = tarjeta.querySelector(".btn-share");
+          const comentariosDiv = tarjeta.querySelector(`#comentarios-${id}`);
+          const inputComentario = tarjeta.querySelector(".input-comentario");
+          const btnEnviarComentario = tarjeta.querySelector(".btn-enviar-comentario");
+
+          btnLike.onclick = async () => {
+            await toggleLike(id);
+          };
+
+          btnRetweet.onclick = async () => {
+            await toggleRetweet(id);
+          };
+
+          btnComentar.onclick = () => {
+            if (inputComentario.style.display === "none") {
+              comentariosDiv.style.display = "block";
+              inputComentario.style.display = "block";
+              btnEnviarComentario.style.display = "inline-block";
+              cargarComentarios(id, comentariosDiv);
+            } else {
+              comentariosDiv.style.display = "none";
+              inputComentario.style.display = "none";
+              btnEnviarComentario.style.display = "none";
+            }
+          };
+
+          btnEnviarComentario.onclick = async () => {
+            const texto = inputComentario.value.trim();
+            if (texto) {
+              await comentar(id, texto);
+              inputComentario.value = "";
+            }
+          };
+
+          btnShare.onclick = () => {
+            const urlPost = `${location.origin}${location.pathname}#post-${id}`;
+            if (navigator.share) {
+              navigator.share({
+                title: `Post de ${mensaje.autor}`,
+                text: mensaje.texto,
+                url: urlPost
+              }).catch(() => {
+                alert("No se pudo compartir.");
+              });
+            } else {
+              navigator.clipboard.writeText(urlPost).then(() => {
+                alert("Enlace copiado al portapapeles");
+              });
+            }
+          };
         });
       });
     }
-
-    window.comentarPost = async (id) => {
-      const input = document.getElementById(`input-comentario-${id}`);
-      const texto = input.value.trim();
-      if (texto) {
-        await comentar(id, texto);
-        input.value = "";
-      }
-    };
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -294,11 +428,13 @@
       }
     });
 
-    document.getElementById("btnPublicar").onclick = publicarMensaje;
+    document.getElementById("btnPublicar").addEventListener("click", publicarMensaje);
 
     window.logout = function () {
-      signOut(auth).then(() => location.href = "login.html");
-    };
+      signOut(auth).then(() => {
+        location.href = "login.html";
+      });
+    }
   </script>
 </body>
 </html>
