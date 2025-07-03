@@ -124,24 +124,16 @@
       text-shadow: 0 0 8px #0ff;
     }
 
-    .popup-perfil {
-      position: absolute;
-      background: #002f36;
-      border: 1px solid #00e5ff;
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 0 10px #00e5ff55;
-      color: #0ff;
-      display: none;
-      z-index: 2000;
+    .comentarios {
+      margin-top: 10px;
+      padding-left: 20px;
     }
 
-    .popup-perfil img {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: 2px solid #00e5ff;
-      object-fit: cover;
+    .comentario {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 6px 10px;
+      margin-top: 5px;
     }
   </style>
 </head>
@@ -160,18 +152,14 @@
       <button id="btnPublicar">Publicar</button>
     </div>
     <div id="listaMensajes"></div>
-    <div id="popupPerfil" class="popup-perfil"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy,
-      doc, getDoc, Timestamp
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc, Timestamp, arrayUnion
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -197,10 +185,10 @@
 
       const mensaje = {
         texto: texto,
-        autor: userData.username || currentUser.email,
+        autor: userData.username || "Usuario",
         avatar: userData.avatar || "https://via.placeholder.com/40",
         uid: currentUser.uid,
-        fecha: Timestamp.fromDate(new Date()),
+        fecha: Timestamp.now(),
         likes: [],
         retweets: []
       };
@@ -209,57 +197,92 @@
       document.getElementById("nuevoMensaje").value = "";
     }
 
+    async function comentar(postId, texto) {
+      if (!texto || !currentUser) return;
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const comentario = {
+        texto,
+        autor: userData.username || "Usuario",
+        avatar: userData.avatar || "https://via.placeholder.com/40",
+        uid: currentUser.uid,
+        fecha: Timestamp.now()
+      };
+      await addDoc(collection(db, `publicaciones/${postId}/comentarios`), comentario);
+    }
+
+    function cargarComentarios(postId, contenedor) {
+      const q = query(collection(db, `publicaciones/${postId}/comentarios`), orderBy("fecha"));
+      onSnapshot(q, (snap) => {
+        contenedor.innerHTML = "";
+        snap.forEach(doc => {
+          const c = doc.data();
+          const div = document.createElement("div");
+          div.className = "comentario";
+          div.innerHTML = `<strong>${c.autor}</strong>: ${c.texto}`;
+          contenedor.appendChild(div);
+        });
+      });
+    }
+
     function mostrarMensajes() {
       const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
       const contenedor = document.getElementById("listaMensajes");
-      const popup = document.getElementById("popupPerfil");
 
       onSnapshot(q, (snapshot) => {
         contenedor.innerHTML = "";
         snapshot.forEach((docSnap) => {
           const mensaje = docSnap.data();
+          const id = docSnap.id;
           const tarjeta = document.createElement("div");
           tarjeta.className = "tarjeta";
           tarjeta.innerHTML = `
-            <div class="autor" data-uid="${mensaje.uid}">
+            <div class="autor">
               <img src="${mensaje.avatar}" alt="avatar">
               <strong>${mensaje.autor}</strong>
             </div>
             <p>${mensaje.texto}</p>
             <div class="interacciones">
-              <span>❤️ Like</span>
-              <span>🔁 Retweet</span>
-              <span>💬 Comentar</span>
-              <span>📤 Compartir</span>
+              <span class="btn-like" data-id="${id}">❤️ Like (${mensaje.likes?.length || 0})</span>
+              <span class="btn-retweet" data-id="${id}">🔁 Retweet (${mensaje.retweets?.length || 0})</span>
+              <span class="btn-comentar" data-id="${id}">💬 Comentar</span>
+              <span class="btn-share" data-id="${id}">📤 Compartir</span>
+            </div>
+            <div class="comentarios" id="comentarios-${id}"></div>
+            <div class="nueva-publicacion">
+              <textarea placeholder="Escribe un comentario..." id="input-comentario-${id}"></textarea>
+              <button onclick="comentarPost('${id}')">Responder</button>
             </div>
           `;
-          tarjeta.querySelector(".autor").addEventListener("click", async (e) => {
-            const uid = e.currentTarget.dataset.uid;
-            const userRef = doc(db, "users", uid);
-            const userSnap = await getDoc(userRef);
-            if (userSnap.exists()) {
-              const user = userSnap.data();
-              popup.innerHTML = `
-                <div style="text-align:center;">
-                  <img src="${user.avatar || 'https://via.placeholder.com/60'}" alt="avatar">
-                  <h4>@${user.username || 'Usuario'}</h4>
-                  <p>${user.bio || ''}</p>
-                </div>`;
-              popup.style.display = "block";
-              popup.style.top = e.clientY + "px";
-              popup.style.left = e.clientX + "px";
-            }
+
+          tarjeta.querySelector(".btn-retweet").addEventListener("click", async (e) => {
+            const postId = e.currentTarget.dataset.id;
+            const ref = doc(db, "publicaciones", postId);
+            await updateDoc(ref, {
+              retweets: arrayUnion(currentUser.uid)
+            });
           });
+
+          tarjeta.querySelector(".btn-share").addEventListener("click", () => {
+            const url = window.location.href + "#" + id;
+            navigator.clipboard.writeText(url).then(() => alert("¡Enlace copiado!"));
+          });
+
+          cargarComentarios(id, tarjeta.querySelector(`#comentarios-${id}`));
           contenedor.appendChild(tarjeta);
         });
       });
-
-      document.addEventListener("click", (e) => {
-        if (!e.target.closest(".autor") && !e.target.closest(".popup-perfil")) {
-          popup.style.display = "none";
-        }
-      });
     }
+
+    window.comentarPost = async (id) => {
+      const input = document.getElementById(`input-comentario-${id}`);
+      const texto = input.value.trim();
+      if (texto) {
+        await comentar(id, texto);
+        input.value = "";
+      }
+    };
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -273,7 +296,7 @@
 
     document.getElementById("btnPublicar").onclick = publicarMensaje;
 
-    window.logout = function() {
+    window.logout = function () {
       signOut(auth).then(() => location.href = "login.html");
     };
   </script>
