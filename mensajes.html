@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Mensajes - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Papoclub - Mensajes Privados</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
-      font-family: sans-serif;
+      padding: 70px 16px 16px;
       margin: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
     }
 
     .menu-superior {
@@ -41,89 +39,58 @@
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
 
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    .chat-box {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 0 6px #00e5ff44;
     }
 
-    .contenido {
-      display: flex;
-      flex: 1;
-      margin-top: 70px;
-    }
-
-    .panel-central {
-      flex: 1;
-      padding: 20px;
-      max-width: 50%;
-    }
-
-    .panel-derecho {
-      width: 25%;
-      padding: 20px;
-      border-left: 2px solid #0ff4;
-      background: #011;
+    #historialMensajes {
+      max-height: 400px;
       overflow-y: auto;
-      height: calc(100vh - 70px);
-    }
-
-    @media (max-width: 767px) {
-      .panel-derecho {
-        display: none;
-      }
-    }
-
-    select, textarea, button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #0ff;
-      background: #011;
-      color: #0ff;
-    }
-
-    button {
-      background: #0ff;
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
+      margin-bottom: 10px;
     }
 
     .mensaje {
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 8px;
-      max-width: 90%;
-      font-size: 0.9em;
+      margin: 6px 0;
     }
 
-    .yo {
-      background: #0ff;
-      color: #000;
-      align-self: flex-end;
-      margin-left: auto;
-    }
-
-    .otro {
-      background: #033;
-      color: #0ff;
-      align-self: flex-start;
-    }
-
-    .detalle {
-      font-size: 0.75em;
-      margin-top: 4px;
+    .mio {
       text-align: right;
     }
 
-    #chat {
-      display: flex;
-      flex-direction: column;
+    .suyo {
+      text-align: left;
+    }
+
+    .burbuja {
+      display: inline-block;
+      padding: 10px;
+      border-radius: 12px;
+      background-color: #00e5ff33;
+      max-width: 75%;
+    }
+
+    #mensajeInput {
+      width: 70%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+
+    #enviarBtn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background-color: #00e5ff;
+      color: #003;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -136,137 +103,95 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="contenido">
-    <div class="panel-central">
-      <h2>Enviar mensaje privado</h2>
-      <label for="destinatario">Selecciona usuario:</label>
-      <select id="destinatario"><option value="">--Seleccionar--</option></select>
-      <textarea id="mensaje" rows="3" placeholder="Escribe tu mensaje..."></textarea>
-      <button onclick="enviarMensaje()">Enviar</button>
-    </div>
-
-    <div class="panel-derecho">
-      <h3>Historial</h3>
-      <div id="chat"></div>
+  <div class="chat-box">
+    <h3>Chat con: <span id="nombreDestinatario">@usuario</span></h3>
+    <div id="historialMensajes"></div>
+    <div>
+      <input type="text" id="mensajeInput" placeholder="Escribe tu mensaje..." />
+      <button id="enviarBtn">Enviar</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
     import {
-      getFirestore, collection, addDoc, query, orderBy,
-      onSnapshot, doc, getDoc, getDocs, updateDoc
+      getFirestore, collection, addDoc, query, where,
+      orderBy, onSnapshot, Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const app = initializeApp({
+    const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
-    });
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
 
-    const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     let currentUser = null;
-    let currentUsername = null;
-    let selectedUser = null;
-    let unsubscribe = null;
+    let destinatarioUID = "REEMPLAZAR_UID_DESTINATARIO"; // <-- CAMBIA ESTO con UID real
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = "index.html";
-      currentUser = user;
-      const perfilSnap = await getDoc(doc(db, "users", user.uid));
-      if (perfilSnap.exists()) {
-        currentUsername = perfilSnap.data().username;
-        cargarUsuarios();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        escucharMensajesPrivados();
+      } else {
+        alert("Debes iniciar sesión");
+        location.href = "login.html";
       }
     });
 
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
-    window.enviarMensaje = enviarMensaje;
-
-    async function cargarUsuarios() {
-      const snap = await getDocs(collection(db, "users"));
-      const select = document.getElementById("destinatario");
-      snap.forEach(doc => {
-        const data = doc.data();
-        if (data.username !== currentUsername) {
-          const opt = document.createElement("option");
-          opt.value = data.username;
-          opt.textContent = "@" + data.username;
-          select.appendChild(opt);
-        }
-      });
-
-      select.addEventListener("change", () => {
-        selectedUser = select.value;
-        if (selectedUser) escucharMensajes(selectedUser);
-      });
-
-      // Autoseleccionar si viene de notificación
-      const chatReceptor = localStorage.getItem("chatReceptor");
-      if (chatReceptor) {
-        select.value = chatReceptor;
-        selectedUser = chatReceptor;
-        escucharMensajes(chatReceptor);
-        localStorage.removeItem("chatReceptor");
-      }
-    }
-
-    function getChatId(a, b) {
-      return [a, b].sort().join("_");
-    }
-
-    function formatearHora(timestamp) {
-      const fecha = new Date(timestamp);
-      return fecha.toLocaleString("es-ES", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' });
-    }
-
-    function escucharMensajes(destino) {
-      const chatId = getChatId(currentUsername, destino);
-      const mensajesRef = collection(db, "privados", chatId, "mensajes");
-      const q = query(mensajesRef, orderBy("timestamp", "asc"));
-
-      if (unsubscribe) unsubscribe();
-      unsubscribe = onSnapshot(q, async (snapshot) => {
-        const chat = document.getElementById("chat");
-        chat.innerHTML = "";
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          const div = document.createElement("div");
-          div.className = "mensaje " + (msg.de === currentUsername ? "yo" : "otro");
-          div.innerHTML = `
-            ${msg.texto}
-            <div class="detalle">
-              ${msg.de === currentUsername ? "📤" : "📥"} ${formatearHora(msg.timestamp)} ${msg.leido && msg.de === currentUsername ? "✅" : ""}
-            </div>
-          `;
-          chat.appendChild(div);
-
-          if (msg.para === currentUsername && !msg.leido) {
-            updateDoc(doc.ref, { leido: true });
-          }
-        });
-        chat.scrollTop = chat.scrollHeight;
-      });
-    }
-
     async function enviarMensaje() {
-      const texto = document.getElementById("mensaje").value.trim();
-      if (!selectedUser || !texto) return;
+      const input = document.getElementById("mensajeInput");
+      const texto = input.value.trim();
+      if (!texto || !currentUser) return;
 
-      const chatId = getChatId(currentUsername, selectedUser);
-      await addDoc(collection(db, "privados", chatId, "mensajes"), {
-        de: currentUsername,
-        para: selectedUser,
+      await addDoc(collection(db, "privateMessages"), {
+        senderUID: currentUser.uid,
+        receiverUID: destinatarioUID,
         texto,
-        timestamp: Date.now(),
-        leido: false
+        fecha: Timestamp.fromDate(new Date())
       });
-
-      document.getElementById("mensaje").value = "";
+      input.value = "";
     }
+
+    function escucharMensajesPrivados() {
+      const mensajesRef = collection(db, "privateMessages");
+      const q = query(
+        mensajesRef,
+        where("senderUID", "in", [currentUser.uid, destinatarioUID]),
+        where("receiverUID", "in", [currentUser.uid, destinatarioUID]),
+        orderBy("fecha", "asc")
+      );
+
+      const contenedor = document.getElementById("historialMensajes");
+
+      onSnapshot(q, (snapshot) => {
+        contenedor.innerHTML = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const esMio = data.senderUID === currentUser.uid;
+          const div = document.createElement("div");
+          div.className = `mensaje ${esMio ? 'mio' : 'suyo'}`;
+          div.innerHTML = `<span class="burbuja">${data.texto}</span>`;
+          contenedor.appendChild(div);
+        });
+        contenedor.scrollTop = contenedor.scrollHeight;
+      });
+    }
+
+    document.getElementById("enviarBtn").addEventListener("click", enviarMensaje);
+
+    window.logout = function() {
+      signOut(auth).then(() => location.href = "login.html");
+    };
   </script>
 </body>
 </html>
