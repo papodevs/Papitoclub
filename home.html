@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      color: #0ff;
       font-family: 'Segoe UI', sans-serif;
+      color: #0ff;
+      padding: 70px 16px 16px;
       margin: 0;
-      padding-top: 70px;
     }
 
     .menu-superior {
@@ -39,25 +39,6 @@
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
-    }
-
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
-    }
-
-    .alerta {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: red;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 5px;
-      display: none;
     }
 
     .contenedor {
@@ -109,20 +90,33 @@
       margin: 0;
     }
 
+    .autor {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+      cursor: pointer;
+    }
+
+    .autor img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #00e5ff;
+    }
+
     .interacciones {
       display: flex;
       justify-content: space-between;
       margin-top: 8px;
       font-size: 0.9em;
       color: #0ff;
-      flex-wrap: wrap;
-      gap: 8px;
     }
 
     .interacciones span {
       cursor: pointer;
       transition: 0.3s;
-      user-select: none;
     }
 
     .interacciones span:hover {
@@ -130,41 +124,24 @@
       text-shadow: 0 0 8px #0ff;
     }
 
-    .comentarios div {
-      padding: 4px 0;
-      border-bottom: 1px solid #00e5ff33;
-      font-size: 0.9em;
-    }
-
-    .comentarios strong {
-      font-weight: 600;
-    }
-
-    .comentarios small {
+    .popup-perfil {
+      position: absolute;
+      background: #002f36;
+      border: 1px solid #00e5ff;
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px #00e5ff55;
       color: #0ff;
-      margin-left: 6px;
-      font-weight: 300;
+      display: none;
+      z-index: 2000;
     }
 
-    .nuevo-comentario input {
-      width: 80%;
-      border-radius: 8px;
-      border: none;
-      padding: 6px;
-      font-size: 0.9em;
-      background: #00434b;
-      color: #0ff;
-    }
-
-    .nuevo-comentario button {
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-left: 6px;
+    .popup-perfil img {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 2px solid #00e5ff;
+      object-fit: cover;
     }
   </style>
 </head>
@@ -173,9 +150,7 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
-      ✉️<span id="noti" class="alerta">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
@@ -184,16 +159,19 @@
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
       <button id="btnPublicar">Publicar</button>
     </div>
-
     <div id="listaMensajes"></div>
+    <div id="popupPerfil" class="popup-perfil"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { 
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, arrayUnion, arrayRemove, Timestamp 
+    import {
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+      doc, getDoc, Timestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -207,265 +185,97 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
     let currentUser = null;
 
-    // Manejo del estado de autenticación
+    async function publicarMensaje() {
+      const texto = document.getElementById("nuevoMensaje").value.trim();
+      if (!texto || !currentUser) return;
+
+      const userRef = doc(db, "users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.exists() ? userSnap.data() : {};
+
+      const mensaje = {
+        texto: texto,
+        autor: userData.username || currentUser.email,
+        avatar: userData.avatar || "https://via.placeholder.com/40",
+        uid: currentUser.uid,
+        fecha: Timestamp.fromDate(new Date()),
+        likes: [],
+        retweets: []
+      };
+
+      await addDoc(collection(db, "publicaciones"), mensaje);
+      document.getElementById("nuevoMensaje").value = "";
+    }
+
+    function mostrarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      const contenedor = document.getElementById("listaMensajes");
+      const popup = document.getElementById("popupPerfil");
+
+      onSnapshot(q, (snapshot) => {
+        contenedor.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const mensaje = docSnap.data();
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+          tarjeta.innerHTML = `
+            <div class="autor" data-uid="${mensaje.uid}">
+              <img src="${mensaje.avatar}" alt="avatar">
+              <strong>${mensaje.autor}</strong>
+            </div>
+            <p>${mensaje.texto}</p>
+            <div class="interacciones">
+              <span>❤️ Like</span>
+              <span>🔁 Retweet</span>
+              <span>💬 Comentar</span>
+              <span>📤 Compartir</span>
+            </div>
+          `;
+          tarjeta.querySelector(".autor").addEventListener("click", async (e) => {
+            const uid = e.currentTarget.dataset.uid;
+            const userRef = doc(db, "users", uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+              const user = userSnap.data();
+              popup.innerHTML = `
+                <div style="text-align:center;">
+                  <img src="${user.avatar || 'https://via.placeholder.com/60'}" alt="avatar">
+                  <h4>@${user.username || 'Usuario'}</h4>
+                  <p>${user.bio || ''}</p>
+                </div>`;
+              popup.style.display = "block";
+              popup.style.top = e.clientY + "px";
+              popup.style.left = e.clientX + "px";
+            }
+          });
+          contenedor.appendChild(tarjeta);
+        });
+      });
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".autor") && !e.target.closest(".popup-perfil")) {
+          popup.style.display = "none";
+        }
+      });
+    }
+
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
         mostrarMensajes();
-        document.getElementById("btnPublicar").disabled = false;
       } else {
         alert("Debes iniciar sesión para ver publicaciones.");
         location.href = "login.html";
       }
     });
 
-    // Publicar un nuevo mensaje
-    async function publicarMensaje() {
-      const texto = document.getElementById("nuevoMensaje").value.trim();
-      if (!currentUser) {
-        alert("No estás autenticado.");
-        return;
-      }
-      if (texto === "") {
-        alert("El mensaje no puede estar vacío.");
-        return;
-      }
-      try {
-        const mensaje = {
-          texto,
-          autor: currentUser.displayName || currentUser.email,
-          fecha: Timestamp.fromDate(new Date()),
-          likes: [],
-          retweets: []
-        };
-        await addDoc(collection(db, "publicaciones"), mensaje);
-        document.getElementById("nuevoMensaje").value = "";
-      } catch (error) {
-        console.error("Error al publicar:", error);
-        alert("No se pudo publicar el mensaje.");
-      }
-    }
-
-    // Mostrar mensajes con sus interacciones y comentarios
-    function mostrarMensajes() {
-      // Consulta con ordenación por fecha descendente, pero si hay error, intentamos sin orderBy
-      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
-      const contenedor = document.getElementById("listaMensajes");
-      onSnapshot(q, (snapshot) => {
-        contenedor.innerHTML = "";
-        if (snapshot.empty) {
-          contenedor.innerHTML = "<p>No hay publicaciones aún.</p>";
-          return;
-        }
-        snapshot.forEach(docSnap => {
-          const mensaje = docSnap.data();
-          const docId = docSnap.id;
-
-          // Comprobar que fecha sea Timestamp, si no asignar fecha antigua para no romper orderBy
-          if (!mensaje.fecha || !(mensaje.fecha instanceof Timestamp)) {
-            mensaje.fecha = Timestamp.fromDate(new Date(0));
-          }
-
-          const likeCount = mensaje.likes ? mensaje.likes.length : 0;
-          const retweetCount = mensaje.retweets ? mensaje.retweets.length : 0;
-          const liked = mensaje.likes && mensaje.likes.includes(currentUser.uid);
-          const retweeted = mensaje.retweets && mensaje.retweets.includes(currentUser.uid);
-
-          const tarjeta = document.createElement("div");
-          tarjeta.className = "tarjeta";
-          tarjeta.innerHTML = `
-            <p><strong>${mensaje.autor}</strong></p>
-            <p>${mensaje.texto}</p>
-            <div class="interacciones">
-              <span class="like-btn" data-id="${docId}" style="color:${liked ? '#f00' : '#0ff'}; font-weight:${liked ? 'bold' : 'normal'};">
-                ❤️ Like <span class="like-count">${likeCount}</span>
-              </span>
-              <span class="retweet-btn" data-id="${docId}" style="color:${retweeted ? '#0f0' : '#0ff'}; font-weight:${retweeted ? 'bold' : 'normal'};">
-                🔁 Retweet <span class="retweet-count">${retweetCount}</span>
-              </span>
-              <span class="comentar-btn" data-id="${docId}" style="cursor:pointer;">💬 Comentar</span>
-              <span class="compartir-btn" data-id="${docId}" style="cursor:pointer;">📤 Compartir</span>
-            </div>
-            <div class="comentarios" id="comentarios-${docId}" style="margin-top:8px; padding-left: 12px; border-left: 2px solid #00e5ff88;"></div>
-            <div class="nuevo-comentario" id="nuevo-comentario-${docId}" style="display:none; margin-top:8px;">
-              <input type="text" placeholder="Escribe un comentario..." id="input-comentario-${docId}" />
-              <button data-id="${docId}" class="enviar-comentario-btn">Enviar</button>
-            </div>
-          `;
-
-          contenedor.appendChild(tarjeta);
-
-          // Asignar eventos a los botones
-          tarjeta.querySelector(".like-btn").onclick = () => toggleLike(docId, mensaje.likes || []);
-          tarjeta.querySelector(".retweet-btn").onclick = () => toggleRetweet(docId, mensaje.retweets || []);
-          tarjeta.querySelector(".comentar-btn").onclick = () => toggleFormularioComentario(docId);
-          tarjeta.querySelector(".enviar-comentario-btn").onclick = () => enviarComentario(docId);
-
-          mostrarComentarios(docId);
-        });
-      }, (error) => {
-        console.error("Error al obtener publicaciones:", error);
-        // En caso de error con orderBy, intentar sin orderBy
-        if (error.message.includes('ORDER_BY on field(s)')) {
-          mostrarMensajesSinOrder();
-        }
-      });
-    }
-
-    // Alternativa si hay error con orderBy en mostrarMensajes
-    function mostrarMensajesSinOrder() {
-      const q = query(collection(db, "publicaciones"));
-      const contenedor = document.getElementById("listaMensajes");
-      onSnapshot(q, (snapshot) => {
-        contenedor.innerHTML = "";
-        if (snapshot.empty) {
-          contenedor.innerHTML = "<p>No hay publicaciones aún.</p>";
-          return;
-        }
-        snapshot.forEach(docSnap => {
-          const mensaje = docSnap.data();
-          const docId = docSnap.id;
-          const likeCount = mensaje.likes ? mensaje.likes.length : 0;
-          const retweetCount = mensaje.retweets ? mensaje.retweets.length : 0;
-          const liked = mensaje.likes && mensaje.likes.includes(currentUser.uid);
-          const retweeted = mensaje.retweets && mensaje.retweets.includes(currentUser.uid);
-
-          const tarjeta = document.createElement("div");
-          tarjeta.className = "tarjeta";
-          tarjeta.innerHTML = `
-            <p><strong>${mensaje.autor}</strong></p>
-            <p>${mensaje.texto}</p>
-            <div class="interacciones">
-              <span class="like-btn" data-id="${docId}" style="color:${liked ? '#f00' : '#0ff'}; font-weight:${liked ? 'bold' : 'normal'};">
-                ❤️ Like <span class="like-count">${likeCount}</span>
-              </span>
-              <span class="retweet-btn" data-id="${docId}" style="color:${retweeted ? '#0f0' : '#0ff'}; font-weight:${retweeted ? 'bold' : 'normal'};">
-                🔁 Retweet <span class="retweet-count">${retweetCount}</span>
-              </span>
-              <span class="comentar-btn" data-id="${docId}" style="cursor:pointer;">💬 Comentar</span>
-              <span class="compartir-btn" data-id="${docId}" style="cursor:pointer;">📤 Compartir</span>
-            </div>
-            <div class="comentarios" id="comentarios-${docId}" style="margin-top:8px; padding-left: 12px; border-left: 2px solid #00e5ff88;"></div>
-            <div class="nuevo-comentario" id="nuevo-comentario-${docId}" style="display:none; margin-top:8px;">
-              <input type="text" placeholder="Escribe un comentario..." id="input-comentario-${docId}" />
-              <button data-id="${docId}" class="enviar-comentario-btn">Enviar</button>
-            </div>
-          `;
-
-          contenedor.appendChild(tarjeta);
-
-          tarjeta.querySelector(".like-btn").onclick = () => toggleLike(docId, mensaje.likes || []);
-          tarjeta.querySelector(".retweet-btn").onclick = () => toggleRetweet(docId, mensaje.retweets || []);
-          tarjeta.querySelector(".comentar-btn").onclick = () => toggleFormularioComentario(docId);
-          tarjeta.querySelector(".enviar-comentario-btn").onclick = () => enviarComentario(docId);
-
-          mostrarComentarios(docId);
-        });
-      });
-    }
-
-    // Alternar like
-    async function toggleLike(postId, likesArray) {
-      if (!currentUser) return alert("Debes iniciar sesión para dar like.");
-      const userId = currentUser.uid;
-      const postRef = doc(db, "publicaciones", postId);
-      try {
-        if (likesArray.includes(userId)) {
-          // Quitar like
-          await updateDoc(postRef, { likes: arrayRemove(userId) });
-        } else {
-          // Agregar like
-          await updateDoc(postRef, { likes: arrayUnion(userId) });
-        }
-      } catch (error) {
-        console.error("Error al actualizar like:", error);
-      }
-    }
-
-    // Alternar retweet
-    async function toggleRetweet(postId, retweetsArray) {
-      if (!currentUser) return alert("Debes iniciar sesión para retweetear.");
-      const userId = currentUser.uid;
-      const postRef = doc(db, "publicaciones", postId);
-      try {
-        if (retweetsArray.includes(userId)) {
-          await updateDoc(postRef, { retweets: arrayRemove(userId) });
-        } else {
-          await updateDoc(postRef, { retweets: arrayUnion(userId) });
-        }
-      } catch (error) {
-        console.error("Error al actualizar retweet:", error);
-      }
-    }
-
-    // Mostrar / ocultar formulario comentario
-    function toggleFormularioComentario(postId) {
-      const form = document.getElementById(`nuevo-comentario-${postId}`);
-      if (form.style.display === "none" || form.style.display === "") {
-        form.style.display = "flex";
-      } else {
-        form.style.display = "none";
-      }
-    }
-
-    // Enviar comentario
-    async function enviarComentario(postId) {
-      const input = document.getElementById(`input-comentario-${postId}`);
-      const texto = input.value.trim();
-      if (texto === "") {
-        alert("El comentario no puede estar vacío.");
-        return;
-      }
-      if (!currentUser) {
-        alert("Debes iniciar sesión para comentar.");
-        return;
-      }
-      const comentariosRef = collection(db, "publicaciones", postId, "comentarios");
-      try {
-        await addDoc(comentariosRef, {
-          texto,
-          autor: currentUser.displayName || currentUser.email,
-          fecha: Timestamp.fromDate(new Date()),
-          uid: currentUser.uid
-        });
-        input.value = "";
-        toggleFormularioComentario(postId);
-      } catch (error) {
-        console.error("Error al enviar comentario:", error);
-        alert("No se pudo enviar el comentario.");
-      }
-    }
-
-    // Mostrar comentarios en tiempo real para cada post
-    function mostrarComentarios(postId) {
-      const comentariosRef = collection(db, "publicaciones", postId, "comentarios");
-      const contenedorComentarios = document.getElementById(`comentarios-${postId}`);
-      const q = query(comentariosRef, orderBy("fecha", "asc"));
-
-      onSnapshot(q, (snapshot) => {
-        contenedorComentarios.innerHTML = "";
-        snapshot.forEach(docSnap => {
-          const c = docSnap.data();
-          const fecha = c.fecha instanceof Timestamp ? c.fecha.toDate().toLocaleString() : "";
-          const div = document.createElement("div");
-          div.innerHTML = `<strong>${c.autor}</strong><small>${fecha}</small><br>${c.texto}`;
-          contenedorComentarios.appendChild(div);
-        });
-      });
-    }
-
-    // Logout
-    window.logout = function() {
-      signOut(auth).then(() => {
-        location.href = "login.html";
-      });
-    };
-
-    // Asignar publicarMensaje al botón
     document.getElementById("btnPublicar").onclick = publicarMensaje;
+
+    window.logout = function() {
+      signOut(auth).then(() => location.href = "login.html");
+    };
   </script>
 </body>
 </html>
