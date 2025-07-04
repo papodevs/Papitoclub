@@ -144,6 +144,7 @@
     <input type="text" id="correo" placeholder="Correo electrónico" disabled />
     <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
     <input type="text" id="web" placeholder="Sitio web personal" />
+    <input type="text" id="biografia" placeholder="Breve biografía" />
     <input type="file" id="avatarInput" accept="image/*" />
     <input type="text" id="avatarUrl" placeholder="O ingresa una URL de avatar" />
     <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" />
@@ -158,7 +159,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, updateDoc, getDoc, setDoc
+      getFirestore, doc, getDoc, setDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -187,6 +188,7 @@
     const correoInput = document.getElementById("correo");
     const nicknameInput = document.getElementById("nickname");
     const webInput = document.getElementById("web");
+    const bioInput = document.getElementById("biografia");
     const avatarUrlInput = document.getElementById("avatarUrl");
     const fondoPerfilInput = document.getElementById("fondoPerfil");
     const contenedorPerfil = document.getElementById("contenedorPerfil");
@@ -203,11 +205,14 @@
           const docSnap = await getDoc(doc(db, "users", perfilId));
           if (docSnap.exists()) {
             const data = docSnap.data();
+            const fecha = data.creadoEn?.toDate?.().toLocaleDateString() || "Fecha no disponible";
             contenedorPerfil.innerHTML = `
               <div class="perfil-publico" style="background-image: url('${data.fondo || ''}')">
                 <img src="${data.avatar || ''}" alt="Avatar" />
                 <h2>${data.nickname || 'Usuario sin nick'}</h2>
+                <p><em>${data.biografia || ''}</em></p>
                 <p><a href="${data.web || '#'}" style="color:#0ff" target="_blank">${data.web || ''}</a></p>
+                <p style="margin-top:10px; font-size:0.9em; color:#ccc">📅 Miembro desde: ${fecha}</p>
               </div>
               <div class="volver-home">
                 <a href="home.html">⬅️ Volver al inicio</a>
@@ -224,6 +229,7 @@
             if (data.avatar) vistaAvatar.src = data.avatar;
             if (data.nickname) nicknameInput.value = data.nickname;
             if (data.web) webInput.value = data.web;
+            if (data.biografia) bioInput.value = data.biografia;
             if (data.fondo) fondoPerfilInput.value = data.fondo;
           }
         }
@@ -237,6 +243,7 @@
       if (!currentUser) return alert("Debes iniciar sesión");
       const nickname = nicknameInput.value.trim();
       const web = webInput.value.trim();
+      const bio = bioInput.value.trim();
       const avatarUrlManual = avatarUrlInput.value.trim();
       const fondo = fondoPerfilInput.value.trim();
 
@@ -256,8 +263,10 @@
         email: currentUser.email,
         nickname,
         web,
+        biografia: bio,
         avatar: avatarURL || vistaAvatar.src || "",
-        fondo: fondo || ""
+        fondo: fondo || "",
+        creadoEn: serverTimestamp()
       }, { merge: true });
 
       alert("Perfil actualizado correctamente.");
