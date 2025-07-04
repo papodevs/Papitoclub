@@ -2,20 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Sección Juegos - Papoclub</title>
+  <title>Explorador de Juegos - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
+      padding-top: 70px;
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
-      padding-top: 70px;
     }
 
     .menu-superior {
       position: fixed;
       top: 0;
+      left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -26,6 +27,7 @@
       gap: 8px;
       padding-right: 12px;
       z-index: 1000;
+      backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
 
@@ -33,11 +35,12 @@
       background: none;
       border: none;
       color: #ccf9ff;
-      font-size: 1.5em;
+      font-size: 1.4em;
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
     }
 
     .menu-superior button:hover {
@@ -46,59 +49,62 @@
     }
 
     .contenedor {
-      padding: 20px;
       max-width: 600px;
       margin: auto;
+      padding: 1em;
     }
 
-    .form-juego {
-      background: #012b2d;
-      border: 2px solid #00f6ff;
-      box-shadow: 0 0 10px #00e5ff80;
-      border-radius: 12px;
-      padding: 15px;
+    .formulario-juego, .tarjeta-juego {
+      background: rgba(0,0,0,0.3);
+      border-radius: 16px;
+      padding: 16px;
       margin-bottom: 20px;
+      box-shadow: 0 0 12px #00e5ff55;
     }
 
-    input, textarea {
+    .formulario-juego input {
       width: 100%;
-      margin: 8px 0;
-      padding: 8px;
-      border-radius: 8px;
-      border: 1px solid #0ff;
-      background: #011;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #002f36;
       color: #0ff;
     }
 
-    button {
-      background: #0ff;
-      color: #000;
+    .formulario-juego button {
+      margin-top: 10px;
+      background: #00e5ff;
+      color: #003;
       border: none;
       padding: 10px 16px;
-      border-radius: 8px;
       font-weight: bold;
+      border-radius: 10px;
       cursor: pointer;
-      margin-top: 8px;
-    }
-
-    .tarjeta-juego {
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid cyan;
-      border-radius: 12px;
-      box-shadow: 0 0 10px cyan;
-      padding: 12px;
-      margin-bottom: 15px;
     }
 
     .tarjeta-juego img {
       max-width: 100%;
-      border-radius: 8px;
-      margin-top: 8px;
+      border-radius: 12px;
+      margin-bottom: 10px;
     }
 
-    .info-juego small {
-      color: #aaa;
-      display: block;
+    .comentarios {
+      margin-top: 10px;
+    }
+
+    .comentarios div {
+      margin: 6px 0;
+      padding: 6px;
+      background: #003b4c;
+      border-radius: 10px;
+    }
+
+    .comentarios input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 10px;
+      border: none;
       margin-top: 6px;
     }
   </style>
@@ -113,24 +119,23 @@
   </div>
 
   <div class="contenedor">
-    <div class="form-juego">
-      <h2>Nuevo Juego</h2>
-      <input type="text" id="nombreJuego" placeholder="Nombre del juego" required />
-      <input type="url" id="imagenJuego" placeholder="URL de la imagen (1 sola)" />
-      <input type="url" id="paginaJuego" placeholder="Página web del juego" />
-      <input type="text" id="telegramJuego" placeholder="Cuenta Telegram (opcional)" />
-      <input type="text" id="discordJuego" placeholder="Cuenta Discord (opcional)" />
-      <textarea id="descripcionJuego" placeholder="Descripción o detalles" rows="4"></textarea>
-      <button onclick="guardarJuego()">Guardar juego</button>
+    <div class="formulario-juego">
+      <input id="nombreJuego" placeholder="Nombre del juego" />
+      <input id="urlImagen" placeholder="URL de la imagen del juego" />
+      <input id="urlPagina" placeholder="Página del juego" />
+      <input id="telegram" placeholder="Cuenta de Telegram" />
+      <input id="discord" placeholder="Cuenta de Discord" />
+      <button onclick="publicarJuego()">Publicar Juego</button>
     </div>
-
     <div id="listaJuegos"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, serverTimestamp
+      getFirestore, collection, addDoc, onSnapshot,
+      orderBy, query, doc, setDoc, getDocs,
+      updateDoc, deleteDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -139,58 +144,82 @@
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac"
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const lista = document.getElementById("listaJuegos");
 
-    onAuthStateChanged(auth, user => {
+    let currentUser;
+
+    onAuthStateChanged(auth, (user) => {
       if (!user) return location.href = "index.html";
+      currentUser = user;
       cargarJuegos();
     });
 
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
 
-    async function guardarJuego() {
-      const nombre = document.getElementById("nombreJuego").value.trim();
-      const imagen = document.getElementById("imagenJuego").value.trim();
-      const pagina = document.getElementById("paginaJuego").value.trim();
-      const telegram = document.getElementById("telegramJuego").value.trim();
-      const discord = document.getElementById("discordJuego").value.trim();
-      const descripcion = document.getElementById("descripcionJuego").value.trim();
-
-      if (!nombre) return alert("El nombre del juego es obligatorio.");
-
-      await addDoc(collection(db, "juegos"), {
-        nombre, imagen, pagina, telegram, discord, descripcion,
-        fecha: serverTimestamp()
-      });
-
-      document.querySelectorAll("input, textarea").forEach(el => el.value = "");
-    }
+    window.publicarJuego = async () => {
+      const juego = {
+        nombre: document.getElementById("nombreJuego").value,
+        imagen: document.getElementById("urlImagen").value,
+        pagina: document.getElementById("urlPagina").value,
+        telegram: document.getElementById("telegram").value,
+        discord: document.getElementById("discord").value,
+        creadorUID: currentUser.uid,
+        creadoEn: new Date()
+      };
+      await addDoc(collection(db, "juegos"), juego);
+    };
 
     function cargarJuegos() {
-      const juegosRef = collection(db, "juegos");
-      onSnapshot(juegosRef, (snapshot) => {
-        lista.innerHTML = "";
-        snapshot.forEach(doc => {
-          const juego = doc.data();
-          const div = document.createElement("div");
-          div.className = "tarjeta-juego";
-          div.innerHTML = `
+      const q = query(collection(db, "juegos"), orderBy("creadoEn", "desc"));
+      const contenedor = document.getElementById("listaJuegos");
+
+      onSnapshot(q, (snap) => {
+        contenedor.innerHTML = "";
+        snap.forEach(async (docJuego) => {
+          const juego = docJuego.data();
+          const id = docJuego.id;
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta-juego";
+          tarjeta.innerHTML = `
             <h3>${juego.nombre}</h3>
-            ${juego.imagen ? `<img src="${juego.imagen}" alt="Imagen juego">` : ""}
-            <p>${juego.descripcion || ""}</p>
-            <div class="info-juego">
-              ${juego.pagina ? `<small>🌐 <a href="${juego.pagina}" target="_blank">Página oficial</a></small>` : ""}
-              ${juego.telegram ? `<small>📲 Telegram: ${juego.telegram}</small>` : ""}
-              ${juego.discord ? `<small>🎮 Discord: ${juego.discord}</small>` : ""}
-            </div>
+            <img src="${juego.imagen}" alt="Imagen del juego" />
+            <p><a href="${juego.pagina}" target="_blank">Página oficial</a></p>
+            <p>Telegram: ${juego.telegram}</p>
+            <p>Discord: ${juego.discord}</p>
+            <div class="comentarios" id="comentarios-${id}"></div>
+            <input placeholder="Escribe un comentario..." onkeypress="if(event.key==='Enter'){comentarJuego('${id}', this.value); this.value='';}" />
           `;
-          lista.appendChild(div);
+          contenedor.appendChild(tarjeta);
+          cargarComentarios(id);
+        });
+      });
+    }
+
+    window.comentarJuego = async (juegoId, texto) => {
+      const comentario = {
+        autor: currentUser.email,
+        texto,
+        fecha: new Date()
+      };
+      await addDoc(collection(db, `juegos/${juegoId}/comentarios`), comentario);
+    };
+
+    function cargarComentarios(juegoId) {
+      const cont = document.getElementById("comentarios-" + juegoId);
+      const q = query(collection(db, `juegos/${juegoId}/comentarios`), orderBy("fecha"));
+      onSnapshot(q, snap => {
+        cont.innerHTML = "";
+        snap.forEach(doc => {
+          const c = doc.data();
+          cont.innerHTML += `<div><strong>${c.autor}</strong>: ${c.texto}</div>`;
         });
       });
     }
