@@ -105,37 +105,20 @@
       box-shadow: 0 0 6px #00e5ff44;
     }
 
-    .tarjeta-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
-
-    .tarjeta-header img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid #00e5ff;
-      object-fit: cover;
-    }
-
-    .tarjeta-header strong {
-      color: #00e5ff;
-      font-weight: bold;
-      font-size: 1.1em;
-    }
-
     .tarjeta p {
-      margin: 6px 0;
-      white-space: pre-wrap;
-      word-break: break-word;
+      margin: 0;
+    }
+
+    .autor-nick {
+      color: #0ff;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: underline;
     }
 
     .interacciones {
       display: flex;
-      justify-content: space-around;
+      justify-content: space-between;
       margin-top: 8px;
       font-size: 0.9em;
       color: #0ff;
@@ -145,103 +128,60 @@
       cursor: pointer;
       transition: 0.3s;
       user-select: none;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .interacciones span.liked,
-    .interacciones span.repaped {
-      color: #ff3399;
-      text-shadow: 0 0 8px #ff3399;
-      font-weight: bold;
     }
 
     .interacciones span:hover {
       color: #fff;
-      text-shadow: 0 0 12px #0ff;
+      text-shadow: 0 0 8px #0ff;
     }
 
-    .comentarios-container {
-      margin-top: 12px;
-      padding-left: 20px;
-      border-left: 2px solid #00e5ff66;
+    .comentarios {
+      margin-top: 10px;
+      border-top: 1px solid #00e5ff55;
+      padding-top: 10px;
+      display: none;
     }
 
     .comentario {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0,0,0,0.2);
       border-radius: 10px;
       padding: 8px;
       margin-bottom: 8px;
-      box-shadow: 0 0 8px #00e5ff44;
+      box-shadow: 0 0 6px #00e5ff33;
     }
 
-    .comentario-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
-      cursor: pointer;
+    .comentario p {
+      margin: 4px 0;
     }
 
-    .comentario-header img {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 1.5px solid #00e5ff;
-      object-fit: cover;
-    }
-
-    .comentario-header strong {
-      color: #00e5ff;
-      font-size: 0.95em;
-    }
-
-    .comentario-text {
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin-bottom: 6px;
-    }
-
-    .interacciones-comentario {
-      display: flex;
-      gap: 12px;
-      font-size: 0.8em;
-      color: #0ff;
-      user-select: none;
-    }
-
-    .interacciones-comentario span {
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: color 0.3s;
-    }
-
-    .interacciones-comentario span.liked,
-    .interacciones-comentario span.repaped {
-      color: #ff3399;
-      text-shadow: 0 0 8px #ff3399;
+    .comentario-autor {
       font-weight: bold;
+      color: #0ff;
+      cursor: pointer;
+      text-decoration: underline;
     }
 
-    .interacciones-comentario span:hover {
-      color: #fff;
-      text-shadow: 0 0 12px #0ff;
-    }
-
-    .textarea-comentario {
+    .input-comentario {
       width: 100%;
+      padding: 8px;
+      margin-top: 6px;
       border-radius: 8px;
       border: none;
-      padding: 6px;
-      margin-top: 6px;
       background: #002f36;
       color: #0ff;
       resize: none;
     }
 
+    .btn-comentar {
+      margin-top: 6px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -249,7 +189,9 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
+      ✉️<span id="noti" class="alerta">•</span>
+    </button>
     <button onclick="logout()">🚪</button>
   </div>
 
@@ -262,11 +204,12 @@
     <div id="listaMensajes"></div>
   </div>
 
+  <!-- Firebase (v10 modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy,
-      doc, updateDoc, arrayUnion, arrayRemove, getDoc
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc,
+      setDoc, updateDoc, getDoc, deleteDoc, where
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -287,252 +230,325 @@
 
     let currentUser = null;
 
-    // Publicar un nuevo post
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        cargarMensajes();
+      } else {
+        alert("Debes iniciar sesión para ver publicaciones.");
+        location.href = "index.html";
+      }
+    });
+
+    // Publicar mensaje principal
     async function publicarMensaje() {
       const texto = document.getElementById("nuevoMensaje").value.trim();
-      if (!texto) return alert("Escribe algo para publicar.");
-      if (!currentUser) return alert("Debes iniciar sesión.");
+      if (texto === "") return alert("Escribe algo antes de publicar.");
 
-      const nuevoPost = {
+      const mensaje = {
         texto,
         autorUID: currentUser.uid,
+        autorNick: currentUser.displayName || currentUser.email.split('@')[0],
         fecha: new Date(),
-        likeUIDs: [],
-        repaposUIDs: []
+      };
+      try {
+        await addDoc(collection(db, "publicaciones"), mensaje);
+        document.getElementById("nuevoMensaje").value = "";
+      } catch (e) {
+        alert("Error al publicar: " + e.message);
+      }
+    }
+    window.publicarMensaje = publicarMensaje;
+
+    // Cargar mensajes y setear listener en tiempo real
+    function cargarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      onSnapshot(q, (snapshot) => {
+        const contenedor = document.getElementById("listaMensajes");
+        contenedor.innerHTML = "";
+
+        snapshot.forEach(async (docPublicacion) => {
+          const pub = docPublicacion.data();
+          const pubId = docPublicacion.id;
+
+          // Crear tarjeta principal
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+          tarjeta.setAttribute("data-id", pubId);
+
+          tarjeta.innerHTML = `
+            <p><span class="autor-nick" data-uid="${pub.autorUID}">${pub.autorNick}</span></p>
+            <p>${escapeHtml(pub.texto)}</p>
+            <div class="interacciones">
+              <span class="like-btn" data-id="${pubId}">❤️ Like <span class="like-count">0</span></span>
+              <span class="retweet-btn" data-id="${pubId}">🔁 RePapo <span class="retweet-count">0</span></span>
+              <span class="comment-btn" data-id="${pubId}">💬 comment</span>
+              <span class="share-btn" data-id="${pubId}">📤 share</span>
+            </div>
+            <div class="comentarios" id="comentarios-${pubId}"></div>
+          `;
+
+          contenedor.appendChild(tarjeta);
+
+          // Cargar counts (likes y repapos)
+          cargarContadores(pubId);
+
+          // Cargar comentarios ocultos inicialmente
+          cargarComentarios(pubId);
+
+          // Eventos botones interacción
+          agregarEventosInteraccion(tarjeta, pubId);
+        });
+      });
+    }
+
+    // Escapa HTML para evitar XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Cargar likes y repapos counts para un post
+    function cargarContadores(pubId) {
+      // Likes
+      const likesRef = collection(db, "publicaciones", pubId, "likes");
+      onSnapshot(likesRef, (snapshot) => {
+        const likeCount = snapshot.size;
+        const tarjeta = document.querySelector(`.tarjeta[data-id="${pubId}"]`);
+        if (!tarjeta) return;
+        const likeSpan = tarjeta.querySelector(".like-btn .like-count");
+        likeSpan.textContent = likeCount;
+
+        // Cambiar color si el usuario dio like
+        if (currentUser) {
+          const userLikeDoc = snapshot.docs.find(d => d.id === currentUser.uid);
+          if (userLikeDoc) {
+            likeSpan.parentElement.style.color = "#ff4444";
+          } else {
+            likeSpan.parentElement.style.color = "#0ff";
+          }
+        }
+      });
+
+      // Repapos (retweets)
+      const repaposRef = collection(db, "publicaciones", pubId, "repapos");
+      onSnapshot(repaposRef, (snapshot) => {
+        const repapoCount = snapshot.size;
+        const tarjeta = document.querySelector(`.tarjeta[data-id="${pubId}"]`);
+        if (!tarjeta) return;
+        const repapoSpan = tarjeta.querySelector(".retweet-btn .retweet-count");
+        repapoSpan.textContent = repapoCount;
+
+        if (currentUser) {
+          const userRepapoDoc = snapshot.docs.find(d => d.id === currentUser.uid);
+          if (userRepapoDoc) {
+            repapoSpan.parentElement.style.color = "#44ff44";
+          } else {
+            repapoSpan.parentElement.style.color = "#0ff";
+          }
+        }
+      });
+    }
+
+    // Cargar comentarios de un post (ocultos inicialmente)
+    function cargarComentarios(pubId) {
+      const comentariosDiv = document.getElementById(`comentarios-${pubId}`);
+      comentariosDiv.style.display = "none"; // oculto por defecto
+
+      const comentariosRef = collection(db, "publicaciones", pubId, "comentarios");
+      onSnapshot(query(comentariosRef, orderBy("fecha", "asc")), (snapshot) => {
+        comentariosDiv.innerHTML = "";
+
+        snapshot.forEach((docComentario) => {
+          const com = docComentario.data();
+          const comentarioDiv = document.createElement("div");
+          comentarioDiv.className = "comentario";
+
+          comentarioDiv.innerHTML = `
+            <p><span class="comentario-autor" data-uid="${com.autorUID}">${escapeHtml(com.autorNick)}</span></p>
+            <p>${escapeHtml(com.texto)}</p>
+            <div class="interacciones">
+              <span class="like-comentario-btn" data-pid="${pubId}" data-cid="${docComentario.id}">❤️ Like <span class="like-count">0</span></span>
+              <span class="retweet-comentario-btn" data-pid="${pubId}" data-cid="${docComentario.id}">🔁 RePapo <span class="retweet-count">0</span></span>
+            </div>
+          `;
+
+          comentariosDiv.appendChild(comentarioDiv);
+
+          // Cargar likes y repapos para comentario
+          cargarContadoresComentario(pubId, docComentario.id, comentarioDiv);
+
+        });
+
+        // Añadir input para nuevo comentario
+        const inputComentario = document.createElement("textarea");
+        inputComentario.className = "input-comentario";
+        inputComentario.placeholder = "Escribe un comentario...";
+        comentariosDiv.appendChild(inputComentario);
+
+        const btnComentar = document.createElement("button");
+        btnComentar.className = "btn-comentar";
+        btnComentar.textContent = "Publicar comentario";
+        comentariosDiv.appendChild(btnComentar);
+
+        btnComentar.onclick = async () => {
+          const textoComentario = inputComentario.value.trim();
+          if (!textoComentario) return alert("Escribe un comentario antes de publicar.");
+
+          try {
+            await addDoc(collection(db, "publicaciones", pubId, "comentarios"), {
+              texto: textoComentario,
+              autorUID: currentUser.uid,
+              autorNick: currentUser.displayName || currentUser.email.split('@')[0],
+              fecha: new Date()
+            });
+            inputComentario.value = "";
+          } catch (e) {
+            alert("Error al publicar comentario: " + e.message);
+          }
+        };
+      });
+    }
+
+    // Cargar likes y repapos de comentario
+    function cargarContadoresComentario(pubId, comentarioId, comentarioDiv) {
+      const likesRef = collection(db, "publicaciones", pubId, "comentarios", comentarioId, "likes");
+      onSnapshot(likesRef, (snapshot) => {
+        const likeCount = snapshot.size;
+        const likeSpan = comentarioDiv.querySelector(".like-comentario-btn .like-count");
+        likeSpan.textContent = likeCount;
+
+        if (currentUser) {
+          const userLikeDoc = snapshot.docs.find(d => d.id === currentUser.uid);
+          if (userLikeDoc) {
+            likeSpan.parentElement.style.color = "#ff4444";
+          } else {
+            likeSpan.parentElement.style.color = "#0ff";
+          }
+        }
+      });
+
+      const repaposRef = collection(db, "publicaciones", pubId, "comentarios", comentarioId, "repapos");
+      onSnapshot(repaposRef, (snapshot) => {
+        const repapoCount = snapshot.size;
+        const repapoSpan = comentarioDiv.querySelector(".retweet-comentario-btn .retweet-count");
+        repapoSpan.textContent = repapoCount;
+
+        if (currentUser) {
+          const userRepapoDoc = snapshot.docs.find(d => d.id === currentUser.uid);
+          if (userRepapoDoc) {
+            repapoSpan.parentElement.style.color = "#44ff44";
+          } else {
+            repapoSpan.parentElement.style.color = "#0ff";
+          }
+        }
+      });
+    }
+
+    // Agrega eventos para los botones de interacción en una tarjeta
+    function agregarEventosInteraccion(tarjeta, pubId) {
+      const likeBtn = tarjeta.querySelector(".like-btn");
+      const repapoBtn = tarjeta.querySelector(".retweet-btn");
+      const commentBtn = tarjeta.querySelector(".comment-btn");
+      const shareBtn = tarjeta.querySelector(".share-btn");
+      const comentariosDiv = tarjeta.querySelector(".comentarios");
+
+      likeBtn.onclick = async () => {
+        if (!currentUser) return alert("Debes iniciar sesión.");
+        const likeDocRef = doc(db, "publicaciones", pubId, "likes", currentUser.uid);
+        const likeDocSnap = await getDoc(likeDocRef);
+        if (likeDocSnap.exists()) {
+          await deleteDoc(likeDocRef);
+        } else {
+          await setDoc(likeDocRef, { fecha: new Date() });
+        }
       };
 
-      await addDoc(collection(db, "publicaciones"), nuevoPost);
-      document.getElementById("nuevoMensaje").value = "";
-    }
-
-    // Función para crear tarjeta de comentario
-    async function crearTarjetaComentario(postId, comentarioData, comentarioId) {
-      const cont = document.createElement("div");
-      cont.className = "comentario";
-
-      // Obtener datos de usuario autor comentario
-      let avatar = "";
-      let nickname = "Usuario";
-      try {
-        const userSnap = await getDoc(doc(db, "users", comentarioData.autorUID));
-        if (userSnap.exists()) {
-          const dataUser = userSnap.data();
-          avatar = dataUser.avatar || "";
-          nickname = dataUser.nickname || nickname;
-        }
-      } catch {}
-
-      const likeCount = comentarioData.likeUIDs ? comentarioData.likeUIDs.length : 0;
-      const repapoCount = comentarioData.repaposUIDs ? comentarioData.repaposUIDs.length : 0;
-      const userLiked = comentarioData.likeUIDs && comentarioData.likeUIDs.includes(currentUser.uid);
-      const userRepaped = comentarioData.repaposUIDs && comentarioData.repaposUIDs.includes(currentUser.uid);
-
-      cont.innerHTML = `
-        <div class="comentario-header" onclick="mostrarPerfil('${nickname}', '${comentarioData.autorUID}')">
-          <img src="${avatar}" alt="avatar" />
-          <strong>${nickname}</strong>
-        </div>
-        <div class="comentario-text">${comentarioData.texto}</div>
-        <div class="interacciones-comentario">
-          <span class="like-comentario ${userLiked ? 'liked' : ''}" onclick="toggleLikeComentario(event, '${postId}', '${comentarioId}')">❤️ ${likeCount}</span>
-          <span class="repapo-comentario ${userRepaped ? 'repaped' : ''}" onclick="toggleRepapoComentario(event, '${postId}', '${comentarioId}')">🔁 ${repapoCount}</span>
-        </div>
-      `;
-
-      return cont;
-    }
-
-    // Crear tarjeta post con comentarios
-    async function crearTarjetaPost(postId, data) {
-      const tarjeta = document.createElement("div");
-      tarjeta.className = "tarjeta";
-
-      // Obtener usuario autor
-      let avatar = "";
-      let nickname = "Usuario";
-      try {
-        const userSnap = await getDoc(doc(db, "users", data.autorUID));
-        if (userSnap.exists()) {
-          const dataUser = userSnap.data();
-          avatar = dataUser.avatar || "";
-          nickname = dataUser.nickname || nickname;
-        }
-      } catch {}
-
-      // Contar likes y repapos
-      const likeCount = data.likeUIDs ? data.likeUIDs.length : 0;
-      const repapoCount = data.repaposUIDs ? data.repaposUIDs.length : 0;
-      const userLiked = data.likeUIDs && data.likeUIDs.includes(currentUser.uid);
-      const userRepaped = data.repaposUIDs && data.repaposUIDs.includes(currentUser.uid);
-
-      // Crear contenedor para comentarios y textarea oculto
-      const comentariosContenedor = document.createElement("div");
-      comentariosContenedor.className = "comentarios-container";
-
-      const textareaComentario = document.createElement("textarea");
-      textareaComentario.className = "textarea-comentario";
-      textareaComentario.placeholder = "Escribe un comentario...";
-      textareaComentario.style.display = "none";
-
-      const botonEnviarComentario = document.createElement("button");
-      botonEnviarComentario.textContent = "Enviar comentario";
-      botonEnviarComentario.style.display = "none";
-
-      // Mostrar/ocultar textarea y botón al click en comentar
-      function toggleComentario() {
-        if (textareaComentario.style.display === "none") {
-          textareaComentario.style.display = "block";
-          botonEnviarComentario.style.display = "inline-block";
-          textareaComentario.focus();
+      repapoBtn.onclick = async () => {
+        if (!currentUser) return alert("Debes iniciar sesión.");
+        const repapoDocRef = doc(db, "publicaciones", pubId, "repapos", currentUser.uid);
+        const repapoDocSnap = await getDoc(repapoDocRef);
+        if (repapoDocSnap.exists()) {
+          await deleteDoc(repapoDocRef);
         } else {
-          textareaComentario.style.display = "none";
-          botonEnviarComentario.style.display = "none";
-          textareaComentario.value = "";
+          await setDoc(repapoDocRef, { fecha: new Date() });
         }
-      }
+      };
 
-      // Enviar comentario a Firestore
-      botonEnviarComentario.addEventListener("click", async () => {
-        const texto = textareaComentario.value.trim();
-        if (!texto) return alert("Escribe un comentario.");
-        const comentario = {
-          texto,
-          autorUID: currentUser.uid,
-          fecha: new Date(),
-          likeUIDs: [],
-          repaposUIDs: []
-        };
-        await addDoc(collection(db, "publicaciones", postId, "comentarios"), comentario);
-        textareaComentario.value = "";
-        textareaComentario.style.display = "none";
-        botonEnviarComentario.style.display = "none";
+      commentBtn.onclick = () => {
+        if (comentariosDiv.style.display === "none" || comentariosDiv.style.display === "") {
+          comentariosDiv.style.display = "block";
+        } else {
+          comentariosDiv.style.display = "none";
+        }
+      };
+
+      shareBtn.onclick = async () => {
+        const postTexto = tarjeta.querySelector("p:nth-child(2)").textContent;
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: "Papoclub Post",
+              text: postTexto,
+              url: window.location.href
+            });
+          } catch (err) {
+            alert("Error al compartir: " + err);
+          }
+        } else {
+          // fallback: copiar al portapapeles
+          try {
+            await navigator.clipboard.writeText(postTexto);
+            alert("Texto copiado al portapapeles");
+          } catch {
+            alert("Tu navegador no soporta compartir ni copiar al portapapeles");
+          }
+        }
+      };
+
+      // Eventos para like y repapo en comentarios (delegación dinámica)
+      comentariosDiv.addEventListener("click", async (e) => {
+        const target = e.target;
+        if (target.classList.contains("like-comentario-btn")) {
+          if (!currentUser) return alert("Debes iniciar sesión.");
+          const comentarioId = target.getAttribute("data-cid");
+          const pubId = target.getAttribute("data-pid");
+          const likeDocRef = doc(db, "publicaciones", pubId, "comentarios", comentarioId, "likes", currentUser.uid);
+          const likeDocSnap = await getDoc(likeDocRef);
+          if (likeDocSnap.exists()) {
+            await deleteDoc(likeDocRef);
+          } else {
+            await setDoc(likeDocRef, { fecha: new Date() });
+          }
+        } else if (target.classList.contains("retweet-comentario-btn")) {
+          if (!currentUser) return alert("Debes iniciar sesión.");
+          const comentarioId = target.getAttribute("data-cid");
+          const pubId = target.getAttribute("data-pid");
+          const repapoDocRef = doc(db, "publicaciones", pubId, "comentarios", comentarioId, "repapos", currentUser.uid);
+          const repapoDocSnap = await getDoc(repapoDocRef);
+          if (repapoDocSnap.exists()) {
+            await deleteDoc(repapoDocRef);
+          } else {
+            await setDoc(repapoDocRef, { fecha: new Date() });
+          }
+        }
       });
 
-      // Cabecera con avatar y nickname clickeable para perfil público
-      tarjeta.innerHTML = `
-        <div class="tarjeta-header" onclick="mostrarPerfil('${nickname}', '${data.autorUID}')">
-          <img src="${avatar}" alt="avatar" />
-          <strong>${nickname}</strong>
-        </div>
-        <p>${data.texto}</p>
-        <div class="interacciones">
-          <span class="like-post ${userLiked ? 'liked' : ''}" onclick="toggleLike(event, '${postId}')">❤️ ${likeCount}</span>
-          <span class="repapo-post ${userRepaped ? 'repaped' : ''}" onclick="toggleRepapo(event, '${postId}')">🔁 ${repapoCount}</span>
-          <span class="comment-post" onclick="toggleComentario()">💬 comment</span>
-          <span class="share-post" onclick="sharePost('${encodeURIComponent(data.texto)}')">📤 share</span>
-        </div>
-      `;
+      // Mostrar perfil usuario al clicar en nick
+      tarjeta.querySelector(".autor-nick").onclick = () => {
+        const uid = tarjeta.querySelector(".autor-nick").getAttribute("data-uid");
+        if(uid) location.href = `perfil.html?id=${uid}`;
+      };
 
-      tarjeta.appendChild(textareaComentario);
-      tarjeta.appendChild(botonEnviarComentario);
-      tarjeta.appendChild(comentariosContenedor);
-
-      // Cargar comentarios en tiempo real
-      const qComentarios = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
-      onSnapshot(qComentarios, async (snapshot) => {
-        comentariosContenedor.innerHTML = "";
-        for (const docu of snapshot.docs) {
-          const comentData = docu.data();
-          const comentId = docu.id;
-          const comentTarjeta = await crearTarjetaComentario(postId, comentData, comentId);
-          comentariosContenedor.appendChild(comentTarjeta);
+      // Mostrar perfil usuario al clicar en nick comentario
+      comentariosDiv.addEventListener("click", e => {
+        const target = e.target;
+        if (target.classList.contains("comentario-autor")) {
+          const uid = target.getAttribute("data-uid");
+          if(uid) location.href = `perfil.html?id=${uid}`;
         }
       });
-
-      return tarjeta;
-    }
-
-    // Toggle like post
-    async function toggleLike(event, postId) {
-      event.stopPropagation();
-      const docRef = doc(db, "publicaciones", postId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-      const likeUIDs = data.likeUIDs || [];
-      const userHasLiked = likeUIDs.includes(currentUser.uid);
-      if (userHasLiked) {
-        await updateDoc(docRef, { likeUIDs: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(docRef, { likeUIDs: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    // Toggle repapo post
-    async function toggleRepapo(event, postId) {
-      event.stopPropagation();
-      const docRef = doc(db, "publicaciones", postId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-      const repaposUIDs = data.repaposUIDs || [];
-      const userHasRepaped = repaposUIDs.includes(currentUser.uid);
-      if (userHasRepaped) {
-        await updateDoc(docRef, { repaposUIDs: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(docRef, { repaposUIDs: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    // Toggle like comentario
-    async function toggleLikeComentario(event, postId, comentarioId) {
-      event.stopPropagation();
-      const docRef = doc(db, "publicaciones", postId, "comentarios", comentarioId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-      const likeUIDs = data.likeUIDs || [];
-      const userHasLiked = likeUIDs.includes(currentUser.uid);
-      if (userHasLiked) {
-        await updateDoc(docRef, { likeUIDs: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(docRef, { likeUIDs: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    // Toggle repapo comentario
-    async function toggleRepapoComentario(event, postId, comentarioId) {
-      event.stopPropagation();
-      const docRef = doc(db, "publicaciones", postId, "comentarios", comentarioId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-      const repaposUIDs = data.repaposUIDs || [];
-      const userHasRepaped = repaposUIDs.includes(currentUser.uid);
-      if (userHasRepaped) {
-        await updateDoc(docRef, { repaposUIDs: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(docRef, { repaposUIDs: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    // Mostrar perfil público al hacer click en avatar o nickname
-    function mostrarPerfil(nick, uid) {
-      window.location.href = `perfil.html?id=${uid}`;
-    }
-
-    // Compartir post usando Web Share API si disponible o fallback copiar texto
-    async function sharePost(texto) {
-      const decodedText = decodeURIComponent(texto);
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "Papoclub",
-            text: decodedText,
-            url: window.location.href
-          });
-        } catch (err) {
-          alert("Error al compartir: " + err);
-        }
-      } else {
-        // fallback copiar al portapapeles
-        try {
-          await navigator.clipboard.writeText(decodedText);
-          alert("Texto copiado al portapapeles para compartir.");
-        } catch {
-          alert("No se pudo acceder al portapapeles.");
-        }
-      }
     }
 
     // Logout
@@ -540,28 +556,6 @@
       signOut(auth).then(() => location.href = "index.html");
     }
     window.logout = logout;
-
-    // Carga inicial y escucha en tiempo real de posts
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        alert("Debes iniciar sesión.");
-        location.href = "index.html";
-        return;
-      }
-      currentUser = user;
-
-      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
-      onSnapshot(q, async (snapshot) => {
-        const lista = document.getElementById("listaMensajes");
-        lista.innerHTML = "";
-        for (const docu of snapshot.docs) {
-          const data = docu.data();
-          const id = docu.id;
-          const tarjeta = await crearTarjetaPost(id, data);
-          lista.appendChild(tarjeta);
-        }
-      });
-    });
   </script>
 </body>
 </html>
