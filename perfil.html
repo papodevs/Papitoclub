@@ -56,6 +56,7 @@
       padding: 20px;
       border-radius: 20px;
       box-shadow: 0 0 12px #00e5ff88;
+      text-align: left;
     }
 
     .perfil-publico {
@@ -66,11 +67,13 @@
       padding: 20px;
       margin-top: 20px;
       color: #fff;
+      text-align: center;
     }
 
     h2 {
       margin-bottom: 20px;
       color: #0ff;
+      text-align: center;
     }
 
     input[type="file"], input[type="text"] {
@@ -82,6 +85,7 @@
       color: #0ff;
       border: none;
       width: 90%;
+      box-sizing: border-box;
     }
 
     button {
@@ -94,6 +98,9 @@
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.3s;
       margin-top: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     button:hover {
@@ -101,7 +108,7 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ffaa;
     }
 
-    img {
+    img.avatar {
       margin-top: 20px;
       width: 100px;
       height: 100px;
@@ -109,10 +116,14 @@
       object-fit: cover;
       border: 3px solid #00e5ff;
       box-shadow: 0 0 8px #00e5ff;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .volver-home {
       margin-top: 20px;
+      text-align: center;
     }
 
     .volver-home a {
@@ -140,26 +151,13 @@
   </div>
 
   <div class="contenedor" id="contenedorPerfil">
-    <h2>Editar Perfil</h2>
-    <input type="text" id="correo" placeholder="Correo electrónico" disabled />
-    <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
-    <input type="text" id="web" placeholder="Sitio web personal" />
-    <input type="text" id="biografia" placeholder="Breve biografía" />
-    <input type="file" id="avatarInput" accept="image/*" />
-    <input type="text" id="avatarUrl" placeholder="O ingresa una URL de avatar" />
-    <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" />
-    <button id="subirAvatarBtn">Guardar Perfil</button>
-    <img id="vistaAvatar" src="" alt="Tu Avatar" />
-
-    <div class="volver-home">
-      <a href="home.html">⬅️ Volver al inicio</a>
-    </div>
+    <!-- Aquí irá el formulario para editar perfil -->
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, setDoc, serverTimestamp
+      getFirestore, doc, getDoc, setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -182,18 +180,111 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const avatarInput = document.getElementById("avatarInput");
-    const subirBtn = document.getElementById("subirAvatarBtn");
-    const vistaAvatar = document.getElementById("vistaAvatar");
-    const correoInput = document.getElementById("correo");
-    const nicknameInput = document.getElementById("nickname");
-    const webInput = document.getElementById("web");
-    const bioInput = document.getElementById("biografia");
-    const avatarUrlInput = document.getElementById("avatarUrl");
-    const fondoPerfilInput = document.getElementById("fondoPerfil");
     const contenedorPerfil = document.getElementById("contenedorPerfil");
 
     let currentUser = null;
+
+    function renderFormularioPerfil(data = {}) {
+      contenedorPerfil.innerHTML = `
+        <h2>Editar Perfil</h2>
+        <input type="text" id="correo" placeholder="Correo electrónico" disabled value="${data.email || ''}" />
+        <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" value="${data.nickname || ''}" />
+        <input type="text" id="web" placeholder="Sitio web personal" value="${data.web || ''}" />
+        <input type="text" id="biografia" placeholder="Breve biografía" value="${data.biografia || ''}" />
+        <input type="file" id="avatarInput" accept="image/*" />
+        <input type="text" id="avatarUrl" placeholder="O ingresa una URL de avatar" value="${data.avatar || ''}" />
+        <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" value="${data.fondo || ''}" />
+        <button id="subirAvatarBtn">Guardar Perfil</button>
+        <img id="vistaAvatar" class="avatar" src="${data.avatar || ''}" alt="Tu Avatar" />
+        <div class="volver-home">
+          <a href="home.html">⬅️ Volver al inicio</a>
+        </div>
+      `;
+
+      const avatarInput = document.getElementById("avatarInput");
+      const subirBtn = document.getElementById("subirAvatarBtn");
+      const vistaAvatar = document.getElementById("vistaAvatar");
+      const correoInput = document.getElementById("correo");
+      const nicknameInput = document.getElementById("nickname");
+      const webInput = document.getElementById("web");
+      const bioInput = document.getElementById("biografia");
+      const avatarUrlInput = document.getElementById("avatarUrl");
+      const fondoPerfilInput = document.getElementById("fondoPerfil");
+
+      subirBtn.addEventListener("click", async () => {
+        if (!currentUser) return alert("Debes iniciar sesión");
+        const nickname = nicknameInput.value.trim();
+        const web = webInput.value.trim();
+        const bio = bioInput.value.trim();
+        const avatarUrlManual = avatarUrlInput.value.trim();
+        const fondo = fondoPerfilInput.value.trim();
+
+        if (!nickname) return alert("Debes ingresar tu nick de usuario");
+
+        let avatarURL = avatarUrlManual;
+
+        const file = avatarInput.files[0];
+        if (file) {
+          const storageRef = ref(storage, `avatars/${currentUser.uid}/avatar.jpg`);
+          await uploadBytes(storageRef, file);
+          avatarURL = await getDownloadURL(storageRef);
+          vistaAvatar.src = avatarURL;
+        }
+
+        await setDoc(doc(db, "users", currentUser.uid), {
+          email: currentUser.email,
+          nickname,
+          web,
+          biografia: bio,
+          avatar: avatarURL || vistaAvatar.src || "",
+          fondo: fondo || ""
+        }, { merge: true });
+
+        alert("Perfil actualizado correctamente.");
+
+        // Actualizar tarjeta pública debajo
+        renderTarjetaPublica({
+          nickname,
+          avatar: avatarURL || vistaAvatar.src || "",
+          biografia: bio,
+          web,
+          fondo
+        });
+      });
+    }
+
+    function renderTarjetaPublica(data) {
+      // Si el formulario existe, mostramos la tarjeta pública debajo,
+      // si no, reemplazamos todo el contenido con la tarjeta pública (perfil externo)
+      const existeFormulario = !!document.getElementById("nickname");
+      const tarjetaHTML = `
+        <div class="perfil-publico" style="background-image: url('${data.fondo || ''}'); margin-top: 30px;">
+          <img src="${data.avatar || ''}" alt="Avatar" />
+          <h2>${data.nickname || 'Usuario sin nick'}</h2>
+          <p><em>${data.biografia || ''}</em></p>
+          <p><a href="${data.web || '#'}" style="color:#0ff" target="_blank">${data.web || ''}</a></p>
+        </div>
+      `;
+
+      if (existeFormulario) {
+        // Insertar después del formulario
+        // Primero elimina si ya existe una tarjeta pública previa
+        const prevTarjeta = document.querySelector(".perfil-publico.publica");
+        if (prevTarjeta) prevTarjeta.remove();
+
+        const divTemp = document.createElement("div");
+        divTemp.innerHTML = tarjetaHTML;
+        divTemp.firstChild.classList.add("publica");
+        contenedorPerfil.appendChild(divTemp.firstChild);
+      } else {
+        // Solo tarjeta pública para perfil externo
+        contenedorPerfil.innerHTML = tarjetaHTML + `
+          <div class="volver-home">
+            <a href="home.html">⬅️ Volver al inicio</a>
+          </div>
+        `;
+      }
+    }
 
     onAuthStateChanged(auth, async (user) => {
       const params = new URLSearchParams(location.search);
@@ -202,35 +293,22 @@
       if (user) {
         currentUser = user;
         if (perfilId && perfilId !== user.uid) {
+          // Perfil público de otro usuario
           const docSnap = await getDoc(doc(db, "users", perfilId));
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const fecha = data.creadoEn?.toDate?.().toLocaleDateString() || "Fecha no disponible";
-            contenedorPerfil.innerHTML = `
-              <div class="perfil-publico" style="background-image: url('${data.fondo || ''}')">
-                <img src="${data.avatar || ''}" alt="Avatar" />
-                <h2>${data.nickname || 'Usuario sin nick'}</h2>
-                <p><em>${data.biografia || ''}</em></p>
-                <p><a href="${data.web || '#'}" style="color:#0ff" target="_blank">${data.web || ''}</a></p>
-                <p style="margin-top:10px; font-size:0.9em; color:#ccc">📅 Miembro desde: ${fecha}</p>
-              </div>
-              <div class="volver-home">
-                <a href="home.html">⬅️ Volver al inicio</a>
-              </div>
-            `;
+            renderTarjetaPublica(data);
           } else {
             contenedorPerfil.innerHTML = `<p style="color: #fff">Perfil no encontrado.</p>`;
           }
         } else {
-          correoInput.value = user.email;
+          // Perfil propio
           const docSnap = await getDoc(doc(db, "users", user.uid));
           if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.avatar) vistaAvatar.src = data.avatar;
-            if (data.nickname) nicknameInput.value = data.nickname;
-            if (data.web) webInput.value = data.web;
-            if (data.biografia) bioInput.value = data.biografia;
-            if (data.fondo) fondoPerfilInput.value = data.fondo;
+            renderFormularioPerfil(docSnap.data());
+            renderTarjetaPublica(docSnap.data());
+          } else {
+            renderFormularioPerfil({ email: user.email });
           }
         }
       } else {
@@ -239,45 +317,11 @@
       }
     });
 
-    subirBtn.addEventListener("click", async () => {
-      if (!currentUser) return alert("Debes iniciar sesión");
-      const nickname = nicknameInput.value.trim();
-      const web = webInput.value.trim();
-      const bio = bioInput.value.trim();
-      const avatarUrlManual = avatarUrlInput.value.trim();
-      const fondo = fondoPerfilInput.value.trim();
-
-      if (!nickname) return alert("Debes ingresar tu nick de usuario");
-
-      let avatarURL = avatarUrlManual;
-
-      const file = avatarInput.files[0];
-      if (file) {
-        const storageRef = ref(storage, `avatars/${currentUser.uid}/avatar.jpg`);
-        await uploadBytes(storageRef, file);
-        avatarURL = await getDownloadURL(storageRef);
-        vistaAvatar.src = avatarURL;
-      }
-
-      await setDoc(doc(db, "users", currentUser.uid), {
-        email: currentUser.email,
-        nickname,
-        web,
-        biografia: bio,
-        avatar: avatarURL || vistaAvatar.src || "",
-        fondo: fondo || "",
-        creadoEn: serverTimestamp()
-      }, { merge: true });
-
-      alert("Perfil actualizado correctamente.");
-    });
-
     function logout() {
       signOut(auth).then(() => {
         location.href = "index.html";
       });
     }
-
     window.logout = logout;
   </script>
 </body>
