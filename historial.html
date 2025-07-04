@@ -2,15 +2,15 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Explorador de Juegos - Papoclub</title>
+  <title>Sección Juegos - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       margin: 0;
-      padding-top: 70px;
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
+      padding-top: 70px;
     }
 
     .menu-superior {
@@ -59,21 +59,20 @@
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 20px;
-      box-shadow: 0 0 12px #00e5ff55;
+      box-shadow: 0 0 10px #00e5ff55;
     }
 
-    .formulario-juego input {
+    input, textarea {
       width: 100%;
-      margin: 6px 0;
       padding: 10px;
+      margin-bottom: 10px;
       border-radius: 10px;
       border: none;
       background: #002f36;
       color: #0ff;
     }
 
-    .formulario-juego button {
-      margin-top: 10px;
+    button {
       background: #00e5ff;
       color: #003;
       border: none;
@@ -84,28 +83,14 @@
     }
 
     .tarjeta-juego img {
-      max-width: 100%;
+      width: 100%;
       border-radius: 12px;
       margin-bottom: 10px;
     }
 
-    .comentarios {
-      margin-top: 10px;
-    }
-
-    .comentarios div {
-      margin: 6px 0;
-      padding: 6px;
-      background: #003b4c;
-      border-radius: 10px;
-    }
-
-    .comentarios input {
-      width: 100%;
-      padding: 8px;
-      border-radius: 10px;
-      border: none;
-      margin-top: 6px;
+    .tarjeta-juego h3 {
+      margin-top: 0;
+      color: #fff;
     }
   </style>
 </head>
@@ -119,27 +104,23 @@
   </div>
 
   <div class="contenedor">
-    <div class="formulario-juego">
-      <input id="nombreJuego" placeholder="Nombre del juego" />
-      <input id="urlImagen" placeholder="URL de la imagen del juego" />
-      <input id="urlPagina" placeholder="Página del juego" />
-      <input id="telegram" placeholder="Cuenta de Telegram" />
-      <input id="discord" placeholder="Cuenta de Discord" />
-      <button onclick="publicarJuego()">Publicar Juego</button>
+    <div id="formularioJuego" class="formulario-juego" style="display: none;">
+      <h2>Publicar nuevo juego</h2>
+      <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
+      <input type="text" id="urlImagen" placeholder="URL de imagen del juego" />
+      <input type="text" id="paginaJuego" placeholder="Enlace a la página del juego" />
+      <input type="text" id="telegram" placeholder="Cuenta de Telegram" />
+      <input type="text" id="discord" placeholder="Cuenta de Discord" />
+      <button onclick="guardarJuego()">Guardar Juego</button>
     </div>
+
     <div id="listaJuegos"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, onSnapshot,
-      orderBy, query, doc, setDoc, getDocs,
-      updateDoc, deleteDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -154,75 +135,69 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser;
+    let currentUserUID = null;
 
     onAuthStateChanged(auth, (user) => {
       if (!user) return location.href = "index.html";
-      currentUser = user;
+      currentUserUID = user.uid;
+      document.getElementById("formularioJuego").style.display = "block";
       cargarJuegos();
     });
 
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
+    async function guardarJuego() {
+      const nombre = document.getElementById("nombreJuego").value.trim();
+      const imagen = document.getElementById("urlImagen").value.trim();
+      const pagina = document.getElementById("paginaJuego").value.trim();
+      const telegram = document.getElementById("telegram").value.trim();
+      const discord = document.getElementById("discord").value.trim();
 
-    window.publicarJuego = async () => {
-      const juego = {
-        nombre: document.getElementById("nombreJuego").value,
-        imagen: document.getElementById("urlImagen").value,
-        pagina: document.getElementById("urlPagina").value,
-        telegram: document.getElementById("telegram").value,
-        discord: document.getElementById("discord").value,
-        creadorUID: currentUser.uid,
-        creadoEn: new Date()
-      };
-      await addDoc(collection(db, "juegos"), juego);
-    };
+      if (!nombre || !imagen) return alert("Nombre e imagen son obligatorios");
+
+      await addDoc(collection(db, "juegos"), {
+        creadorUID: currentUserUID,
+        nombre,
+        imagen,
+        pagina,
+        telegram,
+        discord,
+        fecha: serverTimestamp()
+      });
+
+      document.getElementById("nombreJuego").value = "";
+      document.getElementById("urlImagen").value = "";
+      document.getElementById("paginaJuego").value = "";
+      document.getElementById("telegram").value = "";
+      document.getElementById("discord").value = "";
+    }
 
     function cargarJuegos() {
-      const q = query(collection(db, "juegos"), orderBy("creadoEn", "desc"));
-      const contenedor = document.getElementById("listaJuegos");
+      const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
+      const lista = document.getElementById("listaJuegos");
 
-      onSnapshot(q, (snap) => {
-        contenedor.innerHTML = "";
-        snap.forEach(async (docJuego) => {
-          const juego = docJuego.data();
-          const id = docJuego.id;
+      onSnapshot(q, (snapshot) => {
+        lista.innerHTML = "";
+        snapshot.forEach(doc => {
+          const juego = doc.data();
           const tarjeta = document.createElement("div");
           tarjeta.className = "tarjeta-juego";
           tarjeta.innerHTML = `
+            <img src="${juego.imagen}" alt="${juego.nombre}" />
             <h3>${juego.nombre}</h3>
-            <img src="${juego.imagen}" alt="Imagen del juego" />
-            <p><a href="${juego.pagina}" target="_blank">Página oficial</a></p>
-            <p>Telegram: ${juego.telegram}</p>
-            <p>Discord: ${juego.discord}</p>
-            <div class="comentarios" id="comentarios-${id}"></div>
-            <input placeholder="Escribe un comentario..." onkeypress="if(event.key==='Enter'){comentarJuego('${id}', this.value); this.value='';}" />
+            ${juego.pagina ? `<p><a href="${juego.pagina}" target="_blank">Página oficial</a></p>` : ""}
+            ${juego.telegram ? `<p>Telegram: ${juego.telegram}</p>` : ""}
+            ${juego.discord ? `<p>Discord: ${juego.discord}</p>` : ""}
           `;
-          contenedor.appendChild(tarjeta);
-          cargarComentarios(id);
+          lista.appendChild(tarjeta);
         });
       });
     }
 
-    window.comentarJuego = async (juegoId, texto) => {
-      const comentario = {
-        autor: currentUser.email,
-        texto,
-        fecha: new Date()
-      };
-      await addDoc(collection(db, `juegos/${juegoId}/comentarios`), comentario);
-    };
-
-    function cargarComentarios(juegoId) {
-      const cont = document.getElementById("comentarios-" + juegoId);
-      const q = query(collection(db, `juegos/${juegoId}/comentarios`), orderBy("fecha"));
-      onSnapshot(q, snap => {
-        cont.innerHTML = "";
-        snap.forEach(doc => {
-          const c = doc.data();
-          cont.innerHTML += `<div><strong>${c.autor}</strong>: ${c.texto}</div>`;
-        });
+    function logout() {
+      signOut(auth).then(() => {
+        location.href = "index.html";
       });
     }
+    window.logout = logout;
   </script>
 </body>
 </html>
