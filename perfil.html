@@ -3,18 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>Perfil - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0;
-      padding-top: 70px; /* espacio para menú superior fijo */
       background: linear-gradient(135deg, #006994, #00b88a);
-      color: #0ff;
       font-family: 'Segoe UI', sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+      color: #0ff;
+      margin: 0;
+      padding-top: 70px;
+      text-align: center;
     }
 
     .menu-superior {
@@ -24,15 +21,12 @@
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow:
-        0 0 8px #00e5ffaa,
-        0 0 20px #00e5ff88,
-        inset 0 2px 6px #00b8d9cc;
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
-      padding-right: 15px;
+      padding-right: 12px;
       z-index: 1000;
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
@@ -42,360 +36,185 @@
       background: none;
       border: none;
       color: #ccf9ff;
-      font-size: 1.3em;
+      font-size: 1.4em;
       cursor: pointer;
-      padding: 6px 12px;
+      padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
-      flex-shrink: 0;
     }
 
     .menu-superior button:hover {
       transform: translateY(-3px);
-      box-shadow:
-        0 0 12px #00e5ff,
-        0 0 30px #00e5ffaa;
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    main.contenido {
-      max-width: 700px;
-      width: 100%;
+    .contenedor {
+      background: rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      margin: auto;
       padding: 20px;
-      box-sizing: border-box;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
+      border-radius: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
     }
 
-    h2, h3 {
-      margin-top: 0;
-    }
-
-    .perfil-info, .perfil-editar {
-      background: #011;
-      border: 2px solid #00e5ff;
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 0 15px #00e5ff66;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-      user-select: none;
-    }
-
-    .perfil-editar {
-      /* Oculto por defecto, se muestra solo para el usuario autenticado */
-      display: none;
-    }
-
-    .avatar {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 3px solid #0ff;
-      box-shadow: 0 0 12px #0ff;
-      object-fit: cover;
-      background: #022;
-    }
-
-    .usuario-nombre {
-      font-size: 1.8em;
-      font-weight: bold;
+    h2 {
+      margin-bottom: 20px;
       color: #0ff;
     }
 
-    .usuario-email {
-      font-size: 1em;
-      color: #66ffffcc;
+    input[type="file"], input[type="text"] {
+      display: block;
+      margin: 10px auto;
+      border-radius: 10px;
+      padding: 10px;
+      background: #002f36;
+      color: #0ff;
+      border: none;
+      width: 90%;
     }
 
-    button.cerrar-sesion, button.guardar-cambios {
-      align-self: center;
-      background: #0ff;
-      color: #000;
+    button {
+      background: #00e5ff;
+      color: #003;
       border: none;
-      padding: 10px 30px;
+      padding: 10px 20px;
       font-weight: bold;
       border-radius: 12px;
       cursor: pointer;
-      transition: background-color 0.2s ease;
-      user-select: none;
+      transition: transform 0.2s, box-shadow 0.3s;
+      margin-top: 10px;
     }
 
-    button.cerrar-sesion:hover, button.guardar-cambios:hover {
-      background: #33ffff;
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ffaa;
     }
 
-    .perfil-editar form {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .perfil-editar label {
-      font-weight: bold;
-      color: #0ff;
-      margin-bottom: 4px;
-    }
-
-    .perfil-editar input[type="text"],
-    .perfil-editar textarea {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid #0ff;
-      background: #011;
-      color: #0ff;
-      font-size: 1em;
-      resize: vertical;
-      box-sizing: border-box;
-    }
-
-    .perfil-editar textarea {
-      min-height: 80px;
-    }
-
-    .perfil-editar input[type="file"] {
-      border: none;
-      padding: 4px;
-      background: #011;
-      color: #0ff;
-      border-radius: 8px;
-      font-size: 1em;
-    }
-
-    .mensaje-estado {
-      font-size: 0.9em;
-      color: #0ff;
-      text-align: center;
-      min-height: 1.2em;
-      user-select: none;
-    }
-
-    @media (max-width: 480px) {
-      main.contenido {
-        max-width: 100%;
-        padding: 15px;
-      }
-
-      .menu-superior button {
-        font-size: 1.1em;
-        padding: 6px 8px;
-      }
-
-      .avatar {
-        width: 90px;
-        height: 90px;
-      }
-
-      .usuario-nombre {
-        font-size: 1.4em;
-      }
+    img {
+      margin-top: 20px;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #00e5ff;
+      box-shadow: 0 0 8px #00e5ff;
     }
   </style>
 </head>
 <body>
-
   <div class="menu-superior">
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">📜</button>
+    <button onclick="location.href='historial.html'">🎮</button>
     <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
-  <main class="contenido">
-    <h2>Perfil de Usuario</h2>
-    <section class="perfil-info">
-      <img id="avatar" class="avatar" src="default-avatar.png" alt="Avatar" />
-      <div class="usuario-nombre" id="nombreUsuario">Cargando...</div>
-      <div class="usuario-email" id="emailUsuario"></div>
-      <div id="bioUsuario" style="color:#66ffffcc; margin-top:8px; max-width:90%; text-align:center;"></div>
-      <a id="urlPersonal" href="#" target="_blank" rel="noopener" style="color:#0ff; font-weight:bold; margin-top:8px; display:none;"></a>
-    </section>
-
-    <button class="cerrar-sesion" onclick="logout()">Cerrar sesión</button>
-
-    <!-- Solo se muestra al usuario autenticado -->
-    <section class="perfil-editar" id="seccionEditarPerfil">
-      <h3>Editar Perfil</h3>
-      <form id="formEditarPerfil">
-        <label for="inputNick">Nick (Usuario):</label>
-        <input type="text" id="inputNick" name="nick" maxlength="30" placeholder="Tu nick de usuario" />
-
-        <label for="inputAvatarURL">URL Foto de Perfil (opcional):</label>
-        <input type="text" id="inputAvatarURL" name="avatarURL" placeholder="URL de tu avatar" />
-
-        <label for="inputAvatarFile">O subir imagen de perfil:</label>
-        <input type="file" id="inputAvatarFile" accept="image/*" />
-
-        <label for="inputBio">Biografía:</label>
-        <textarea id="inputBio" name="bio" maxlength="200" placeholder="Pequeña descripción o biografía"></textarea>
-
-        <label for="inputURL">URL Personal:</label>
-        <input type="text" id="inputURL" name="urlPersonal" placeholder="Tu página personal o redes" />
-
-        <div class="mensaje-estado" id="mensajeEstado"></div>
-
-        <button type="submit" class="guardar-cambios">Guardar Cambios</button>
-      </form>
-    </section>
-  </main>
+  <div class="contenedor">
+    <h2>Editar Perfil</h2>
+    <input type="text" id="correo" placeholder="Correo electrónico" disabled />
+    <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
+    <input type="text" id="web" placeholder="Sitio web personal" />
+    <input type="file" id="avatarInput" accept="image/*" />
+    <input type="text" id="avatarUrl" placeholder="O ingresa una URL de avatar" />
+    <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" />
+    <button id="subirAvatarBtn">Guardar Perfil</button>
+    <img id="vistaAvatar" src="" alt="Tu Avatar" />
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import {
+      getFirestore, doc, updateDoc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
       authDomain: "papoclub-737ac.firebaseapp.com",
       projectId: "papoclub-737ac",
       storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "1016897274452",
-      appId: "1:1016897274452:web:9b096128cbb136357763c1"
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
     };
 
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
+    const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const avatarEl = document.getElementById("avatar");
-    const nombreEl = document.getElementById("nombreUsuario");
-    const emailEl = document.getElementById("emailUsuario");
-    const bioEl = document.getElementById("bioUsuario");
-    const urlPersonalEl = document.getElementById("urlPersonal");
-
-    const seccionEditarPerfil = document.getElementById("seccionEditarPerfil");
-
-    const inputNick = document.getElementById("inputNick");
-    const inputAvatarURL = document.getElementById("inputAvatarURL");
-    const inputAvatarFile = document.getElementById("inputAvatarFile");
-    const inputBio = document.getElementById("inputBio");
-    const inputURL = document.getElementById("inputURL");
-    const formEditarPerfil = document.getElementById("formEditarPerfil");
-    const mensajeEstado = document.getElementById("mensajeEstado");
+    const avatarInput = document.getElementById("avatarInput");
+    const subirBtn = document.getElementById("subirAvatarBtn");
+    const vistaAvatar = document.getElementById("vistaAvatar");
+    const correoInput = document.getElementById("correo");
+    const nicknameInput = document.getElementById("nickname");
+    const webInput = document.getElementById("web");
+    const avatarUrlInput = document.getElementById("avatarUrl");
+    const fondoPerfilInput = document.getElementById("fondoPerfil");
 
     let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        location.href = "index.html";
-        return;
-      }
-      currentUser = user;
-
-      try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-
-          // Actualizar tarjeta de perfil
-          avatarEl.src = data.avatarURL || "default-avatar.png";
-          nombreEl.textContent = data.username || user.email || "Usuario";
-          emailEl.textContent = user.email || "";
-          bioEl.textContent = data.bio || "";
-          if (data.urlPersonal) {
-            urlPersonalEl.href = data.urlPersonal;
-            urlPersonalEl.textContent = data.urlPersonal;
-            urlPersonalEl.style.display = "block";
-          } else {
-            urlPersonalEl.style.display = "none";
-          }
-
-          // Rellenar inputs sólo si es el usuario autenticado
-          if (user.uid === currentUser.uid) {
-            seccionEditarPerfil.style.display = "flex";
-
-            inputNick.value = data.username || "";
-            inputAvatarURL.value = data.avatarURL || "";
-            inputBio.value = data.bio || "";
-            inputURL.value = data.urlPersonal || "";
-          } else {
-            seccionEditarPerfil.style.display = "none";
-          }
-
-        } else {
-          // Perfil sin datos adicionales
-          avatarEl.src = "default-avatar.png";
-          nombreEl.textContent = user.email || "Usuario";
-          emailEl.textContent = "";
-          bioEl.textContent = "";
-          urlPersonalEl.style.display = "none";
-          seccionEditarPerfil.style.display = "flex"; // En este caso perfil propio también visible
+      if (user) {
+        currentUser = user;
+        correoInput.value = user.email;
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.avatar) vistaAvatar.src = data.avatar;
+          if (data.nickname) nicknameInput.value = data.nickname;
+          if (data.web) webInput.value = data.web;
+          if (data.fondo) fondoPerfilInput.value = data.fondo;
         }
-      } catch (error) {
-        console.error("Error al cargar perfil:", error);
-        nombreEl.textContent = "Error al cargar perfil";
+      } else {
+        alert("Debes iniciar sesión.");
+        location.href = "login.html";
       }
     });
 
-    formEditarPerfil.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      mensajeEstado.textContent = "";
-      if (!currentUser) return alert("No estás autenticado.");
+    subirBtn.addEventListener("click", async () => {
+      if (!currentUser) return alert("Debes iniciar sesión");
+      const nickname = nicknameInput.value.trim();
+      const web = webInput.value.trim();
+      const avatarUrlManual = avatarUrlInput.value.trim();
+      const fondo = fondoPerfilInput.value.trim();
 
-      const nuevoNick = inputNick.value.trim();
-      const urlAvatarManual = inputAvatarURL.value.trim();
-      const archivoAvatar = inputAvatarFile.files[0];
-      const nuevaBio = inputBio.value.trim();
-      const nuevaURL = inputURL.value.trim();
+      if (!nickname) return alert("Debes ingresar tu nick de usuario");
 
-      if (!nuevoNick) {
-        alert("El nick no puede estar vacío.");
-        return;
+      let avatarURL = avatarUrlManual;
+
+      const file = avatarInput.files[0];
+      if (file) {
+        const storageRef = ref(storage, `avatars/${currentUser.uid}/avatar.jpg`);
+        await uploadBytes(storageRef, file);
+        avatarURL = await getDownloadURL(storageRef);
+        vistaAvatar.src = avatarURL;
       }
 
-      mensajeEstado.textContent = "Guardando cambios...";
+      await setDoc(doc(db, "users", currentUser.uid), {
+        email: currentUser.email,
+        nickname,
+        web,
+        avatar: avatarURL || vistaAvatar.src || "",
+        fondo: fondo || ""
+      }, { merge: true });
 
-      try {
-        let avatarURLFinal = urlAvatarManual || null;
-
-        if (archivoAvatar) {
-          const storageRef = ref(storage, `avatars/${currentUser.uid}/${archivoAvatar.name}`);
-          await uploadBytes(storageRef, archivoAvatar);
-          avatarURLFinal = await getDownloadURL(storageRef);
-        }
-
-        await setDoc(doc(db, "users", currentUser.uid), {
-          username: nuevoNick,
-          avatarURL: avatarURLFinal,
-          bio: nuevaBio,
-          urlPersonal: nuevaURL
-        }, { merge: true });
-
-        // Actualizar tarjeta de perfil inmediatamente
-        avatarEl.src = avatarURLFinal || "default-avatar.png";
-        nombreEl.textContent = nuevoNick;
-        bioEl.textContent = nuevaBio;
-        if (nuevaURL) {
-          urlPersonalEl.href = nuevaURL;
-          urlPersonalEl.textContent = nuevaURL;
-          urlPersonalEl.style.display = "block";
-        } else {
-          urlPersonalEl.style.display = "none";
-        }
-
-        inputAvatarURL.value = avatarURLFinal || "";
-        inputAvatarFile.value = "";
-        mensajeEstado.textContent = "Perfil actualizado con éxito.";
-      } catch (error) {
-        console.error("Error al guardar perfil:", error);
-        mensajeEstado.textContent = "Error al guardar perfil.";
-      }
+      alert("Perfil actualizado correctamente.");
     });
 
-    window.logout = () => {
+    function logout() {
       signOut(auth).then(() => {
-        location.href = "index.html";
+        location.href = "login.html";
       });
-    };
+    }
+
+    window.logout = logout;
   </script>
 </body>
 </html>
