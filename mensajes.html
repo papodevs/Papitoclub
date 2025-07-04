@@ -2,14 +2,14 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Mensajes - Papoclub</title>
+  <title>Mensajes Privados - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
       padding-top: 70px;
     }
 
@@ -48,50 +48,86 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    .contenedor {
+    .alerta {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: red;
+      color: white;
+      font-size: 0.7em;
+      border-radius: 50%;
+      padding: 2px 5px;
+      display: none;
+    }
+
+    #contenedorMensajes {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
       max-width: 600px;
       margin: auto;
-      padding: 1em;
+      padding: 20px;
     }
 
-    .mensaje-box {
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 0 10px #00e5ff55;
-    }
-
-    .mensaje-box input, .mensaje-box textarea {
-      width: 100%;
-      margin: 8px 0;
-      border-radius: 10px;
+    .mensaje {
+      background: rgba(0,0,0,0.4);
+      border-radius: 14px;
       padding: 10px;
+      box-shadow: 0 0 8px #00e5ff66;
+    }
+
+    .mensaje-propio {
+      background-color: rgba(0, 255, 255, 0.1);
+      align-self: flex-end;
+    }
+
+    .chat-control {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 0 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    input, textarea, select {
+      border-radius: 10px;
       border: none;
+      padding: 10px;
+      font-size: 1em;
       background: #002f36;
       color: #0ff;
     }
 
-    .mensaje-box button {
+    button.enviar {
       background: #00e5ff;
       color: #003;
       border: none;
-      padding: 10px 16px;
+      padding: 10px;
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
     }
 
-    .chat-historial {
-      background: rgba(0,0,0,0.3);
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 0 6px #00e5ff44;
-      margin-bottom: 10px;
-    }
-
-    .chat-historial p {
-      margin: 6px 0;
+    @media (min-width: 768px) {
+      #chatContainer {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+      #listaUsuarios {
+        width: 200px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 14px;
+        padding: 10px;
+        height: 80vh;
+        overflow-y: auto;
+      }
+      #contenedorMensajes {
+        flex: 1;
+        height: 80vh;
+        overflow-y: auto;
+      }
     }
   </style>
 </head>
@@ -100,105 +136,121 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta">•</span></button>
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="contenedor">
-    <div class="mensaje-box">
-      <input id="destinatario" placeholder="Escribe el @usuario" />
-      <textarea id="mensajeTexto" placeholder="Escribe tu mensaje..."></textarea>
-      <button onclick="enviarMensaje()">Enviar</button>
+  <div id="chatContainer">
+    <div id="listaUsuarios"></div>
+    <div style="flex: 1">
+      <div class="chat-control">
+        <select id="destinatario"></select>
+        <textarea id="mensajeInput" placeholder="Escribe un mensaje..."></textarea>
+        <button class="enviar" onclick="enviarMensaje()">Enviar</button>
+      </div>
+      <div id="contenedorMensajes"></div>
     </div>
-
-    <div id="historialMensajes"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDoc, where
+      getFirestore, collection, addDoc, onSnapshot, query,
+      orderBy, doc, getDoc, getDocs, setDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "76712370993",
-      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
-    };
-
+    const firebaseConfig = { /* tus credenciales */ };
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
     let currentUser;
-    let receptorUID;
+    let chatActivo;
+
+    const noti = document.getElementById("noti");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
+      cargarUsuarios();
+      escucharMensajes();
     });
 
-    window.enviarMensaje = async () => {
-      const destinatarioNick = document.getElementById("destinatario").value.trim();
-      const texto = document.getElementById("mensajeTexto").value.trim();
-      if (!destinatarioNick || !texto || !currentUser) return alert("Completa todos los campos");
+    async function cargarUsuarios() {
+      const usersRef = collection(db, "users");
+      const snapshot = await getDocs(usersRef);
+      const select = document.getElementById("destinatario");
+      const lista = document.getElementById("listaUsuarios");
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
+        if (docSnap.id !== currentUser.uid) {
+          const option = document.createElement("option");
+          option.value = docSnap.id;
+          option.textContent = data.nickname || data.email;
+          select.appendChild(option);
 
-      const q = doc(db, "users", destinatarioNick);
-      const docSnap = await getDoc(q);
-      if (!docSnap.exists()) return alert("Usuario no encontrado");
-
-      receptorUID = docSnap.id;
-
-      const mensaje = {
-        senderUID: currentUser.uid,
-        receiverUID: receptorUID,
-        texto,
-        timestamp: new Date()
-      };
-
-      await addDoc(collection(db, "privateMessages"), mensaje);
-      document.getElementById("mensajeTexto").value = "";
-    };
-
-    document.getElementById("destinatario").addEventListener("change", async () => {
-      const nick = document.getElementById("destinatario").value.trim();
-      if (!nick) return;
-
-      const q = doc(db, "users", nick);
-      const docSnap = await getDoc(q);
-      if (!docSnap.exists()) return alert("Usuario no encontrado");
-
-      receptorUID = docSnap.id;
-
-      const mensajesRef = collection(db, "privateMessages");
-      const qChat = query(mensajesRef,
-        where("senderUID", "in", [currentUser.uid, receptorUID]),
-        where("receiverUID", "in", [currentUser.uid, receptorUID]),
-        orderBy("timestamp", "asc")
-      );
-
-      onSnapshot(qChat, (snapshot) => {
-        const historial = document.getElementById("historialMensajes");
-        historial.innerHTML = "";
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          const div = document.createElement("div");
-          div.className = "chat-historial";
-          div.innerHTML = `<p><strong>${data.senderUID === currentUser.uid ? "Tú" : "Ellx"}:</strong> ${data.texto}</p>`;
-          historial.appendChild(div);
-        });
+          const userBtn = document.createElement("div");
+          userBtn.textContent = data.nickname || data.email;
+          userBtn.style.cursor = 'pointer';
+          userBtn.onclick = () => {
+            select.value = docSnap.id;
+            cargarMensajes(docSnap.id);
+            noti.style.display = 'none';
+          };
+          lista.appendChild(userBtn);
+        }
       });
-    });
-
-    function logout() {
-      signOut(auth).then(() => location.href = "index.html");
     }
 
-    window.logout = logout;
+    function obtenerChatId(uid1, uid2) {
+      return [uid1, uid2].sort().join("_");
+    }
+
+    async function enviarMensaje() {
+      const destinatarioId = document.getElementById("destinatario").value;
+      const texto = document.getElementById("mensajeInput").value.trim();
+      if (!texto) return;
+
+      const chatId = obtenerChatId(currentUser.uid, destinatarioId);
+      await addDoc(collection(db, `privados/${chatId}/mensajes`), {
+        texto,
+        fecha: new Date(),
+        remitente: currentUser.uid,
+        receptor: destinatarioId
+      });
+      document.getElementById("mensajeInput").value = "";
+      cargarMensajes(destinatarioId);
+    }
+
+    function cargarMensajes(destinatarioId) {
+      const chatId = obtenerChatId(currentUser.uid, destinatarioId);
+      const mensajesRef = query(collection(db, `privados/${chatId}/mensajes`), orderBy("fecha"));
+      const contenedor = document.getElementById("contenedorMensajes");
+
+      onSnapshot(mensajesRef, (snapshot) => {
+        contenedor.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "mensaje" + (msg.receptor === currentUser.uid ? '' : ' mensaje-propio');
+          div.textContent = msg.texto;
+          contenedor.appendChild(div);
+        });
+      });
+    }
+
+    function escucharMensajes() {
+      const privadosRef = collection(db, "privados");
+      onSnapshot(privadosRef, () => {
+        noti.style.display = 'inline-block';
+      });
+    }
+
+    window.enviarMensaje = enviarMensaje;
+    window.logout = function () {
+      signOut(auth).then(() => location.href = "index.html");
+    }
   </script>
 </body>
 </html>
