@@ -7,11 +7,12 @@
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
     }
+
     .menu-superior {
       position: fixed;
       top: 0;
@@ -29,6 +30,7 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
+
     .menu-superior button {
       background: none;
       border: none;
@@ -40,165 +42,56 @@
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
     }
+
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
-    .alerta {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: red;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 6px;
-      display: none;
-      user-select: none;
-      line-height: 1;
-    }
+
     .contenedor {
       max-width: 600px;
       margin: auto;
       padding: 1em;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
     }
-    .selector-usuario {
-      position: relative;
-    }
-    #destinatarioInput {
-      width: 100%;
-      padding: 10px;
-      border-radius: 12px;
-      border: none;
-      font-size: 1em;
-      background: #002f36;
-      color: #0ff;
-    }
-    .autocomplete-list {
-      position: absolute;
-      background: #004d59;
-      border-radius: 0 0 12px 12px;
-      max-height: 150px;
-      overflow-y: auto;
-      width: 100%;
-      box-sizing: border-box;
-      z-index: 2000;
-      border: 1px solid #00e5ff;
-    }
-    .autocomplete-item {
-      padding: 8px 12px;
-      cursor: pointer;
-      border-bottom: 1px solid #007a89;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .autocomplete-item:hover {
-      background: #007a89;
-    }
-    .autocomplete-item img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #00e5ff;
-    }
-    .historial-mensajes {
-      background: rgba(0,0,0,0.3);
+
+    .mensaje-box {
+      background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
-      height: 400px;
-      overflow-y: auto;
-      color: #0ff;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      scrollbar-width: thin;
-      scrollbar-color: #00e5ff #002f36;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px #00e5ff55;
     }
-    .historial-mensajes::-webkit-scrollbar {
-      width: 8px;
-    }
-    .historial-mensajes::-webkit-scrollbar-track {
-      background: #002f36;
-      border-radius: 12px;
-    }
-    .historial-mensajes::-webkit-scrollbar-thumb {
-      background-color: #00e5ff;
-      border-radius: 12px;
-    }
-    .mensaje {
-      background: #004d59;
-      border-radius: 12px;
-      padding: 10px 14px;
-      max-width: 70%;
-      word-wrap: break-word;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
-    .mensaje.mio {
-      background: #00e5ff;
-      color: #003;
-      align-self: flex-end;
-      flex-direction: row-reverse;
-    }
-    .mensaje .avatar {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      border: 2px solid #00e5ff;
-      object-fit: cover;
-    }
-    .mensaje .contenido {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex-grow: 1;
-    }
-    .mensaje .nombre {
-      font-weight: bold;
-      font-size: 0.9em;
-    }
-    .mensaje .fecha {
-      font-size: 0.75em;
-      color: #99ffffaa;
-    }
-    .input-mensaje {
-      display: flex;
-      gap: 8px;
-    }
-    #mensajeTexto {
-      flex-grow: 1;
+
+    .mensaje-box input, .mensaje-box textarea {
+      width: 100%;
+      margin: 8px 0;
+      border-radius: 10px;
       padding: 10px;
-      border-radius: 12px;
       border: none;
-      font-size: 1em;
       background: #002f36;
       color: #0ff;
     }
-    #enviarMensajeBtn {
+
+    .mensaje-box button {
       background: #00e5ff;
       color: #003;
       border: none;
-      border-radius: 12px;
-      padding: 10px 20px;
-      cursor: pointer;
+      padding: 10px 16px;
       font-weight: bold;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      border-radius: 10px;
+      cursor: pointer;
     }
-    #enviarMensajeBtn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ffaa;
+
+    .chat-historial {
+      background: rgba(0,0,0,0.3);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 6px #00e5ff44;
+      margin-bottom: 10px;
     }
-    .info-sin-destinatario {
-      color: #66c;
-      font-style: italic;
-      margin-top: 20px;
-      text-align: center;
+
+    .chat-historial p {
+      margin: 6px 0;
     }
   </style>
 </head>
@@ -207,36 +100,26 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">
-      ✉️<span id="noti" class="alerta">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
   <div class="contenedor">
-    <div class="selector-usuario">
-      <input type="text" id="destinatarioInput" placeholder="Escribe el nombre o email del usuario destinatario" autocomplete="off" />
-      <div id="autocompleteList" class="autocomplete-list" style="display:none;"></div>
+    <div class="mensaje-box">
+      <input id="destinatario" placeholder="Escribe el @usuario" />
+      <textarea id="mensajeTexto" placeholder="Escribe tu mensaje..."></textarea>
+      <button onclick="enviarMensaje()">Enviar</button>
     </div>
 
-    <div id="historialMensajes" class="historial-mensajes">
-      <p class="info-sin-destinatario">Selecciona un destinatario para ver el historial.</p>
-    </div>
-
-    <div class="input-mensaje">
-      <input type="text" id="mensajeTexto" placeholder="Escribe tu mensaje..." disabled />
-      <button id="enviarMensajeBtn" disabled>Enviar</button>
-    </div>
+    <div id="historialMensajes"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, query, where, orderBy, onSnapshot, updateDoc, doc
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, setDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -251,219 +134,41 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser = null;
-    let destinatarioSeleccionado = null;
-    let unsubscribeMensajes = null;
-
-    const destinatarioInput = document.getElementById("destinatarioInput");
-    const autocompleteList = document.getElementById("autocompleteList");
-    const historialMensajes = document.getElementById("historialMensajes");
-    const mensajeTexto = document.getElementById("mensajeTexto");
-    const enviarMensajeBtn = document.getElementById("enviarMensajeBtn");
-    const noti = document.getElementById("noti");
-    const iconoMensajeBtn = document.getElementById("iconoMensaje");
-
-    // Cargar usuarios para autocomplete
-    let listaUsuarios = [];
-
-    async function cargarUsuarios() {
-      const snapshot = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-        .then(mod => mod.getDocs(collection(db, "users")));
-
-      listaUsuarios = snapshot.docs.map(doc => ({
-        uid: doc.id,
-        ...doc.data()
-      }));
-
-      revisarMensajesNuevos();
-    }
-
-    function filtrarUsuarios(text) {
-      if (!text) return [];
-      text = text.toLowerCase();
-      return listaUsuarios.filter(u =>
-        (u.nickname && u.nickname.toLowerCase().includes(text)) ||
-        (u.email && u.email.toLowerCase().includes(text))
-      );
-    }
-
-    destinatarioInput.addEventListener("input", () => {
-      const texto = destinatarioInput.value.trim();
-      if (!texto) {
-        autocompleteList.style.display = "none";
-        return;
-      }
-      const resultados = filtrarUsuarios(texto);
-      if (resultados.length === 0) {
-        autocompleteList.style.display = "none";
-        return;
-      }
-      autocompleteList.innerHTML = "";
-      resultados.forEach(user => {
-        const div = document.createElement("div");
-        div.className = "autocomplete-item";
-        div.title = user.email;
-        // avatar y nombre
-        div.innerHTML = `<img src="${user.avatar || 'https://i.pravatar.cc/40?u=' + user.uid}" alt="Avatar" /> <span>${user.nickname || user.email}</span>`;
-        div.addEventListener("click", () => {
-          destinatarioSeleccionado = user;
-          destinatarioInput.value = user.nickname || user.email;
-          autocompleteList.style.display = "none";
-          cargarHistorialMensajes();
-          mensajeTexto.disabled = false;
-          enviarMensajeBtn.disabled = false;
-          mensajeTexto.focus();
-          marcarMensajesComoLeidos();
-        });
-        autocompleteList.appendChild(div);
-      });
-      autocompleteList.style.display = "block";
-    });
-
-    document.addEventListener("click", (e) => {
-      if (e.target !== destinatarioInput) {
-        autocompleteList.style.display = "none";
-      }
-    });
-
-    async function cargarHistorialMensajes() {
-      if (!currentUser || !destinatarioSeleccionado) {
-        historialMensajes.innerHTML = '<p class="info-sin-destinatario">Selecciona un destinatario para ver el historial.</p>';
-        mensajeTexto.disabled = true;
-        enviarMensajeBtn.disabled = true;
-        return;
-      }
-      if (unsubscribeMensajes) unsubscribeMensajes();
-
-      // Query mensajes entre ambos usuarios
-      const mensajesRef = collection(db, "privateMessages");
-      const q = query(
-        mensajesRef,
-        where("participants", "array-contains", currentUser.uid),
-        orderBy("fecha", "asc")
-      );
-
-      unsubscribeMensajes = onSnapshot(q, (snapshot) => {
-        // Filtramos mensajes solo con el destinatario seleccionado
-        const mensajes = snapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() }))
-          .filter(m => m.participants.includes(destinatarioSeleccionado.uid));
-
-        historialMensajes.innerHTML = "";
-        if (mensajes.length === 0) {
-          historialMensajes.innerHTML = '<p style="color:#66c; font-style: italic;">No hay mensajes con este usuario.</p>';
-          return;
-        }
-
-        mensajes.forEach(mensaje => {
-          const div = document.createElement("div");
-          div.className = "mensaje";
-          if (mensaje.senderUID === currentUser.uid) div.classList.add("mio");
-
-          const remitente = listaUsuarios.find(u => u.uid === mensaje.senderUID);
-          const nombreRemitente = remitente ? (remitente.nickname || remitente.email) : "Desconocido";
-          const avatarRemitente = remitente ? (remitente.avatar || `https://i.pravatar.cc/40?u=${remitente.uid}`) : "https://i.pravatar.cc/40";
-
-          const fecha = mensaje.fecha?.toDate ? mensaje.fecha.toDate() : new Date(mensaje.fecha);
-          const fechaStr = fecha.toLocaleString();
-
-          div.innerHTML = `
-            <img class="avatar" src="${avatarRemitente}" alt="Avatar" />
-            <div class="contenido">
-              <div class="nombre">${nombreRemitente}</div>
-              <div class="texto">${mensaje.texto}</div>
-              <div class="fecha">${fechaStr}</div>
-            </div>
-          `;
-          historialMensajes.appendChild(div);
-        });
-        historialMensajes.scrollTop = historialMensajes.scrollHeight;
-        revisarMensajesNuevos(); // actualizar notificaciones
-      });
-    }
-
-    enviarMensajeBtn.addEventListener("click", async () => {
-      const texto = mensajeTexto.value.trim();
-      if (!texto) return alert("Escribe un mensaje.");
-      if (!destinatarioSeleccionado) return alert("Selecciona un destinatario.");
-
-      // Guardar mensaje con campo read:false para destinatario
-      await addDoc(collection(db, "privateMessages"), {
-        texto,
-        senderUID: currentUser.uid,
-        receiverUID: destinatarioSeleccionado.uid,
-        fecha: new Date(),
-        participants: [currentUser.uid, destinatarioSeleccionado.uid],
-        readByReceiver: false
-      });
-
-      mensajeTexto.value = "";
-    });
-
-    async function marcarMensajesComoLeidos() {
-      if (!destinatarioSeleccionado || !currentUser) return;
-      // Marcar mensajes del destinatario como leídos (solo los que no haya leído)
-      const mensajesRef = collection(db, "privateMessages");
-      const q = query(
-        mensajesRef,
-        where("senderUID", "==", destinatarioSeleccionado.uid),
-        where("receiverUID", "==", currentUser.uid),
-        where("readByReceiver", "==", false)
-      );
-
-      const snapshot = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-        .then(mod => mod.getDocs(q));
-
-      snapshot.docs.forEach(async (docSnap) => {
-        await updateDoc(doc(db, "privateMessages", docSnap.id), { readByReceiver: true });
-      });
-
-      revisarMensajesNuevos();
-    }
-
-    async function revisarMensajesNuevos() {
-      if (!currentUser) {
-        noti.style.display = "none";
-        return;
-      }
-      // Revisar si hay mensajes nuevos no leídos
-      const mensajesRef = collection(db, "privateMessages");
-      const q = query(
-        mensajesRef,
-        where("receiverUID", "==", currentUser.uid),
-        where("readByReceiver", "==", false)
-      );
-
-      const snapshot = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js")
-        .then(mod => mod.getDocs(q));
-
-      if (snapshot.size > 0) {
-        noti.style.display = "inline-block";
-        // Si la sección mensajes está abierta y con destinatario seleccionado, ocultar noti
-        if (destinatarioSeleccionado) {
-          // Opcional: ocultar el punto si estás viendo el chat del remitente
-          // Pero por simplicidad lo dejamos visible para otros mensajes
-        }
-      } else {
-        noti.style.display = "none";
-      }
-    }
+    let currentUser;
 
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        await cargarUsuarios();
-      } else {
-        alert("Debes iniciar sesión para acceder a los mensajes.");
-        location.href = "index.html";
-      }
+      if (!user) return location.href = "index.html";
+      currentUser = user;
     });
 
+    window.enviarMensaje = async () => {
+      const destinatarioNick = document.getElementById("destinatario").value.trim();
+      const texto = document.getElementById("mensajeTexto").value.trim();
+      if (!destinatarioNick || !texto || !currentUser) return alert("Completa todos los campos");
+
+      const q = doc(db, "users", destinatarioNick);
+      const docSnap = await getDoc(q);
+      if (!docSnap.exists()) return alert("Usuario no encontrado");
+
+      const receptorUID = docSnap.id;
+      const senderUID = currentUser.uid;
+
+      const mensaje = {
+        senderUID,
+        receiverUID: receptorUID,
+        texto,
+        timestamp: new Date()
+      };
+
+      await addDoc(collection(db, "privateMessages"), mensaje);
+      document.getElementById("mensajeTexto").value = "";
+      alert("Mensaje enviado correctamente");
+    };
+
     function logout() {
-      signOut(auth).then(() => {
-        location.href = "index.html";
-      });
+      signOut(auth).then(() => location.href = "index.html");
     }
+
     window.logout = logout;
   </script>
 </body>
