@@ -100,6 +100,25 @@
       border: 3px solid #00e5ff;
       box-shadow: 0 0 8px #00e5ff;
     }
+
+    .tarjeta-perfil {
+      background: rgba(0, 0, 0, 0.4);
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 20px;
+      max-width: 400px;
+      box-shadow: 0 0 12px #00e5ff77;
+    }
+
+    .tarjeta-perfil h3 {
+      margin: 10px 0 5px;
+      color: #0ff;
+    }
+
+    .tarjeta-perfil a {
+      color: #00e5ff;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -111,7 +130,7 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="contenedor">
+  <div id="formularioPerfil" class="contenedor" style="display:none;">
     <h2>Editar Perfil</h2>
     <input type="text" id="correo" placeholder="Correo electrónico" disabled />
     <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
@@ -123,17 +142,18 @@
     <img id="vistaAvatar" src="" alt="Tu Avatar" />
   </div>
 
+  <div id="tarjetaPerfil" class="tarjeta-perfil" style="display:none;">
+    <img id="avatarDisplay" src="" alt="Avatar" />
+    <h3 id="nicknameDisplay"></h3>
+    <p id="emailDisplay"></p>
+    <a id="webDisplay" href="#" target="_blank"></a>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, updateDoc, getDoc, setDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getStorage, ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -158,23 +178,48 @@
     const avatarUrlInput = document.getElementById("avatarUrl");
     const fondoPerfilInput = document.getElementById("fondoPerfil");
 
+    const tarjeta = document.getElementById("tarjetaPerfil");
+    const avatarDisplay = document.getElementById("avatarDisplay");
+    const nicknameDisplay = document.getElementById("nicknameDisplay");
+    const emailDisplay = document.getElementById("emailDisplay");
+    const webDisplay = document.getElementById("webDisplay");
+    const formContainer = document.getElementById("formularioPerfil");
+
     let currentUser = null;
 
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
     onAuthStateChanged(auth, async (user) => {
+      const idURL = getQueryParam("id");
       if (user) {
         currentUser = user;
-        correoInput.value = user.email;
-        const docSnap = await getDoc(doc(db, "users", user.uid));
+        const viewUID = idURL || user.uid;
+        const docSnap = await getDoc(doc(db, "users", viewUID));
         if (docSnap.exists()) {
           const data = docSnap.data();
-          if (data.avatar) vistaAvatar.src = data.avatar;
-          if (data.nickname) nicknameInput.value = data.nickname;
-          if (data.web) webInput.value = data.web;
-          if (data.fondo) fondoPerfilInput.value = data.fondo;
+          avatarDisplay.src = data.avatar || "";
+          nicknameDisplay.textContent = data.nickname || "Sin nombre";
+          emailDisplay.textContent = data.email || "";
+          webDisplay.href = data.web || "#";
+          webDisplay.textContent = data.web || "";
+          tarjeta.style.display = "block";
+
+          if (!idURL || idURL === user.uid) {
+            // Mostrar formulario solo si es su propio perfil
+            formContainer.style.display = "block";
+            correoInput.value = user.email;
+            if (data.avatar) vistaAvatar.src = data.avatar;
+            if (data.nickname) nicknameInput.value = data.nickname;
+            if (data.web) webInput.value = data.web;
+            if (data.fondo) fondoPerfilInput.value = data.fondo;
+          }
         }
       } else {
         alert("Debes iniciar sesión.");
-        location.href = "login.html";
+        location.href = "index.html";
       }
     });
 
@@ -206,11 +251,12 @@
       }, { merge: true });
 
       alert("Perfil actualizado correctamente.");
+      location.reload();
     });
 
     function logout() {
       signOut(auth).then(() => {
-        location.href = "login.html";
+        location.href = "index.html";
       });
     }
 
