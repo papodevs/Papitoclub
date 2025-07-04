@@ -4,19 +4,21 @@
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="estilos.css" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
-      padding: 70px 16px 16px;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      padding-top: 70px;
     }
-
     .menu-superior {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 60px;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
       box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
@@ -28,7 +30,6 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
-
     .menu-superior button {
       background: none;
       border: none;
@@ -37,138 +38,16 @@
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
     }
-
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    }
     .contenedor {
       max-width: 600px;
       margin: auto;
       padding: 1em;
-    }
-
-    .nueva-publicacion {
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 0 10px #00e5ff55;
-    }
-
-    .nueva-publicacion textarea {
-      width: 97%;
-      height: 80px;
-      border-radius: 8px;
-      border: none;
-      padding: 10px;
-      font-size: 1em;
-      resize: none;
-      background: #002f36;
-      color: #0ff;
-    }
-
-    .nueva-publicacion button {
-      margin-top: 8px;
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      padding: 10px 16px;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-    }
-
-    .tarjeta {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 14px;
-      box-shadow: 0 0 6px #00e5ff44;
-    }
-
-    .tarjeta p {
-      margin: 0;
-    }
-
-    .autor {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 6px;
-      cursor: pointer;
-    }
-
-    .autor img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #00e5ff;
-    }
-
-    .interacciones {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 8px;
-      font-size: 0.9em;
-      color: #0ff;
-    }
-
-    .interacciones span {
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .interacciones span:hover {
-      color: #fff;
-      text-shadow: 0 0 8px #0ff;
-    }
-
-    .comentarios {
-      margin-top: 10px;
-      padding-left: 20px;
-    }
-
-    .comentario {
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      padding: 6px 10px;
-      margin-top: 5px;
-    }
-
-    .comentario .autor {
-      margin-bottom: 4px;
-    }
-
-    .comentario .interacciones {
-      font-size: 0.8em;
-      margin-top: 4px;
-      justify-content: flex-start;
-      gap: 12px;
-    }
-
-    .comentario textarea {
-      width: 100%;
-      height: 50px;
-      border-radius: 8px;
-      border: none;
-      padding: 6px 10px;
-      font-size: 0.9em;
-      resize: none;
-      background: #003840;
-      color: #0ff;
-      margin-top: 6px;
-      display: none;
-    }
-
-    .comentario button {
-      background: #00e5ff;
-      border: none;
-      color: #003;
-      padding: 5px 10px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: 0.8em;
-      margin-top: 4px;
-      display: none;
     }
   </style>
 </head>
@@ -177,264 +56,14 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta">•</span></button>
     <button onclick="logout()">🚪</button>
   </div>
 
   <div class="contenedor">
-    <div class="nueva-publicacion">
-      <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
-      <button id="btnPublicar">Publicar</button>
-    </div>
-    <div id="listaMensajes"></div>
+    <!-- Aquí irán las publicaciones, campo para nuevo post, tarjetas, etc. -->
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc, Timestamp, arrayUnion, arrayRemove
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "76712370993",
-      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    let currentUser = null;
-
-    async function publicarMensaje() {
-      const texto = document.getElementById("nuevoMensaje").value.trim();
-      if (!texto || !currentUser) return;
-
-      const userRef = doc(db, "users", currentUser.uid);
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.exists() ? userSnap.data() : {};
-
-      const mensaje = {
-        texto: texto,
-        autor: userData.username || "Usuario",
-        avatar: userData.avatar || "https://via.placeholder.com/40",
-        uid: currentUser.uid,
-        fecha: Timestamp.now(),
-        likes: [],
-        retweets: []
-      };
-
-      await addDoc(collection(db, "publicaciones"), mensaje);
-      document.getElementById("nuevoMensaje").value = "";
-    }
-
-    async function toggleLike(postId, isComment = false, commentId = null) {
-      if (!currentUser) return;
-      const ref = isComment
-        ? doc(db, `publicaciones/${postId}/comentarios`, commentId)
-        : doc(db, "publicaciones", postId);
-
-      const docSnap = await getDoc(ref);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-
-      const liked = data.likes?.includes(currentUser.uid);
-      if (liked) {
-        await updateDoc(ref, { likes: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(ref, { likes: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    async function toggleRetweet(postId, isComment = false, commentId = null) {
-      if (!currentUser) return;
-      const ref = isComment
-        ? doc(db, `publicaciones/${postId}/comentarios`, commentId)
-        : doc(db, "publicaciones", postId);
-
-      const docSnap = await getDoc(ref);
-      if (!docSnap.exists()) return;
-      const data = docSnap.data();
-
-      const retweeted = data.retweets?.includes(currentUser.uid);
-      if (retweeted) {
-        await updateDoc(ref, { retweets: arrayRemove(currentUser.uid) });
-      } else {
-        await updateDoc(ref, { retweets: arrayUnion(currentUser.uid) });
-      }
-    }
-
-    async function comentar(postId, texto) {
-      if (!texto || !currentUser) return;
-      const userRef = doc(db, "users", currentUser.uid);
-      const userSnap = await getDoc(userRef);
-      const userData = userSnap.exists() ? userSnap.data() : {};
-      const comentario = {
-        texto,
-        autor: userData.username || "Usuario",
-        avatar: userData.avatar || "https://via.placeholder.com/40",
-        uid: currentUser.uid,
-        fecha: Timestamp.now(),
-        likes: [],
-        retweets: []
-      };
-      await addDoc(collection(db, `publicaciones/${postId}/comentarios`), comentario);
-    }
-
-    function cargarComentarios(postId, contenedor) {
-      const q = query(collection(db, `publicaciones/${postId}/comentarios`), orderBy("fecha"));
-      onSnapshot(q, (snap) => {
-        contenedor.innerHTML = "";
-        snap.forEach(doc => {
-          const c = doc.data();
-          const id = doc.id;
-          const div = document.createElement("div");
-          div.className = "comentario";
-          div.innerHTML = `
-            <div class="autor">
-              <img src="${c.avatar}" alt="avatar">
-              <strong>${c.autor}</strong>
-            </div>
-            <p>${c.texto}</p>
-            <div class="interacciones">
-              <span class="btn-like" data-postid="${postId}" data-commentid="${id}">❤️ Like (${c.likes?.length || 0})</span>
-              <span class="btn-retweet" data-postid="${postId}" data-commentid="${id}">🔁 Retweet (${c.retweets?.length || 0})</span>
-            </div>
-            <textarea placeholder="Escribe un comentario..." class="input-comentario" style="display:none;"></textarea>
-            <button class="btn-comentar-en-comentario" style="display:none;">Responder</button>
-          `;
-          contenedor.appendChild(div);
-
-          // Añadir eventos likes y retweets comentarios
-          const btnLike = div.querySelector(".btn-like");
-          const btnRetweet = div.querySelector(".btn-retweet");
-          const textarea = div.querySelector("textarea");
-          const btnResponder = div.querySelector("button");
-
-          btnLike.onclick = async () => {
-            await toggleLike(postId, true, id);
-          };
-          btnRetweet.onclick = async () => {
-            await toggleRetweet(postId, true, id);
-          };
-
-          // Mostrar textarea y botón responder al hacer clic en Like o Retweet en comentario (opcional)
-          // O bien podrías crear otro botón para abrir caja comentario anidada si quieres.
-
-          // Aquí ocultamos textarea y botón responder inicialmente,
-          // podrías mostrarlo con otro botón si quieres anidación profunda.
-        });
-      });
-    }
-
-    function mostrarMensajes() {
-      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
-      const contenedor = document.getElementById("listaMensajes");
-
-      onSnapshot(q, (snapshot) => {
-        contenedor.innerHTML = "";
-        snapshot.forEach((docSnap) => {
-          const mensaje = docSnap.data();
-          const id = docSnap.id;
-          const tarjeta = document.createElement("div");
-          tarjeta.className = "tarjeta";
-          tarjeta.innerHTML = `
-            <div class="autor">
-              <img src="${mensaje.avatar}" alt="avatar">
-              <strong>${mensaje.autor}</strong>
-            </div>
-            <p>${mensaje.texto}</p>
-            <div class="interacciones">
-              <span class="btn-like" data-id="${id}">❤️ Like (${mensaje.likes?.length || 0})</span>
-              <span class="btn-retweet" data-id="${id}">🔁 Retweet (${mensaje.retweets?.length || 0})</span>
-              <span class="btn-comentar" data-id="${id}">💬 Comentar</span>
-              <span class="btn-share" data-id="${id}">📤 Compartir</span>
-            </div>
-            <div class="comentarios" id="comentarios-${id}" style="display:none;"></div>
-            <textarea class="input-comentario" placeholder="Escribe un comentario..." style="display:none;"></textarea>
-            <button class="btn-enviar-comentario" style="display:none;">Enviar</button>
-          `;
-          contenedor.appendChild(tarjeta);
-
-          // Eventos botones del post
-          const btnLike = tarjeta.querySelector(".btn-like");
-          const btnRetweet = tarjeta.querySelector(".btn-retweet");
-          const btnComentar = tarjeta.querySelector(".btn-comentar");
-          const btnShare = tarjeta.querySelector(".btn-share");
-          const comentariosDiv = tarjeta.querySelector(`#comentarios-${id}`);
-          const inputComentario = tarjeta.querySelector(".input-comentario");
-          const btnEnviarComentario = tarjeta.querySelector(".btn-enviar-comentario");
-
-          btnLike.onclick = async () => {
-            await toggleLike(id);
-          };
-
-          btnRetweet.onclick = async () => {
-            await toggleRetweet(id);
-          };
-
-          btnComentar.onclick = () => {
-            if (inputComentario.style.display === "none") {
-              comentariosDiv.style.display = "block";
-              inputComentario.style.display = "block";
-              btnEnviarComentario.style.display = "inline-block";
-              cargarComentarios(id, comentariosDiv);
-            } else {
-              comentariosDiv.style.display = "none";
-              inputComentario.style.display = "none";
-              btnEnviarComentario.style.display = "none";
-            }
-          };
-
-          btnEnviarComentario.onclick = async () => {
-            const texto = inputComentario.value.trim();
-            if (texto) {
-              await comentar(id, texto);
-              inputComentario.value = "";
-            }
-          };
-
-          btnShare.onclick = () => {
-            const urlPost = `${location.origin}${location.pathname}#post-${id}`;
-            if (navigator.share) {
-              navigator.share({
-                title: `Post de ${mensaje.autor}`,
-                text: mensaje.texto,
-                url: urlPost
-              }).catch(() => {
-                alert("No se pudo compartir.");
-              });
-            } else {
-              navigator.clipboard.writeText(urlPost).then(() => {
-                alert("Enlace copiado al portapapeles");
-              });
-            }
-          };
-        });
-      });
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUser = user;
-        mostrarMensajes();
-      } else {
-        alert("Debes iniciar sesión para ver publicaciones.");
-        location.href = "login.html";
-      }
-    });
-
-    document.getElementById("btnPublicar").addEventListener("click", publicarMensaje);
-
-    window.logout = function () {
-      signOut(auth).then(() => {
-        location.href = "login.html";
-      });
-    }
-  </script>
+  <script type="module" src="scripts/home.js"></script>
 </body>
 </html>
