@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Papoclub - Mensajes Privados</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Mensajes Privados - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
-      padding: 70px 16px 16px;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
+      padding-top: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .menu-superior {
@@ -39,58 +42,147 @@
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
     }
 
-    .chat-box {
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    }
+
+    .contenedor-mensajes {
+      width: 90%;
       max-width: 600px;
-      margin: auto;
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 0 6px #00e5ff44;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
+      margin-top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
     }
 
-    #historialMensajes {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 10px;
-    }
-
-    .mensaje {
-      margin: 6px 0;
-    }
-
-    .mio {
-      text-align: right;
-    }
-
-    .suyo {
-      text-align: left;
-    }
-
-    .burbuja {
-      display: inline-block;
+    #destinatario {
+      width: calc(100% - 24px);
       padding: 10px;
       border-radius: 12px;
-      background-color: #00e5ff33;
-      max-width: 75%;
+      border: none;
+      font-size: 1em;
+      background: #002f36;
+      color: #0ff;
+      margin-bottom: 4px;
+      position: relative;
+      z-index: 10;
+    }
+
+    #listaSugerencias {
+      position: absolute;
+      background: #002f36;
+      max-height: 140px;
+      overflow-y: auto;
+      width: calc(100% - 40px);
+      border-radius: 10px;
+      margin-top: -4px;
+      z-index: 9999;
+      display: none;
+      box-shadow: 0 0 8px #00e5ffaa;
+    }
+
+    .sugerencia-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #005e77;
+      color: #0ff;
+    }
+
+    .sugerencia-item:hover {
+      background: #00e5ff22;
+      color: #00e5ff;
     }
 
     #mensajeInput {
-      width: 70%;
+      width: calc(100% - 24px);
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 12px;
       border: none;
+      font-size: 1em;
+      resize: vertical;
+      min-height: 70px;
+      background: #002f36;
+      color: #0ff;
     }
 
-    #enviarBtn {
-      padding: 10px 16px;
-      border: none;
-      border-radius: 8px;
-      background-color: #00e5ff;
+    #btnEnviar {
+      background: #00e5ff;
       color: #003;
+      border: none;
+      padding: 12px 20px;
       font-weight: bold;
+      border-radius: 14px;
       cursor: pointer;
+      font-size: 1.1em;
+      margin-top: 10px;
+      align-self: flex-end;
+      box-shadow: 0 0 10px #00e5ff88;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    #btnEnviar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 16px #00e5ffcc;
+    }
+
+    #errorMensaje {
+      color: #f66;
+      margin-top: 8px;
+      display: none;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    #listaChats {
+      width: 90%;
+      max-width: 600px;
+      margin: 10px auto 30px auto;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: 0 0 12px #00e5ff88;
+      max-height: 400px;
+      overflow-y: auto;
+      color: #0ff;
+    }
+
+    .chat-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #005e77;
+      cursor: pointer;
+    }
+
+    .chat-item:hover, .chat-item.selected {
+      background: #00e5ff33;
+      color: #00e5ff;
+      font-weight: bold;
+    }
+
+    .mensaje-privado {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      box-shadow: 0 0 8px #00e5ff55;
+    }
+
+    .mensaje-autor {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .mensaje-texto {
+      white-space: pre-wrap;
     }
   </style>
 </head>
@@ -103,20 +195,20 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="chat-box">
-    <h3>Chat con: <span id="nombreDestinatario">@usuario</span></h3>
-    <div id="historialMensajes"></div>
-    <div>
-      <input type="text" id="mensajeInput" placeholder="Escribe tu mensaje..." />
-      <button id="enviarBtn">Enviar</button>
-    </div>
+  <div class="contenedor-mensajes">
+    <input type="text" id="destinatario" placeholder="Para: escribe @usuario" autocomplete="off" />
+    <div id="listaSugerencias"></div>
+    <textarea id="mensajeInput" placeholder="Escribe tu mensaje aquí..."></textarea>
+    <button id="btnEnviar">Enviar mensaje</button>
+    <div id="errorMensaje"></div>
   </div>
+
+  <div id="listaChats"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, query, where,
-      orderBy, onSnapshot, Timestamp
+      getFirestore, collection, addDoc, query, where, onSnapshot, orderBy
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -136,62 +228,209 @@
     const auth = getAuth(app);
 
     let currentUser = null;
-    let destinatarioUID = "REEMPLAZAR_UID_DESTINATARIO"; // <-- CAMBIA ESTO con UID real
+    let usuariosCache = {}; // uid => {nickname}
+    let usuarioSeleccionadoUID = null;
+
+    const inputDestinatario = document.getElementById("destinatario");
+    const listaSugerencias = document.getElementById("listaSugerencias");
+    const inputMensaje = document.getElementById("mensajeInput");
+    const btnEnviar = document.getElementById("btnEnviar");
+    const errorDiv = document.getElementById("errorMensaje");
+    const listaChatsDiv = document.getElementById("listaChats");
+
+    function buscarUsuarioPorNick(nick) {
+      const lowerNick = nick.toLowerCase();
+      for (const [uid, user] of Object.entries(usuariosCache)) {
+        if (user.nickname && user.nickname.toLowerCase() === lowerNick) {
+          return { uid, ...user };
+        }
+      }
+      return null;
+    }
+
+    async function cargarUsuarios() {
+      const q = query(collection(db, "users"));
+      onSnapshot(q, (snapshot) => {
+        usuariosCache = {};
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          usuariosCache[doc.id] = {
+            nickname: data.nickname || "",
+          };
+        });
+      });
+    }
+
+    inputDestinatario.addEventListener("input", () => {
+      const texto = inputDestinatario.value.trim().toLowerCase().replace(/^@/, "");
+      if (!texto) {
+        listaSugerencias.style.display = "none";
+        usuarioSeleccionadoUID = null;
+        return;
+      }
+      const coincidencias = Object.entries(usuariosCache)
+        .filter(([uid, u]) => u.nickname && u.nickname.toLowerCase().startsWith(texto))
+        .slice(0, 5);
+
+      if (coincidencias.length === 0) {
+        listaSugerencias.style.display = "none";
+        usuarioSeleccionadoUID = null;
+        return;
+      }
+
+      listaSugerencias.innerHTML = coincidencias.map(([uid, u]) =>
+        `<div class="sugerencia-item" data-uid="${uid}">${u.nickname}</div>`
+      ).join("");
+      listaSugerencias.style.display = "block";
+    });
+
+    listaSugerencias.addEventListener("click", e => {
+      if (e.target.classList.contains("sugerencia-item")) {
+        const uid = e.target.dataset.uid;
+        const nick = usuariosCache[uid].nickname;
+        inputDestinatario.value = "@" + nick;
+        usuarioSeleccionadoUID = uid;
+        listaSugerencias.style.display = "none";
+      }
+    });
+
+    async function cargarChats() {
+      if (!currentUser) return;
+      // Mostrar lista de usuarios con los que tiene mensajes recientes
+      // Traer mensajes donde currentUser es sender o receiver
+      const q = query(collection(db, "privateMessages"),
+        where("participants", "array-contains", currentUser.uid),
+        orderBy("fecha", "desc")
+      );
+      onSnapshot(q, (snapshot) => {
+        const chats = {};
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const otroUID = msg.senderUID === currentUser.uid ? msg.receiverUID : msg.senderUID;
+          if (!chats[otroUID]) chats[otroUID] = [];
+          chats[otroUID].push({ id: doc.id, ...msg });
+        });
+
+        listaChatsDiv.innerHTML = "";
+        for (const [uid, mensajes] of Object.entries(chats)) {
+          const user = usuariosCache[uid];
+          const nombre = user ? user.nickname : uid;
+          const div = document.createElement("div");
+          div.textContent = nombre;
+          div.className = "chat-item";
+          div.dataset.uid = uid;
+          div.onclick = () => seleccionarChat(uid);
+          listaChatsDiv.appendChild(div);
+        }
+      });
+    }
+
+    let chatActualUID = null;
+
+    async function seleccionarChat(uid) {
+      chatActualUID = uid;
+      usuarioSeleccionadoUID = uid;
+      inputDestinatario.value = "@" + (usuariosCache[uid]?.nickname || uid);
+      listaSugerencias.style.display = "none";
+      errorDiv.style.display = "none";
+
+      // Marcar seleccionado en lista
+      Array.from(listaChatsDiv.children).forEach(div => {
+        div.classList.toggle("selected", div.dataset.uid === uid);
+      });
+
+      // Mostrar mensajes con ese usuario
+      const q = query(collection(db, "privateMessages"),
+        where("participants", "array-contains", currentUser.uid),
+        orderBy("fecha", "asc")
+      );
+
+      onSnapshot(q, (snapshot) => {
+        // Limpiar y mostrar solo mensajes con chatActualUID
+        const mensajesConUsuario = [];
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          if ((msg.senderUID === currentUser.uid && msg.receiverUID === chatActualUID) ||
+              (msg.receiverUID === currentUser.uid && msg.senderUID === chatActualUID)) {
+            mensajesConUsuario.push(msg);
+          }
+        });
+
+        listaChatsDiv.innerHTML = mensajesConUsuario.map(m => {
+          const esMio = m.senderUID === currentUser.uid;
+          return `<div class="mensaje-privado" style="text-align:${esMio ? 'right' : 'left'}">
+            <div class="mensaje-autor">${esMio ? 'Tú' : usuariosCache[m.senderUID]?.nickname || m.senderUID}</div>
+            <div class="mensaje-texto">${m.texto}</div>
+          </div>`;
+        }).join("");
+      });
+    }
+
+    btnEnviar.addEventListener("click", async () => {
+      errorDiv.style.display = "none";
+      let destinatarioUID = usuarioSeleccionadoUID;
+      const texto = inputMensaje.value.trim();
+
+      if (!destinatarioUID) {
+        const nickEscrito = inputDestinatario.value.trim().replace(/^@/, "");
+        if (!nickEscrito) {
+          errorDiv.textContent = "Debes seleccionar un destinatario válido";
+          errorDiv.style.display = "block";
+          return;
+        }
+        const usuario = buscarUsuarioPorNick(nickEscrito);
+        if (!usuario) {
+          errorDiv.textContent = "No se encontró usuario con ese nickname.";
+          errorDiv.style.display = "block";
+          return;
+        }
+        destinatarioUID = usuario.uid;
+      }
+
+      if (!texto) {
+        errorDiv.textContent = "El mensaje no puede estar vacío.";
+        errorDiv.style.display = "block";
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "privateMessages"), {
+          senderUID: currentUser.uid,
+          receiverUID: destinatarioUID,
+          texto,
+          fecha: new Date(),
+          participants: [currentUser.uid, destinatarioUID],
+          leidoPor: [currentUser.uid]
+        });
+        inputMensaje.value = "";
+        inputDestinatario.value = "";
+        usuarioSeleccionadoUID = null;
+        await cargarChats();
+        seleccionarChat(destinatarioUID);
+      } catch (e) {
+        errorDiv.textContent = "Error al enviar mensaje: " + e.message;
+        errorDiv.style.display = "block";
+      }
+    });
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
         currentUser = user;
-        escucharMensajesPrivados();
+        cargarUsuarios();
+        cargarChats();
       } else {
-        alert("Debes iniciar sesión");
-        location.href = "login.html";
+        alert("Debes iniciar sesión para ver tus mensajes privados.");
+        location.href = "index.html";
       }
     });
 
-    async function enviarMensaje() {
-      const input = document.getElementById("mensajeInput");
-      const texto = input.value.trim();
-      if (!texto || !currentUser) return;
-
-      await addDoc(collection(db, "privateMessages"), {
-        senderUID: currentUser.uid,
-        receiverUID: destinatarioUID,
-        texto,
-        fecha: Timestamp.fromDate(new Date())
-      });
-      input.value = "";
-    }
-
-    function escucharMensajesPrivados() {
-      const mensajesRef = collection(db, "privateMessages");
-      const q = query(
-        mensajesRef,
-        where("senderUID", "in", [currentUser.uid, destinatarioUID]),
-        where("receiverUID", "in", [currentUser.uid, destinatarioUID]),
-        orderBy("fecha", "asc")
-      );
-
-      const contenedor = document.getElementById("historialMensajes");
-
-      onSnapshot(q, (snapshot) => {
-        contenedor.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const esMio = data.senderUID === currentUser.uid;
-          const div = document.createElement("div");
-          div.className = `mensaje ${esMio ? 'mio' : 'suyo'}`;
-          div.innerHTML = `<span class="burbuja">${data.texto}</span>`;
-          contenedor.appendChild(div);
-        });
-        contenedor.scrollTop = contenedor.scrollHeight;
+    function logout() {
+      signOut(auth).then(() => {
+        location.href = "index.html";
       });
     }
 
-    document.getElementById("enviarBtn").addEventListener("click", enviarMensaje);
-
-    window.logout = function() {
-      signOut(auth).then(() => location.href = "login.html");
-    };
+    window.logout = logout;
   </script>
 </body>
 </html>
