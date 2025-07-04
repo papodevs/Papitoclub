@@ -58,6 +58,16 @@
       box-shadow: 0 0 12px #00e5ff88;
     }
 
+    .perfil-publico {
+      background-size: cover;
+      background-position: center;
+      border-radius: 16px;
+      box-shadow: 0 0 12px #00e5ff55;
+      padding: 20px;
+      margin-top: 20px;
+      color: #fff;
+    }
+
     h2 {
       margin-bottom: 20px;
       color: #0ff;
@@ -101,23 +111,22 @@
       box-shadow: 0 0 8px #00e5ff;
     }
 
-    .tarjeta-perfil {
-      background: rgba(0, 0, 0, 0.4);
-      margin: 30px auto;
-      padding: 20px;
-      border-radius: 20px;
-      max-width: 400px;
-      box-shadow: 0 0 12px #00e5ff77;
+    .volver-home {
+      margin-top: 20px;
     }
 
-    .tarjeta-perfil h3 {
-      margin: 10px 0 5px;
-      color: #0ff;
-    }
-
-    .tarjeta-perfil a {
-      color: #00e5ff;
+    .volver-home a {
+      background: #00e5ff;
+      color: #003;
+      padding: 8px 16px;
       text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .volver-home a:hover {
+      box-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ffaa;
     }
   </style>
 </head>
@@ -130,7 +139,7 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div id="formularioPerfil" class="contenedor" style="display:none;">
+  <div class="contenedor" id="contenedorPerfil">
     <h2>Editar Perfil</h2>
     <input type="text" id="correo" placeholder="Correo electrónico" disabled />
     <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
@@ -140,20 +149,23 @@
     <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" />
     <button id="subirAvatarBtn">Guardar Perfil</button>
     <img id="vistaAvatar" src="" alt="Tu Avatar" />
-  </div>
 
-  <div id="tarjetaPerfil" class="tarjeta-perfil" style="display:none;">
-    <img id="avatarDisplay" src="" alt="Avatar" />
-    <h3 id="nicknameDisplay"></h3>
-    <p id="emailDisplay"></p>
-    <a id="webDisplay" href="#" target="_blank"></a>
+    <div class="volver-home">
+      <a href="home.html">⬅️ Volver al inicio</a>
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import {
+      getFirestore, doc, updateDoc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getStorage, ref, uploadBytes, getDownloadURL
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -177,40 +189,38 @@
     const webInput = document.getElementById("web");
     const avatarUrlInput = document.getElementById("avatarUrl");
     const fondoPerfilInput = document.getElementById("fondoPerfil");
-
-    const tarjeta = document.getElementById("tarjetaPerfil");
-    const avatarDisplay = document.getElementById("avatarDisplay");
-    const nicknameDisplay = document.getElementById("nicknameDisplay");
-    const emailDisplay = document.getElementById("emailDisplay");
-    const webDisplay = document.getElementById("webDisplay");
-    const formContainer = document.getElementById("formularioPerfil");
+    const contenedorPerfil = document.getElementById("contenedorPerfil");
 
     let currentUser = null;
 
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
-
     onAuthStateChanged(auth, async (user) => {
-      const idURL = getQueryParam("id");
+      const params = new URLSearchParams(location.search);
+      const perfilId = params.get("id");
+
       if (user) {
         currentUser = user;
-        const viewUID = idURL || user.uid;
-        const docSnap = await getDoc(doc(db, "users", viewUID));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          avatarDisplay.src = data.avatar || "";
-          nicknameDisplay.textContent = data.nickname || "Sin nombre";
-          emailDisplay.textContent = data.email || "";
-          webDisplay.href = data.web || "#";
-          webDisplay.textContent = data.web || "";
-          tarjeta.style.display = "block";
-
-          if (!idURL || idURL === user.uid) {
-            // Mostrar formulario solo si es su propio perfil
-            formContainer.style.display = "block";
-            correoInput.value = user.email;
+        if (perfilId && perfilId !== user.uid) {
+          const docSnap = await getDoc(doc(db, "users", perfilId));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            contenedorPerfil.innerHTML = `
+              <div class="perfil-publico" style="background-image: url('${data.fondo || ''}')">
+                <img src="${data.avatar || ''}" alt="Avatar" />
+                <h2>${data.nickname || 'Usuario sin nick'}</h2>
+                <p><a href="${data.web || '#'}" style="color:#0ff" target="_blank">${data.web || ''}</a></p>
+              </div>
+              <div class="volver-home">
+                <a href="home.html">⬅️ Volver al inicio</a>
+              </div>
+            `;
+          } else {
+            contenedorPerfil.innerHTML = `<p style="color: #fff">Perfil no encontrado.</p>`;
+          }
+        } else {
+          correoInput.value = user.email;
+          const docSnap = await getDoc(doc(db, "users", user.uid));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
             if (data.avatar) vistaAvatar.src = data.avatar;
             if (data.nickname) nicknameInput.value = data.nickname;
             if (data.web) webInput.value = data.web;
@@ -251,7 +261,6 @@
       }, { merge: true });
 
       alert("Perfil actualizado correctamente.");
-      location.reload();
     });
 
     function logout() {
