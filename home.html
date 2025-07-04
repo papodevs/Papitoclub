@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="estilos.css" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
@@ -45,9 +44,85 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
     .contenedor {
+      width: 95%;
       max-width: 600px;
       margin: auto;
       padding: 1em;
+    }
+    .nueva-publicacion {
+      background: linear-gradient(145deg, #003f4d, #005f5f);
+      box-shadow: inset 0 0 10px #00e5ff55, 0 0 10px #00e5ff33;
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .nueva-publicacion textarea {
+      width: 97%;
+      height: 80px;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      font-size: 1em;
+      resize: none;
+      background: #002f36;
+      color: #0ff;
+      box-shadow: inset 0 0 8px #00e5ff66;
+    }
+    .nueva-publicacion button {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .tarjeta {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 0 6px #00e5ff44;
+    }
+    .tarjeta p {
+      margin: 0;
+    }
+    .interacciones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 0.9em;
+      color: #0ff;
+    }
+    .interacciones span {
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .interacciones span:hover {
+      color: #fff;
+      text-shadow: 0 0 8px #0ff;
+    }
+
+    @media (max-width: 768px) {
+      .menu-superior {
+        justify-content: space-around;
+        font-size: 1.2em;
+        padding: 0 8px;
+      }
+      .contenedor {
+        width: 95%;
+        padding: 0.5em;
+      }
+      .nueva-publicacion textarea {
+        height: 70px;
+      }
+      .interacciones {
+        justify-content: space-around;
+        gap: 8px;
+        font-size: 0.85em;
+      }
     }
   </style>
 </head>
@@ -61,9 +136,87 @@
   </div>
 
   <div class="contenedor">
-    <!-- Aquí irán las publicaciones, campo para nuevo post, tarjetas, etc. -->
+    <div class="nueva-publicacion">
+      <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
+      <button onclick="publicarMensaje()">Publicar</button>
+    </div>
+
+    <div id="listaMensajes"></div>
   </div>
 
-  <script type="module" src="scripts/home.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    async function publicarMensaje() {
+      const texto = document.getElementById("nuevoMensaje").value.trim();
+      if (texto !== "") {
+        const user = auth.currentUser;
+        const mensaje = {
+          texto: texto,
+          autor: user ? (user.displayName || user.email) : "Anónimo",
+          fecha: serverTimestamp()
+        };
+        await addDoc(collection(db, "publicaciones"), mensaje);
+        document.getElementById("nuevoMensaje").value = "";
+      }
+    }
+
+    function mostrarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      const contenedor = document.getElementById("listaMensajes");
+      onSnapshot(q, (snapshot) => {
+        contenedor.innerHTML = "";
+        snapshot.forEach((doc) => {
+          const mensaje = doc.data();
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+          tarjeta.innerHTML = `
+            <p><strong>${mensaje.autor}</strong></p>
+            <p>${mensaje.texto}</p>
+            <div class="interacciones">
+              <span>❤️ Like</span>
+              <span>🔁 RePapo</span>
+              <span>💬 comment</span>
+              <span>📤 share</span>
+            </div>
+          `;
+          contenedor.appendChild(tarjeta);
+        });
+      });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        mostrarMensajes();
+      } else {
+        alert("Debes iniciar sesión para ver publicaciones.");
+        location.href = "index.html";
+      }
+    });
+
+    function logout() {
+      signOut(auth).then(() => {
+        location.href = "index.html";
+      });
+    }
+
+    window.logout = logout;
+    window.publicarMensaje = publicarMensaje;
+  </script>
 </body>
 </html>
