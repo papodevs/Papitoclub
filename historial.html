@@ -11,8 +11,7 @@
       color: #0ff;
       margin: 0;
       padding-top: 70px;
-      display: flex;
-      height: 100vh;
+      text-align: center;
     }
 
     .menu-superior {
@@ -51,13 +50,12 @@
     }
 
     .contenedor {
-      flex: 1;
+      max-width: 900px;
+      margin: auto;
       padding: 1em;
       display: flex;
-      gap: 20px;
-      max-width: 1000px;
-      margin: auto;
-      box-sizing: border-box;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .formulario-juego {
@@ -66,8 +64,7 @@
       padding: 16px;
       margin-bottom: 20px;
       box-shadow: 0 0 12px #00e5ff88;
-      width: 60%;
-      box-sizing: border-box;
+      width: 100%;
     }
 
     .formulario-juego input {
@@ -96,9 +93,10 @@
       background: rgba(0,0,0,0.3);
       border-radius: 12px;
       padding: 16px;
-      margin-bottom: 20px;
+      margin: 10px;
       box-shadow: 0 0 10px #00e5ff66;
       text-align: left;
+      flex: 1 1 300px;
     }
 
     .tarjeta-juego img {
@@ -114,51 +112,30 @@
       color: #ccf;
     }
 
-    /* Lista de juegos a la derecha */
-    #listaNombres {
-      width: 35%;
-      max-height: 90vh;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.3);
-      border-radius: 14px;
-      padding: 10px;
-      box-sizing: border-box;
-      color: #0ff;
+    .lista-juegos-titulos {
+      width: 200px;
+      margin-left: 20px;
+      text-align: left;
     }
 
-    #listaNombres ul {
+    .lista-juegos-titulos ul {
       list-style: none;
       padding: 0;
-      margin: 0;
     }
 
-    #listaNombres li {
-      padding: 8px;
-      border-bottom: 1px solid #00e5ff66;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .lista-juegos-titulos li {
+      margin: 8px 0;
+      color: #ccf;
     }
 
-    #listaNombres li:hover {
-      background: #00e5ff33;
-    }
-
-    #listaNombres button {
-      background: #00e5ff;
-      border: none;
-      border-radius: 8px;
-      color: #003;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.9em;
-      transition: background 0.3s ease;
-    }
-
-    #listaNombres button:hover {
-      background: #00c1d6;
+    @media (max-width: 768px) {
+      .contenedor {
+        flex-direction: column;
+        align-items: center;
+      }
+      .lista-juegos-titulos {
+        margin: 20px auto 0 auto;
+      }
     }
   </style>
 </head>
@@ -172,25 +149,22 @@
   </div>
 
   <div class="contenedor">
-    <div id="formularioJuego" class="formulario-juego" style="display: none;">
-      <h2>Nuevo Juego</h2>
-      <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
-      <input type="text" id="imagenJuego" placeholder="URL de imagen" />
-      <input type="text" id="paginaJuego" placeholder="Página del juego" />
-      <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
-      <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
-      <button onclick="guardarJuego()">Guardar</button>
-
-      <hr/>
-
-      <div id="detalleJuego" class="tarjeta-juego">
-        <p>Haz clic en un juego para ver los detalles aquí.</p>
+    <div style="flex: 1">
+      <div id="formularioJuego" class="formulario-juego" style="display: none;">
+        <h2>Nuevo Juego</h2>
+        <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
+        <input type="url" id="imagenJuego" placeholder="URL de imagen" />
+        <input type="url" id="paginaJuego" placeholder="Página del juego" />
+        <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
+        <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
+        <button onclick="guardarJuego()">Guardar</button>
       </div>
-    </div>
 
-    <div id="listaNombres">
-      <h3>Juegos</h3>
-      <ul id="listaJuegos"></ul>
+      <div id="listaJuegos"></div>
+    </div>
+    <div class="lista-juegos-titulos">
+      <h3>Juegos Públicos</h3>
+      <ul id="nombresJuegos"></ul>
     </div>
   </div>
 
@@ -217,7 +191,6 @@
     const auth = getAuth(app);
 
     let currentUser = null;
-    const juegosMap = new Map();
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -225,8 +198,7 @@
         document.getElementById("formularioJuego").style.display = "block";
         cargarJuegos();
       } else {
-        alert("Debes iniciar sesión.");
-        location.href = "index.html";
+        cargarJuegos(); // Permite ver los juegos sin login
       }
     });
 
@@ -261,87 +233,30 @@
 
     function cargarJuegos() {
       const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
-      const listaJuegosUL = document.getElementById("listaJuegos");
-      const detalleJuego = document.getElementById("detalleJuego");
-
+      const lista = document.getElementById("listaJuegos");
+      const listaNombres = document.getElementById("nombresJuegos");
       onSnapshot(q, (snapshot) => {
-        listaJuegosUL.innerHTML = "";
-        juegosMap.clear();
-
+        lista.innerHTML = "";
+        listaNombres.innerHTML = "";
         snapshot.forEach((doc) => {
           const j = doc.data();
-          const id = doc.id;
-          juegosMap.set(id, j);
+          const div = document.createElement("div");
+          div.className = "tarjeta-juego";
+          div.innerHTML = `
+            <h3>${j.nombre}</h3>
+            <img src="${j.imagen}" alt="Imagen de ${j.nombre}" />
+            <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
+            <p>📱 Telegram: ${j.telegram}</p>
+            <p>💬 Discord: ${j.discord}</p>
+            <button onclick="navigator.share ? navigator.share({ title: '${j.nombre}', text: 'Descúbrelo en PapoClub!', url: '${j.pagina}' }).catch(console.log) : alert('Tu navegador no soporta compartir.')">Share (PapoClub promo)</button>
+          `;
+          lista.appendChild(div);
 
-          // Crear item de lista
           const li = document.createElement("li");
-
-          const nombreSpan = document.createElement("span");
-          nombreSpan.textContent = j.nombre;
-          nombreSpan.style.flexGrow = "1";
-          nombreSpan.style.cursor = "pointer";
-          nombreSpan.onclick = () => mostrarDetalle(id);
-
-          const btnShare = document.createElement("button");
-          btnShare.textContent = "Share";
-          btnShare.onclick = (e) => {
-            e.stopPropagation();
-            compartirJuego(j, id);
-          };
-
-          li.appendChild(nombreSpan);
-          li.appendChild(btnShare);
-          listaJuegosUL.appendChild(li);
+          li.textContent = j.nombre;
+          listaNombres.appendChild(li);
         });
-
-        // Mostrar detalles del primer juego si existe
-        if (snapshot.size > 0) {
-          mostrarDetalle(snapshot.docs[0].id);
-        } else {
-          detalleJuego.innerHTML = "<p>No hay juegos publicados aún.</p>";
-        }
       });
-    }
-
-    function mostrarDetalle(id) {
-      const detalleJuego = document.getElementById("detalleJuego");
-      const j = juegosMap.get(id);
-      if (!j) {
-        detalleJuego.innerHTML = "<p>Juego no encontrado.</p>";
-        return;
-      }
-      detalleJuego.innerHTML = `
-        <h3>${j.nombre}</h3>
-        <img src="${j.imagen}" alt="${j.nombre}" />
-        <p><a href="${j.pagina}" target="_blank" rel="noopener">🌐 Página</a></p>
-        <p>📱 Telegram: ${j.telegram || 'No disponible'}</p>
-        <p>💬 Discord: ${j.discord || 'No disponible'}</p>
-      `;
-    }
-
-    async function compartirJuego(juego, id) {
-      const urlJuego = `${location.origin}/home.html?juegoId=${id}`;
-      const texto = `¡Mira este juego: ${juego.nombre}! ${urlJuego}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: juego.nombre,
-            text: texto,
-            url: urlJuego,
-          });
-        } catch (error) {
-          alert("Compartir cancelado o error: " + error);
-        }
-      } else {
-        // Fallback: copiar al portapapeles
-        try {
-          await navigator.clipboard.writeText(texto);
-          alert("Enlace copiado al portapapeles:\n" + texto);
-        } catch (err) {
-          alert("No se pudo copiar el enlace, por favor copia manualmente:\n" + texto);
-        }
-      }
     }
 
     window.logout = function () {
