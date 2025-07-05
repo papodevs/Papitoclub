@@ -12,12 +12,9 @@
       margin: 0;
       padding-top: 70px;
     }
-
-    /* Menú superior 3D estilo Papoclub */
     .menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -48,8 +45,7 @@
     }
     .alerta {
       position: absolute;
-      top: 4px;
-      right: 4px;
+      top: 4px; right: 4px;
       background: red;
       color: white;
       font-size: 0.7em;
@@ -57,15 +53,11 @@
       padding: 2px 5px;
       display: none;
     }
-
-    /* Contenedor principal */
     .contenedor {
       max-width: 600px;
       margin: auto;
       padding: 1em;
     }
-
-    /* Nueva publicación */
     .nueva-publicacion {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
@@ -94,8 +86,6 @@
       border-radius: 10px;
       cursor: pointer;
     }
-
-    /* Tarjeta post */
     .tarjeta {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
@@ -103,15 +93,42 @@
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
     }
-    .tarjeta p {
-      margin: 0;
+    .tarjeta .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
     }
-
-    /* Interacciones */
+    .tarjeta .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 2px solid #00e5ff;
+      transition: box-shadow 0.3s ease;
+    }
+    .tarjeta .avatar:hover {
+      box-shadow: 0 0 8px #00e5ff;
+    }
+    .tarjeta .autor {
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    .tarjeta .fecha {
+      margin-left: auto;
+      font-size: 0.8em;
+      color: #a0e0ffcc;
+    }
+    .tarjeta p {
+      margin: 8px 0 0 0;
+      white-space: pre-wrap;
+    }
     .interacciones {
       display: flex;
       justify-content: space-between;
-      margin-top: 8px;
+      margin-top: 10px;
       font-size: 0.9em;
       color: #0ff;
     }
@@ -124,119 +141,82 @@
       color: #fff;
       text-shadow: 0 0 8px #0ff;
     }
-
-    /* Avatar en post */
-    .avatar {
-      width: 40px;
-      height: 40px;
+    .interacciones .activo {
+      color: #00ffff;
+      text-shadow: 0 0 12px #0ff;
+      font-weight: bold;
+    }
+    /* Comentarios */
+    .comentarios {
+      margin-top: 12px;
+      padding-left: 50px;
+      border-left: 2px solid #00e5ff44;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+    .comentarios.abierto {
+      max-height: 500px; /* suficiente para mostrar */
+    }
+    .comentario {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+      padding: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 6px #00e5ff55;
+    }
+    .comentario .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .comentario .avatar {
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       object-fit: cover;
-      vertical-align: middle;
-      margin-right: 8px;
-      border: 2px solid #00e5ff;
-    }
-
-    /* Botón nick usuario (estilo link) */
-    .btn-nick {
-      background: none;
-      border: none;
-      color: #00e5ff;
+      border: 1.5px solid #00e5ff;
       cursor: pointer;
+      transition: box-shadow 0.3s ease;
+    }
+    .comentario .avatar:hover {
+      box-shadow: 0 0 6px #00e5ff;
+    }
+    .comentario .autor {
       font-weight: bold;
-      font-size: 1em;
-      padding: 0;
-      margin: 0;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.9em;
     }
-    .btn-nick:hover {
-      text-decoration: underline;
-      color: #0ff;
+    .comentario p {
+      margin: 4px 0 0 0;
+      white-space: pre-wrap;
+      font-size: 0.9em;
     }
-
-    /* Comentarios ocultos por defecto */
-    .comentarios {
-      margin-top: 10px;
-      margin-left: 48px;
-      display: none;
-      border-left: 2px solid #00e5ff55;
-      padding-left: 10px;
-    }
-
-    /* Campo para escribir comentario */
-    .area-comentario {
+    .nueva-respuesta {
+      display: flex;
       margin-top: 8px;
-      display: none;
+      gap: 6px;
     }
-    .area-comentario textarea {
-      width: 100%;
+    .nueva-respuesta input {
+      flex-grow: 1;
       border-radius: 8px;
       border: none;
-      padding: 6px;
-      resize: none;
+      padding: 6px 10px;
+      font-size: 0.9em;
       background: #002f36;
       color: #0ff;
     }
-    .area-comentario button {
-      margin-top: 4px;
+    .nueva-respuesta button {
       background: #00e5ff;
       color: #003;
       border: none;
-      padding: 6px 12px;
-      font-weight: bold;
       border-radius: 8px;
+      padding: 6px 14px;
       cursor: pointer;
-    }
-
-    /* Modal perfil público */
-    #modalPerfil {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-      z-index: 10000;
-    }
-    #modalPerfil > div {
-      background: rgba(0,0,0,0.9);
-      border-radius: 16px;
-      padding: 20px;
-      max-width: 320px;
-      width: 90%;
-      color: #0ff;
-      text-align: center;
-      position: relative;
-    }
-    #modalPerfil button.cerrarModal {
-      position: absolute;
-      top: 8px; right: 12px;
-      background: none;
-      border: none;
-      font-size: 1.5em;
-      color: #0ff;
-      cursor: pointer;
-    }
-    #modalPerfil img {
-      border-radius: 50%;
-      max-width: 120px;
-      max-height: 120px;
-      object-fit: cover;
-      border: 2px solid #00e5ff;
-      margin-bottom: 12px;
-    }
-    #modalPerfil a {
-      color: #00e5ff;
-      text-decoration: none;
-    }
-    #modalPerfil a:hover {
-      text-decoration: underline;
-    }
-    #modalPerfil .fondoPerfil {
-      height: 100px;
-      background-size: cover;
-      background-position: center;
-      margin-top: 10px;
-      border-radius: 12px;
+      font-weight: bold;
+      user-select: none;
     }
   </style>
 </head>
@@ -254,24 +234,17 @@
   <div class="contenedor">
     <div class="nueva-publicacion">
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
-      <button onclick="publicarMensaje()">Publicar</button>
+      <button id="btnPublicar">Publicar</button>
     </div>
 
     <div id="listaMensajes"></div>
   </div>
 
-  <!-- Modal Perfil -->
-  <div id="modalPerfil">
-    <div>
-      <button class="cerrarModal" id="cerrarModalPerfil">×</button>
-      <div id="contenidoPerfilModal">Cargando...</div>
-    </div>
-  </div>
-
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, updateDoc, arrayUnion, arrayRemove
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+      doc, getDoc, setDoc, deleteDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -292,301 +265,281 @@
 
     let currentUser = null;
 
-    onAuthStateChanged(auth, (user) => {
+    // Utility para formato fecha
+    function formatoFecha(fecha) {
+      const d = fecha.toDate ? fecha.toDate() : fecha;
+      return d.toLocaleString('es-ES', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    // Control de sesión
+    onAuthStateChanged(auth, user => {
       if (user) {
         currentUser = user;
-        mostrarMensajes();
+        cargarMensajes();
+        verificarMensajesNuevos();
       } else {
         alert("Debes iniciar sesión para ver publicaciones.");
         location.href = "index.html";
       }
     });
 
-    // Publicar mensaje
-    async function publicarMensaje() {
-      const texto = document.getElementById("nuevoMensaje").value.trim();
-      if (texto === "") return;
-
-      const mensaje = {
-        texto,
-        autorUID: currentUser.uid,
-        autor: currentUser.displayName || currentUser.email.split('@')[0] || "user",
-        avatar: currentUser.photoURL || "https://via.placeholder.com/40?text=U",
-        fecha: new Date(),
-        likes: [],
-        repapos: []
-      };
-
-      try {
-        await addDoc(collection(db, "publicaciones"), mensaje);
-        document.getElementById("nuevoMensaje").value = "";
-      } catch(e) {
-        alert("Error al publicar: " + e.message);
-      }
-    }
-
-    window.publicarMensaje = publicarMensaje;
-
-    // Mostrar mensajes
-    function mostrarMensajes() {
-      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
-      const contenedor = document.getElementById("listaMensajes");
-
-      onSnapshot(q, (snapshot) => {
-        contenedor.innerHTML = "";
-
-        snapshot.forEach(docSnap => {
-          const data = docSnap.data();
-          const docId = docSnap.id;
-
-          // Crear tarjeta
-          const tarjeta = document.createElement("div");
-          tarjeta.className = "tarjeta";
-
-          // Nombre usuario como botón para abrir perfil
-          const botonNick = document.createElement("button");
-          botonNick.className = "btn-nick";
-          botonNick.textContent = data.autor || "user";
-          botonNick.dataset.uid = data.autorUID;
-          botonNick.addEventListener("click", () => abrirPerfilModal(data.autorUID));
-
-          // Avatar imagen
-          const avatarImg = document.createElement("img");
-          avatarImg.src = data.avatar || "https://via.placeholder.com/40?text=U";
-          avatarImg.alt = "avatar";
-          avatarImg.className = "avatar";
-
-          // Cabecera (avatar + usuario)
-          const cabecera = document.createElement("p");
-          cabecera.appendChild(avatarImg);
-          cabecera.appendChild(botonNick);
-
-          // Texto mensaje
-          const textoMsg = document.createElement("p");
-          textoMsg.textContent = data.texto;
-
-          // Interacciones: Like, RePapo, comment, share
-          const interacciones = document.createElement("div");
-          interacciones.className = "interacciones";
-
-          // Like button
-          const likeBtn = document.createElement("span");
-          const liked = data.likes.includes(currentUser.uid);
-          likeBtn.textContent = `❤️ Like ${data.likes.length}`;
-          likeBtn.style.color = liked ? "#ff4d4d" : "";
-          likeBtn.addEventListener("click", () => toggleLike(docId, data.likes));
-
-          // RePapo button
-          const repapoBtn = document.createElement("span");
-          const repapado = data.repapos.includes(currentUser.uid);
-          repapoBtn.textContent = `🔁 RePapo ${data.repapos.length}`;
-          repapoBtn.style.color = repapado ? "#00ff00" : "";
-          repapoBtn.addEventListener("click", () => toggleRepapo(docId, data.repapos));
-
-          // Comment button
-          const commentBtn = document.createElement("span");
-          commentBtn.textContent = "💬 comment";
-          commentBtn.addEventListener("click", () => toggleComentarios(docId));
-
-          // Share button
-          const shareBtn = document.createElement("span");
-          shareBtn.textContent = "📤 share";
-          shareBtn.addEventListener("click", () => sharePost(data.texto));
-
-          interacciones.appendChild(likeBtn);
-          interacciones.appendChild(repapoBtn);
-          interacciones.appendChild(commentBtn);
-          interacciones.appendChild(shareBtn);
-
-          // Comentarios contenedor
-          const comentariosCont = document.createElement("div");
-          comentariosCont.className = "comentarios";
-          comentariosCont.id = `comentarios-${docId}`;
-
-          // Área para escribir comentario
-          const areaComentario = document.createElement("div");
-          areaComentario.className = "area-comentario";
-          areaComentario.id = `areaComentario-${docId}`;
-
-          const textArea = document.createElement("textarea");
-          textArea.rows = 2;
-          textArea.placeholder = "Escribe un comentario...";
-          areaComentario.appendChild(textArea);
-
-          const btnEnviarComentario = document.createElement("button");
-          btnEnviarComentario.textContent = "Enviar";
-          btnEnviarComentario.addEventListener("click", () => enviarComentario(docId, textArea.value, areaComentario, comentariosCont));
-          areaComentario.appendChild(btnEnviarComentario);
-
-          // Agregar elementos a la tarjeta
-          tarjeta.appendChild(cabecera);
-          tarjeta.appendChild(textoMsg);
-          tarjeta.appendChild(interacciones);
-          tarjeta.appendChild(areaComentario);
-          tarjeta.appendChild(comentariosCont);
-
-          contenedor.appendChild(tarjeta);
-
-          // Cargar comentarios en tiempo real para este post
-          cargarComentarios(docId, comentariosCont);
-        });
+    // Logout
+    window.logout = function() {
+      signOut(auth).then(() => {
+        location.href = "index.html";
       });
     }
 
-    // Toggle like
-    async function toggleLike(postId, currentLikes) {
-      const docRef = doc(db, "publicaciones", postId);
-      const uid = currentUser.uid;
-      const hasLiked = currentLikes.includes(uid);
+    // Publicar mensaje
+    async function publicarMensaje() {
+      const texto = document.getElementById("nuevoMensaje").value.trim();
+      if (!texto) return alert("Escribe algo antes de publicar.");
+      if (!currentUser) return alert("Debes iniciar sesión.");
 
       try {
-        if (hasLiked) {
-          await updateDoc(docRef, { likes: arrayRemove(uid) });
-        } else {
-          await updateDoc(docRef, { likes: arrayUnion(uid) });
-        }
+        await addDoc(collection(db, "publicaciones"), {
+          texto,
+          autorUID: currentUser.uid,
+          autorNick: currentUser.displayName || currentUser.email.split("@")[0],
+          autorAvatar: currentUser.photoURL || "https://via.placeholder.com/40?text=👤",
+          fecha: new Date()
+        });
+        document.getElementById("nuevoMensaje").value = "";
       } catch (e) {
-        alert("Error al actualizar like: " + e.message);
+        alert("Error al publicar: " + e.message);
       }
     }
+    document.getElementById("btnPublicar").addEventListener("click", publicarMensaje);
 
-    // Toggle RePapo
-    async function toggleRepapo(postId, currentRepapos) {
-      const docRef = doc(db, "publicaciones", postId);
-      const uid = currentUser.uid;
-      const hasRepapado = currentRepapos.includes(uid);
+    // Cargar mensajes y escucharlos en tiempo real
+    function cargarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      const lista = document.getElementById("listaMensajes");
+      onSnapshot(q, async snapshot => {
+        lista.innerHTML = "";
+        for (const docSnap of snapshot.docs) {
+          const data = docSnap.data();
+          const id = docSnap.id;
 
-      try {
-        if (hasRepapado) {
-          await updateDoc(docRef, { repapos: arrayRemove(uid) });
-        } else {
-          await updateDoc(docRef, { repapos: arrayUnion(uid) });
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+
+          tarjeta.innerHTML = `
+            <div class="header">
+              <img src="${data.autorAvatar}" alt="avatar" class="avatar" data-uid="${data.autorUID}" title="Ver perfil" />
+              <span class="autor" data-uid="${data.autorUID}">${data.autorNick}</span>
+              <span class="fecha">${formatoFecha(data.fecha)}</span>
+            </div>
+            <p>${escapeHtml(data.texto)}</p>
+            <div class="interacciones">
+              <span class="like" data-id="${id}">❤️ Like <span class="countLike">0</span></span>
+              <span class="retweet" data-id="${id}">🔁 RePapo <span class="countRetweet">0</span></span>
+              <span class="commentToggle" data-id="${id}">💬 comment</span>
+              <span class="share" data-id="${id}">📤 share</span>
+            </div>
+            <div class="comentarios" id="comentarios-${id}"></div>
+          `;
+
+          lista.appendChild(tarjeta);
+
+          // Añadir listeners botones
+          tarjeta.querySelector(".like").addEventListener("click", () => toggleLike(id));
+          tarjeta.querySelector(".retweet").addEventListener("click", () => toggleRetweet(id));
+          tarjeta.querySelector(".commentToggle").addEventListener("click", () => toggleComentarios(id));
+          tarjeta.querySelector(".share").addEventListener("click", () => compartirMensaje(data.texto));
+
+          // Perfil autor
+          tarjeta.querySelectorAll(".avatar, .autor").forEach(el => {
+            el.addEventListener("click", () => verPerfil(data.autorUID));
+          });
+
+          // Cargar contadores likes y retweets
+          actualizarContadores(id, tarjeta);
+
+          // Cargar comentarios
+          cargarComentarios(id);
         }
-      } catch (e) {
-        alert("Error al actualizar RePapo: " + e.message);
-      }
+      });
     }
 
-    // Mostrar u ocultar comentarios y área de escribir
-    function toggleComentarios(postId) {
-      const contComentarios = document.getElementById(`comentarios-${postId}`);
-      const areaCom = document.getElementById(`areaComentario-${postId}`);
+    // Escapar HTML para evitar XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
 
-      if (contComentarios.style.display === "block") {
-        contComentarios.style.display = "none";
-        areaCom.style.display = "none";
+    // Actualizar contadores y estado botones like/retweet
+    async function actualizarContadores(postId, tarjeta) {
+      const likeCol = collection(db, "publicaciones", postId, "likes");
+      const retweetCol = collection(db, "publicaciones", postId, "retweets");
+      const countLikeSpan = tarjeta.querySelector(".countLike");
+      const countRetweetSpan = tarjeta.querySelector(".countRetweet");
+      const likeBtn = tarjeta.querySelector(".like");
+      const retweetBtn = tarjeta.querySelector(".retweet");
+
+      // Listeners para contadores y cambios en tiempo real
+      onSnapshot(likeCol, snapshot => {
+        const totalLikes = snapshot.size;
+        countLikeSpan.textContent = totalLikes;
+        const userLike = snapshot.docs.find(d => d.id === currentUser.uid);
+        if (userLike) likeBtn.classList.add("activo");
+        else likeBtn.classList.remove("activo");
+      });
+
+      onSnapshot(retweetCol, snapshot => {
+        const totalRetweets = snapshot.size;
+        countRetweetSpan.textContent = totalRetweets;
+        const userRetweet = snapshot.docs.find(d => d.id === currentUser.uid);
+        if (userRetweet) retweetBtn.classList.add("activo");
+        else retweetBtn.classList.remove("activo");
+      });
+    }
+
+    // Toggle Like
+    async function toggleLike(postId) {
+      if (!currentUser) return alert("Debes iniciar sesión.");
+      const likeDoc = doc(db, "publicaciones", postId, "likes", currentUser.uid);
+      const docSnap = await getDoc(likeDoc);
+      if (docSnap.exists()) {
+        await deleteDoc(likeDoc);
       } else {
-        contComentarios.style.display = "block";
-        areaCom.style.display = "block";
+        await setDoc(likeDoc, { uid: currentUser.uid, fecha: new Date() });
+      }
+    }
+
+    // Toggle Retweet (RePapo)
+    async function toggleRetweet(postId) {
+      if (!currentUser) return alert("Debes iniciar sesión.");
+      const retweetDoc = doc(db, "publicaciones", postId, "retweets", currentUser.uid);
+      const docSnap = await getDoc(retweetDoc);
+      if (docSnap.exists()) {
+        await deleteDoc(retweetDoc);
+      } else {
+        await setDoc(retweetDoc, { uid: currentUser.uid, fecha: new Date() });
+      }
+    }
+
+    // Mostrar/Ocultar comentarios
+    function toggleComentarios(postId) {
+      const contenedor = document.getElementById("comentarios-" + postId);
+      if (contenedor.classList.contains("abierto")) {
+        contenedor.classList.remove("abierto");
+      } else {
+        contenedor.classList.add("abierto");
       }
     }
 
     // Cargar comentarios en tiempo real
-    function cargarComentarios(postId, contenedor) {
-      const comentariosRef = collection(db, "publicaciones", postId, "comentarios");
-      const q = query(comentariosRef, orderBy("fecha", "asc"));
-      onSnapshot(q, (snapshot) => {
+    function cargarComentarios(postId) {
+      const contenedor = document.getElementById("comentarios-" + postId);
+      const comentariosCol = collection(db, "publicaciones", postId, "comentarios");
+      onSnapshot(query(comentariosCol, orderBy("fecha", "desc")), snapshot => {
         contenedor.innerHTML = "";
+
         snapshot.forEach(docSnap => {
           const c = docSnap.data();
-          const comentarioDiv = document.createElement("div");
-          comentarioDiv.style.marginBottom = "6px";
-
-          // Comentario texto y autor
-          const autor = c.autor || "user";
-          const avatar = c.avatar || "https://via.placeholder.com/30?text=C";
-          const texto = c.texto || "";
-
-          comentarioDiv.innerHTML = `
-            <img src="${avatar}" alt="avatar" style="width:30px; height:30px; border-radius:50%; object-fit:cover; vertical-align:middle; margin-right:6px; border:1px solid #00e5ff;">
-            <strong>${autor}</strong>: ${texto}
+          const div = document.createElement("div");
+          div.className = "comentario";
+          div.innerHTML = `
+            <div class="header">
+              <img src="${c.autorAvatar || "https://via.placeholder.com/30?text=👤"}" alt="avatar" class="avatar" />
+              <span class="autor">${escapeHtml(c.autorNick)}</span>
+              <span class="fecha" style="margin-left:auto; font-size:0.75em; color:#66ffff;">${formatoFecha(c.fecha)}</span>
+            </div>
+            <p>${escapeHtml(c.texto)}</p>
           `;
+          contenedor.appendChild(div);
+        });
 
-          contenedor.appendChild(comentarioDiv);
+        // Añadir input para nuevo comentario
+        const inputDiv = document.createElement("div");
+        inputDiv.className = "nueva-respuesta";
+        inputDiv.innerHTML = `
+          <input type="text" placeholder="Escribe un comentario..." id="inputComentario-${postId}" />
+          <button>Enviar</button>
+        `;
+        contenedor.appendChild(inputDiv);
+
+        inputDiv.querySelector("button").addEventListener("click", () => {
+          enviarComentario(postId);
         });
       });
     }
 
     // Enviar comentario
-    async function enviarComentario(postId, texto, areaComDiv, contComentarios) {
-      texto = texto.trim();
-      if (texto === "") return alert("Escribe algo para comentar.");
-
-      const comentario = {
-        texto,
-        autorUID: currentUser.uid,
-        autor: currentUser.displayName || currentUser.email.split('@')[0] || "user",
-        avatar: currentUser.photoURL || "https://via.placeholder.com/30?text=C",
-        fecha: new Date()
-      };
+    async function enviarComentario(postId) {
+      if (!currentUser) return alert("Debes iniciar sesión.");
+      const input = document.getElementById("inputComentario-" + postId);
+      const texto = input.value.trim();
+      if (!texto) return alert("Escribe un comentario.");
 
       try {
-        await addDoc(collection(db, "publicaciones", postId, "comentarios"), comentario);
-        // Limpia textarea
-        areaComDiv.querySelector("textarea").value = "";
+        await addDoc(collection(db, "publicaciones", postId, "comentarios"), {
+          texto,
+          autorUID: currentUser.uid,
+          autorNick: currentUser.displayName || currentUser.email.split("@")[0],
+          autorAvatar: currentUser.photoURL || "https://via.placeholder.com/30?text=👤",
+          fecha: new Date()
+        });
+        input.value = "";
       } catch (e) {
         alert("Error al enviar comentario: " + e.message);
       }
     }
 
-    // Compartir post - muestra el share nativo si disponible, sino copia al portapapeles
-    async function sharePost(texto) {
+    // Compartir mensaje
+    async function compartirMensaje(texto) {
+      const urlActual = window.location.href;
+      const textoCompartir = `${texto}\n\nCompartido desde Papoclub: ${urlActual}`;
+
       if (navigator.share) {
         try {
-          await navigator.share({ text: texto });
-        } catch (e) {
-          alert("Error al compartir: " + e.message);
+          await navigator.share({
+            title: "Papoclub",
+            text: textoCompartir,
+            url: urlActual
+          });
+        } catch (error) {
+          alert("Compartir cancelado o fallido.");
         }
       } else {
+        // Fallback: copiar al portapapeles
         try {
-          await navigator.clipboard.writeText(texto);
-          alert("Mensaje copiado al portapapeles para compartir.");
+          await navigator.clipboard.writeText(textoCompartir);
+          alert("Texto copiado al portapapeles. Pega y comparte donde quieras.");
         } catch {
-          alert("No se pudo copiar el mensaje.");
+          alert("No se pudo acceder al portapapeles.");
         }
       }
     }
 
-    // Modal perfil público
-    const modalPerfil = document.getElementById('modalPerfil');
-    const contenidoPerfilModal = document.getElementById('contenidoPerfilModal');
-    const cerrarModalPerfil = document.getElementById('cerrarModalPerfil');
-    cerrarModalPerfil.addEventListener('click', () => {
-      modalPerfil.style.display = 'none';
-      contenidoPerfilModal.innerHTML = 'Cargando...';
-    });
-
-    async function abrirPerfilModal(uid) {
-      modalPerfil.style.display = 'flex';
-      contenidoPerfilModal.innerHTML = 'Cargando...';
-
-      try {
-        const docRef = doc(db, "users", uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          contenidoPerfilModal.innerHTML = `
-            <img src="${data.avatar || 'https://via.placeholder.com/120?text=Avatar'}" alt="Avatar" />
-            <h2>${data.nick || "Sin nick"}</h2>
-            <p><strong>Nombre:</strong> ${data.nombre || "-"}</p>
-            <p><a href="${data.web || '#'}" target="_blank" rel="noopener noreferrer">${data.web || ""}</a></p>
-            <div class="fondoPerfil" style="background-image:url('${data.fondo || ''}');"></div>
-          `;
-        } else {
-          contenidoPerfilModal.innerHTML = '<p>No se encontró el perfil.</p>';
-        }
-      } catch (e) {
-        contenidoPerfilModal.innerHTML = `<p>Error al cargar perfil: ${e.message}</p>`;
-      }
+    // Ver perfil usuario (placeholder)
+    function verPerfil(uid) {
+      alert(`Aquí se abriría el perfil público del usuario con UID: ${uid}`);
+      // Implementar navegación a perfil público o abrir modal con info.
     }
 
-    // Logout
-    function logout() {
-      signOut(auth).then(() => {
-        location.href = "index.html";
+    // Verificar mensajes nuevos para notificación (punto rojo)
+    function verificarMensajesNuevos() {
+      const userId = currentUser.uid;
+      // Aquí deberías escuchar la colección privateMessages filtrando donde el usuario sea receptor
+      // y que no hayan sido leídos. Este ejemplo es básico y solo marca si existen mensajes nuevos.
+      const mensajesCol = collection(db, "privateMessages");
+      onSnapshot(mensajesCol, snapshot => {
+        let hayNuevos = false;
+        snapshot.docs.forEach(docSnap => {
+          const msg = docSnap.data();
+          if (msg.receiverUID === userId && !msg.leido) {
+            hayNuevos = true;
+          }
+        });
+        document.getElementById("noti").style.display = hayNuevos ? "inline-block" : "none";
       });
     }
-    window.logout = logout;
 
   </script>
 </body>
