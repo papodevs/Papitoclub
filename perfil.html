@@ -12,15 +12,15 @@
       margin: 0;
       padding-top: 70px;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
+      align-items: center;
       min-height: 100vh;
+      gap: 20px;
     }
 
     .menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -46,10 +46,54 @@
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
     }
-
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    }
+
+    form#formPerfil {
+      background: rgba(0,0,0,0.4);
+      box-shadow: 0 0 15px #00e5ffcc;
+      padding: 24px 32px;
+      border-radius: 16px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    form#formPerfil label {
+      font-weight: 600;
+      font-size: 1em;
+      color: #0ff;
+      text-shadow: 0 0 8px #0088aaaa;
+    }
+
+    form#formPerfil input {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      background: #002f36;
+      color: #0ff;
+      font-size: 1em;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    form#formPerfil input[readonly] {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    form#formPerfil button {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 1.1em;
     }
 
     .tarjeta-perfil {
@@ -60,9 +104,10 @@
       background: rgba(0,0,0,0.4);
       box-shadow: 0 0 12px #00e5ffcc;
       padding: 24px 16px 40px 16px;
-      margin-top: 30px;
       font-weight: 600;
       text-align: center;
+      color: #0ff;
+      user-select: none;
     }
 
     .tarjeta-perfil img.avatar {
@@ -87,6 +132,7 @@
       font-size: 1em;
       color: #aafcff;
       text-shadow: 0 0 8px #0088aaaa;
+      word-wrap: break-word;
     }
 
     .tarjeta-perfil a {
@@ -94,6 +140,7 @@
       text-decoration: none;
       font-weight: 700;
       transition: color 0.3s ease;
+      word-break: break-word;
     }
     .tarjeta-perfil a:hover {
       color: #00e5ff;
@@ -110,17 +157,35 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="tarjeta-perfil" id="tarjetaPerfil">
-    <img class="avatar" id="avatarPerfil" src="https://via.placeholder.com/120?text=Avatar" alt="Avatar" />
-    <h2 id="nombrePerfil">Nombre Usuario</h2>
-    <p id="nickPerfil">@usuario</p>
-    <p><a id="webPerfil" href="#" target="_blank" rel="noopener noreferrer">https://example.com</a></p>
+  <form id="formPerfil" style="display:none">
+    <label for="emailPerfil">Email (no editable)</label>
+    <input type="email" id="emailPerfil" readonly />
+    <label for="nickPerfilInput">Nick de usuario</label>
+    <input type="text" id="nickPerfilInput" maxlength="30" placeholder="Tu nick" />
+    <label for="nombrePerfilInput">Nombre</label>
+    <input type="text" id="nombrePerfilInput" maxlength="50" placeholder="Tu nombre completo" />
+    <label for="webPerfilInput">Página web personal</label>
+    <input type="url" id="webPerfilInput" placeholder="https://tusitio.com" />
+    <label for="avatarPerfilInput">URL de avatar</label>
+    <input type="url" id="avatarPerfilInput" placeholder="https://..." />
+    <button type="submit">Guardar Perfil</button>
+  </form>
+
+  <div class="tarjeta-perfil" id="tarjetaPublica" style="display:none">
+    <img class="avatar" id="avatarPublico" src="https://via.placeholder.com/120?text=Avatar" alt="Avatar" />
+    <h2 id="nombrePublico">Nombre Usuario</h2>
+    <p id="nickPublico">@usuario</p>
+    <p><a id="webPublico" href="#" target="_blank" rel="noopener noreferrer">https://example.com</a></p>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -135,31 +200,91 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
+    const form = document.getElementById("formPerfil");
+    const emailInput = document.getElementById("emailPerfil");
+    const nickInput = document.getElementById("nickPerfilInput");
+    const nombreInput = document.getElementById("nombrePerfilInput");
+    const webInput = document.getElementById("webPerfilInput");
+    const avatarInput = document.getElementById("avatarPerfilInput");
+
+    const tarjetaPublica = document.getElementById("tarjetaPublica");
+    const avatarPublico = document.getElementById("avatarPublico");
+    const nombrePublico = document.getElementById("nombrePublico");
+    const nickPublico = document.getElementById("nickPublico");
+    const webPublico = document.getElementById("webPublico");
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Obtener perfil desde Firestore con uid = user.uid
+        form.style.display = "flex";
+        emailInput.value = user.email || "";
+
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          document.getElementById("avatarPerfil").src = data.avatar || "https://via.placeholder.com/120?text=Avatar";
-          document.getElementById("nombrePerfil").textContent = data.nombre || (user.displayName || "Usuario sin nombre");
-          document.getElementById("nickPerfil").textContent = data.nick ? "@" + data.nick : "@" + (user.email ? user.email.split("@")[0] : "usuario");
-          if (data.web) {
-            const aWeb = document.getElementById("webPerfil");
-            aWeb.href = data.web;
-            aWeb.textContent = data.web;
-          }
+          nickInput.value = data.nick || "";
+          nombreInput.value = data.nombre || "";
+          webInput.value = data.web || "";
+          avatarInput.value = data.avatar || "";
+          // Mostrar la tarjeta pública actualizada
+          mostrarTarjetaPublica(data);
         } else {
-          console.log("No existe perfil para el usuario.");
+          // Sin perfil previo, mostrar tarjeta default vacía
+          mostrarTarjetaPublica(null);
         }
       } else {
-        alert("Debes iniciar sesión para ver tu perfil.");
+        alert("Debes iniciar sesión para ver y editar tu perfil.");
         location.href = "index.html";
       }
     });
 
-    window.logout = function() {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      if (!user) {
+        alert("No autenticado.");
+        return;
+      }
+
+      const nuevoPerfil = {
+        nick: nickInput.value.trim(),
+        nombre: nombreInput.value.trim(),
+        web: webInput.value.trim(),
+        avatar: avatarInput.value.trim()
+      };
+
+      try {
+        await setDoc(doc(db, "users", user.uid), nuevoPerfil, { merge: true });
+        alert("Perfil guardado correctamente.");
+        mostrarTarjetaPublica(nuevoPerfil);
+      } catch (error) {
+        alert("Error guardando perfil: " + error.message);
+      }
+    });
+
+    function mostrarTarjetaPublica(data) {
+      if (!data) {
+        avatarPublico.src = "https://via.placeholder.com/120?text=Avatar";
+        nombrePublico.textContent = "Nombre Usuario";
+        nickPublico.textContent = "@usuario";
+        webPublico.href = "#";
+        webPublico.textContent = "https://example.com";
+      } else {
+        avatarPublico.src = data.avatar || "https://via.placeholder.com/120?text=Avatar";
+        nombrePublico.textContent = data.nombre || "Nombre Usuario";
+        nickPublico.textContent = data.nick ? "@" + data.nick : "@usuario";
+        if (data.web) {
+          webPublico.href = data.web;
+          webPublico.textContent = data.web;
+        } else {
+          webPublico.href = "#";
+          webPublico.textContent = "https://example.com";
+        }
+      }
+      tarjetaPublica.style.display = "block";
+    }
+
+    window.logout = function () {
       signOut(auth).then(() => {
         location.href = "index.html";
       });
