@@ -53,9 +53,19 @@
       border-radius: 10px;
       cursor: pointer;
     }
+
+    /* Asegura que el menú esté bien posicionado */
+    #menu-superior {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
   </style>
 </head>
 <body>
+  <!-- Aquí se carga el menú desde menu.html -->
   <div id="menu-superior"></div>
 
   <div class="contenedor">
@@ -135,10 +145,12 @@
     window.enviarMensaje = enviarMensaje;
     window.logout = () => signOut(auth).then(() => location.href = "index.html");
 
-    // Cargar menú
-    fetch("menu.html").then(res => res.text()).then(html => {
-      document.getElementById("menu-superior").innerHTML = html;
-    });
+    // 👉 Cargar el menú externo
+    fetch("menu.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("menu-superior").innerHTML = html;
+      });
   </script>
 </body>
 </html>
