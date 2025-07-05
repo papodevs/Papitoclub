@@ -11,7 +11,8 @@
       color: #0ff;
       margin: 0;
       padding-top: 70px;
-      text-align: center;
+      display: flex;
+      height: 100vh;
     }
 
     .menu-superior {
@@ -50,9 +51,13 @@
     }
 
     .contenedor {
-      max-width: 600px;
-      margin: auto;
+      flex: 1;
       padding: 1em;
+      display: flex;
+      gap: 20px;
+      max-width: 1000px;
+      margin: auto;
+      box-sizing: border-box;
     }
 
     .formulario-juego {
@@ -61,6 +66,8 @@
       padding: 16px;
       margin-bottom: 20px;
       box-shadow: 0 0 12px #00e5ff88;
+      width: 60%;
+      box-sizing: border-box;
     }
 
     .formulario-juego input {
@@ -106,6 +113,53 @@
     .tarjeta-juego a {
       color: #ccf;
     }
+
+    /* Lista de juegos a la derecha */
+    #listaNombres {
+      width: 35%;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.3);
+      border-radius: 14px;
+      padding: 10px;
+      box-sizing: border-box;
+      color: #0ff;
+    }
+
+    #listaNombres ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    #listaNombres li {
+      padding: 8px;
+      border-bottom: 1px solid #00e5ff66;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #listaNombres li:hover {
+      background: #00e5ff33;
+    }
+
+    #listaNombres button {
+      background: #00e5ff;
+      border: none;
+      border-radius: 8px;
+      color: #003;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9em;
+      transition: background 0.3s ease;
+    }
+
+    #listaNombres button:hover {
+      background: #00c1d6;
+    }
   </style>
 </head>
 <body>
@@ -126,9 +180,18 @@
       <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
       <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
       <button onclick="guardarJuego()">Guardar</button>
+
+      <hr/>
+
+      <div id="detalleJuego" class="tarjeta-juego">
+        <p>Haz clic en un juego para ver los detalles aquí.</p>
+      </div>
     </div>
 
-    <div id="listaJuegos"></div>
+    <div id="listaNombres">
+      <h3>Juegos</h3>
+      <ul id="listaJuegos"></ul>
+    </div>
   </div>
 
   <script type="module">
@@ -154,6 +217,7 @@
     const auth = getAuth(app);
 
     let currentUser = null;
+    const juegosMap = new Map();
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -197,23 +261,87 @@
 
     function cargarJuegos() {
       const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
-      const lista = document.getElementById("listaJuegos");
+      const listaJuegosUL = document.getElementById("listaJuegos");
+      const detalleJuego = document.getElementById("detalleJuego");
+
       onSnapshot(q, (snapshot) => {
-        lista.innerHTML = "";
+        listaJuegosUL.innerHTML = "";
+        juegosMap.clear();
+
         snapshot.forEach((doc) => {
           const j = doc.data();
-          const div = document.createElement("div");
-          div.className = "tarjeta-juego";
-          div.innerHTML = `
-            <h3>${j.nombre}</h3>
-            <img src="${j.imagen}" alt="${j.nombre}" />
-            <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
-            <p>📱 Telegram: ${j.telegram}</p>
-            <p>💬 Discord: ${j.discord}</p>
-          `;
-          lista.appendChild(div);
+          const id = doc.id;
+          juegosMap.set(id, j);
+
+          // Crear item de lista
+          const li = document.createElement("li");
+
+          const nombreSpan = document.createElement("span");
+          nombreSpan.textContent = j.nombre;
+          nombreSpan.style.flexGrow = "1";
+          nombreSpan.style.cursor = "pointer";
+          nombreSpan.onclick = () => mostrarDetalle(id);
+
+          const btnShare = document.createElement("button");
+          btnShare.textContent = "Share";
+          btnShare.onclick = (e) => {
+            e.stopPropagation();
+            compartirJuego(j, id);
+          };
+
+          li.appendChild(nombreSpan);
+          li.appendChild(btnShare);
+          listaJuegosUL.appendChild(li);
         });
+
+        // Mostrar detalles del primer juego si existe
+        if (snapshot.size > 0) {
+          mostrarDetalle(snapshot.docs[0].id);
+        } else {
+          detalleJuego.innerHTML = "<p>No hay juegos publicados aún.</p>";
+        }
       });
+    }
+
+    function mostrarDetalle(id) {
+      const detalleJuego = document.getElementById("detalleJuego");
+      const j = juegosMap.get(id);
+      if (!j) {
+        detalleJuego.innerHTML = "<p>Juego no encontrado.</p>";
+        return;
+      }
+      detalleJuego.innerHTML = `
+        <h3>${j.nombre}</h3>
+        <img src="${j.imagen}" alt="${j.nombre}" />
+        <p><a href="${j.pagina}" target="_blank" rel="noopener">🌐 Página</a></p>
+        <p>📱 Telegram: ${j.telegram || 'No disponible'}</p>
+        <p>💬 Discord: ${j.discord || 'No disponible'}</p>
+      `;
+    }
+
+    async function compartirJuego(juego, id) {
+      const urlJuego = `${location.origin}/home.html?juegoId=${id}`;
+      const texto = `¡Mira este juego: ${juego.nombre}! ${urlJuego}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: juego.nombre,
+            text: texto,
+            url: urlJuego,
+          });
+        } catch (error) {
+          alert("Compartir cancelado o error: " + error);
+        }
+      } else {
+        // Fallback: copiar al portapapeles
+        try {
+          await navigator.clipboard.writeText(texto);
+          alert("Enlace copiado al portapapeles:\n" + texto);
+        } catch (err) {
+          alert("No se pudo copiar el enlace, por favor copia manualmente:\n" + texto);
+        }
+      }
     }
 
     window.logout = function () {
