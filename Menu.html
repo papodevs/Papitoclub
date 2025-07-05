@@ -1,0 +1,72 @@
+<!-- menu.html -->
+<style>
+  .menu-superior {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    background: linear-gradient(145deg, #00e5ff, #0099cc);
+    box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+    padding-right: 12px;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #00e5ffcc;
+  }
+
+  .menu-superior button {
+    background: none;
+    border: none;
+    color: #ccf9ff;
+    font-size: 1.4em;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    position: relative;
+  }
+
+  .menu-superior button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+  }
+
+  .alerta {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: red;
+    color: white;
+    font-size: 0.7em;
+    border-radius: 50%;
+    padding: 2px 5px;
+    display: none;
+  }
+
+  /* Icono de chat solo visible en mobile */
+  .boton-chat-mobile {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .boton-chat-mobile {
+      display: inline-block !important;
+    }
+  }
+</style>
+
+<div class="menu-superior">
+  <button onclick="location.href='home.html'" title="Inicio">🏠</button>
+  <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
+  <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
+  <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
+  <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
+    ✉️<span id="noti" class="alerta">•</span>
+  </button>
+  <button class="boton-chat-mobile" onclick="location.href='chat.html'" title="Chat Público">💬</button>
+  <button onclick="logout()" title="Cerrar sesión">🚪</button>
+</div>
