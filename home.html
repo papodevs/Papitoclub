@@ -12,6 +12,7 @@
       margin: 0;
       padding-top: 70px;
     }
+
     .menu-superior {
       position: fixed;
       top: 0;
@@ -29,6 +30,7 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
     }
+
     .menu-superior button {
       background: none;
       border: none;
@@ -40,26 +42,18 @@
       transition: transform 0.2s ease, box-shadow 0.3s ease;
       position: relative;
     }
+
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
-    .alerta {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: red;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 5px;
-      display: none;
-    }
+
     .contenedor {
       max-width: 600px;
       margin: auto;
       padding: 1em;
     }
+
     .nueva-publicacion {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
@@ -67,6 +61,7 @@
       margin-bottom: 16px;
       box-shadow: 0 0 10px #00e5ff55;
     }
+
     .nueva-publicacion textarea {
       width: 100%;
       height: 80px;
@@ -78,6 +73,7 @@
       background: #002f36;
       color: #0ff;
     }
+
     .nueva-publicacion button {
       margin-top: 8px;
       background: #00e5ff;
@@ -88,6 +84,7 @@
       border-radius: 10px;
       cursor: pointer;
     }
+
     .tarjeta {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
@@ -95,81 +92,41 @@
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
     }
+
     .tarjeta p {
       margin: 0;
     }
+
     .interacciones {
       display: flex;
       justify-content: space-between;
       margin-top: 8px;
       font-size: 0.9em;
       color: #0ff;
-      flex-wrap: wrap;
-      gap: 8px;
     }
+
     .interacciones span {
       cursor: pointer;
       transition: 0.3s;
-      user-select: none;
     }
+
     .interacciones span:hover {
       color: #fff;
       text-shadow: 0 0 8px #0ff;
     }
+
     .comentarios {
-      margin-top: 10px;
-      padding-left: 12px;
-      border-left: 2px solid #00e5ff;
       display: none;
+      margin-top: 10px;
+      padding-left: 10px;
     }
+
     .comentario {
-      background: rgba(0,0,0,0.25);
-      border-radius: 10px;
-      margin-bottom: 8px;
-      padding: 8px;
-      font-size: 0.9em;
-    }
-    .comentario .interacciones {
-      justify-content: flex-start;
-      gap: 16px;
-    }
-    .comentario .interacciones span {
-      font-size: 0.85em;
-    }
-    .comentario textarea {
-      width: 100%;
-      height: 50px;
-      border-radius: 8px;
-      border: none;
+      background: rgba(0,0,0,0.2);
       padding: 6px;
-      font-size: 0.9em;
-      resize: none;
-      background: #002f36;
-      color: #0ff;
-      margin-top: 6px;
-    }
-    .btn-enviar-comentario {
-      margin-top: 6px;
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      padding: 6px 12px;
-      font-weight: bold;
       border-radius: 8px;
-      cursor: pointer;
-    }
-    .like-btn.liked, .retweet-btn.repapeado {
-      color: #ff69b4;
-      text-shadow: 0 0 8px #ff69b4;
-    }
-    a.usuario-link {
-      color: #0ff;
-      text-decoration: none;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    a.usuario-link:hover {
-      text-decoration: underline;
+      margin-bottom: 4px;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -195,10 +152,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy,
-      doc, updateDoc, getDoc, arrayUnion, arrayRemove
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -214,223 +168,69 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUserUID = null;
-    let currentUserNickname = null;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUserUID = user.uid;
-        // Obtener nickname desde Firestore
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        currentUserNickname = (userDoc.exists() && userDoc.data().nickname) || (user.displayName || user.email || "Anónimo");
-        mostrarMensajes();
-      } else {
-        alert("Debes iniciar sesión para ver publicaciones.");
-        location.href = "index.html";
-      }
-    });
-
     async function publicarMensaje() {
       const texto = document.getElementById("nuevoMensaje").value.trim();
-      if (!texto) return alert("Escribe algo para publicar.");
-      if (!currentUserUID) return alert("Debes iniciar sesión.");
-
-      await addDoc(collection(db, "publicaciones"), {
-        texto,
-        autorUID: currentUserUID,
-        autor: currentUserNickname,
-        fecha: new Date(),
-        likes: [],
-        repapos: []
-      });
-      document.getElementById("nuevoMensaje").value = "";
+      if (texto !== "") {
+        const user = auth.currentUser;
+        const mensaje = {
+          texto: texto,
+          autor: user ? (user.displayName || user.email) : "Anónimo",
+          fecha: new Date()
+        };
+        await addDoc(collection(db, "publicaciones"), mensaje);
+        document.getElementById("nuevoMensaje").value = "";
+      }
     }
 
     function mostrarMensajes() {
       const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
       const contenedor = document.getElementById("listaMensajes");
-
       onSnapshot(q, (snapshot) => {
         contenedor.innerHTML = "";
-        snapshot.forEach(docPub => {
-          const pub = docPub.data();
-          const postId = docPub.id;
-
-          const liked = pub.likes.includes(currentUserUID);
-          const repapeado = pub.repapos.includes(currentUserUID);
-
-          // Tarjeta
+        snapshot.forEach((doc) => {
+          const mensaje = doc.data();
           const tarjeta = document.createElement("div");
           tarjeta.className = "tarjeta";
-
           tarjeta.innerHTML = `
-            <p><a href="perfil.html?id=${pub.autorUID}" class="usuario-link">@${pub.autor}</a></p>
-            <p>${pub.texto}</p>
+            <p><strong>${mensaje.autor}</strong></p>
+            <p>${mensaje.texto}</p>
             <div class="interacciones">
-              <span class="like-btn ${liked ? "liked" : ""}" data-id="${postId}">❤️ Like (${pub.likes.length})</span>
-              <span class="retweet-btn ${repapeado ? "repapeado" : ""}" data-id="${postId}">🔁 RePapo (${pub.repapos.length})</span>
-              <span class="comment-btn" data-id="${postId}">💬 comment</span>
-              <span class="share-btn" data-text="${encodeURIComponent(pub.texto)}">📤 share</span>
+              <span>❤️ Like</span>
+              <span>🔁 RePapo</span>
+              <span onclick="mostrarComentarios(this)">💬 comment</span>
+              <span>📤 share</span>
             </div>
-            <div class="comentarios" id="comentarios-${postId}"></div>
+            <div class="comentarios">
+              <div class="comentario">Ejemplo de comentario 1</div>
+              <div class="comentario">Ejemplo de comentario 2</div>
+            </div>
           `;
-
           contenedor.appendChild(tarjeta);
-
-          // Referencia a comentarios colección
-          const comentariosRef = collection(db, "publicaciones", postId, "comentarios");
-
-          // Referencia al contenedor de comentarios para este post
-          const contenedorComentarios = tarjeta.querySelector(`#comentarios-${postId}`);
-
-          // Toggle comentarios al hacer click en comment-btn
-          tarjeta.querySelector(".comment-btn").addEventListener("click", () => {
-            if (contenedorComentarios.style.display === "block") {
-              contenedorComentarios.style.display = "none";
-              contenedorComentarios.innerHTML = ""; // limpiar para evitar duplicados
-            } else {
-              contenedorComentarios.style.display = "block";
-              cargarComentarios(postId, contenedorComentarios);
-            }
-          });
-
-          // Botón like toggle
-          tarjeta.querySelector(".like-btn").addEventListener("click", async (e) => {
-            const postRef = doc(db, "publicaciones", postId);
-            if (liked) {
-              await updateDoc(postRef, { likes: arrayRemove(currentUserUID) });
-            } else {
-              await updateDoc(postRef, { likes: arrayUnion(currentUserUID) });
-            }
-          });
-
-          // Botón repapo toggle
-          tarjeta.querySelector(".retweet-btn").addEventListener("click", async (e) => {
-            const postRef = doc(db, "publicaciones", postId);
-            if (repapeado) {
-              await updateDoc(postRef, { repapos: arrayRemove(currentUserUID) });
-            } else {
-              await updateDoc(postRef, { repapos: arrayUnion(currentUserUID) });
-            }
-          });
-
-          // Botón share
-          tarjeta.querySelector(".share-btn").addEventListener("click", (e) => {
-            const texto = decodeURIComponent(e.target.getAttribute("data-text"));
-            compartirPublicacion(texto);
-          });
         });
       });
     }
 
-    // Carga y muestra comentarios con likes y repapos propios y botón para enviar comentario
-    function cargarComentarios(postId, contenedorComentarios) {
-      const comentariosRef = collection(db, "publicaciones", postId, "comentarios");
-      const q = query(comentariosRef, orderBy("fecha", "asc"));
-
-      onSnapshot(q, (snapshot) => {
-        contenedorComentarios.innerHTML = "";
-
-        // Caja para escribir nuevo comentario
-        const inputComentario = document.createElement("textarea");
-        inputComentario.placeholder = "Escribe un comentario...";
-        inputComentario.rows = 3;
-        inputComentario.style.width = "100%";
-        inputComentario.style.marginTop = "6px";
-        inputComentario.style.background = "#002f36";
-        inputComentario.style.color = "#0ff";
-        inputComentario.style.borderRadius = "8px";
-        inputComentario.style.border = "none";
-        inputComentario.style.padding = "6px";
-        inputComentario.style.resize = "none";
-
-        const btnEnviarComentario = document.createElement("button");
-        btnEnviarComentario.textContent = "Enviar";
-        btnEnviarComentario.className = "btn-enviar-comentario";
-
-        contenedorComentarios.appendChild(inputComentario);
-        contenedorComentarios.appendChild(btnEnviarComentario);
-
-        btnEnviarComentario.onclick = async () => {
-          const texto = inputComentario.value.trim();
-          if (!texto) return alert("Escribe algo para comentar.");
-          const comentariosCollection = collection(db, "publicaciones", postId, "comentarios");
-          await addDoc(comentariosCollection, {
-            texto,
-            autorUID: currentUserUID,
-            autor: currentUserNickname,
-            fecha: new Date(),
-            likes: [],
-            repapos: []
-          });
-          inputComentario.value = "";
-        };
-
-        snapshot.forEach((docComent) => {
-          const coment = docComent.data();
-          const comentId = docComent.id;
-          const userLiked = coment.likes.includes(currentUserUID);
-          const userRepapeado = coment.repapos.includes(currentUserUID);
-
-          const divComent = document.createElement("div");
-          divComent.className = "comentario";
-
-          divComent.innerHTML = `
-            <p><a href="perfil.html?id=${coment.autorUID}" class="usuario-link">@${coment.autor}</a>: ${coment.texto}</p>
-            <div class="interacciones">
-              <span class="like-btn ${userLiked ? "liked" : ""}" data-postid="${postId}" data-commentid="${comentId}">❤️ Like (${coment.likes.length})</span>
-              <span class="retweet-btn ${userRepapeado ? "repapeado" : ""}" data-postid="${postId}" data-commentid="${comentId}">🔁 RePapo (${coment.repapos.length})</span>
-            </div>
-          `;
-
-          contenedorComentarios.appendChild(divComent);
-
-          // Like comment toggle
-          divComent.querySelector(".like-btn").addEventListener("click", async () => {
-            const commentRef = doc(db, "publicaciones", postId, "comentarios", comentId);
-            if (userLiked) {
-              await updateDoc(commentRef, { likes: arrayRemove(currentUserUID) });
-            } else {
-              await updateDoc(commentRef, { likes: arrayUnion(currentUserUID) });
-            }
-          });
-
-          // Repapo comment toggle
-          divComent.querySelector(".retweet-btn").addEventListener("click", async () => {
-            const commentRef = doc(db, "publicaciones", postId, "comentarios", comentId);
-            if (userRepapeado) {
-              await updateDoc(commentRef, { repapos: arrayRemove(currentUserUID) });
-            } else {
-              await updateDoc(commentRef, { repapos: arrayUnion(currentUserUID) });
-            }
-          });
-        });
-      });
+    window.mostrarComentarios = function(btn) {
+      const comentarios = btn.closest(".tarjeta").querySelector(".comentarios");
+      comentarios.style.display = comentarios.style.display === "none" ? "block" : "none";
     }
 
-    function compartirPublicacion(texto) {
-      if (navigator.share) {
-        navigator.share({
-          title: 'Publicación en Papoclub',
-          text: texto,
-          url: window.location.href
-        }).catch(console.error);
-      } else if (navigator.clipboard) {
-        navigator.clipboard.writeText(texto).then(() => {
-          alert("Texto copiado para compartir");
-        }).catch(() => {
-          alert("No se pudo compartir ni copiar el texto");
-        });
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        mostrarMensajes();
       } else {
-        alert("Tu navegador no soporta compartir ni copiar texto.");
+        alert("Debes iniciar sesión para ver publicaciones.");
+        location.href = "login.html";
       }
+    });
+
+    window.logout = function() {
+      signOut(auth).then(() => {
+        location.href = "index.html";
+      });
     }
 
-    function logout() {
-      signOut(auth).then(() => location.href = "index.html");
-    }
-
-    window.logout = logout;
+    window.publicarMensaje = publicarMensaje;
   </script>
 </body>
 </html>
