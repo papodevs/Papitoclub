@@ -11,6 +11,9 @@
       color: #0ff;
       margin: 0;
       padding-top: 70px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     .menu-superior {
@@ -47,44 +50,19 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    .main-content {
+    .main-layout {
       display: flex;
-      flex-direction: row;
-      justify-content: center;
-      gap: 20px;
-      padding: 1em;
-    }
-
-    .contenedor {
-      flex: 2;
-      max-width: 600px;
-    }
-
-    .lista-juegos-lateral {
       flex: 1;
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 12px;
-      padding: 10px;
-      box-shadow: 0 0 10px #00e5ff55;
-      height: fit-content;
-      max-height: 80vh;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .col-izquierda, .col-centro, .col-derecha {
+      flex: 1;
       overflow-y: auto;
     }
 
-    .lista-juegos-lateral ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .lista-juegos-lateral li {
-      margin-bottom: 10px;
-      cursor: pointer;
-      color: #ccf;
-      text-decoration: underline;
-    }
-
-    .formulario-juego {
+    .formulario-juego, .tarjeta-juego, .vista-juego {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
       padding: 16px;
@@ -93,14 +71,13 @@
     }
 
     .formulario-juego input {
-      width: 90%;
-      margin: 6px auto;
+      width: 100%;
+      margin: 6px 0;
       padding: 10px;
       border-radius: 10px;
       border: none;
       background: #002f36;
       color: #0ff;
-      display: block;
     }
 
     .formulario-juego button {
@@ -114,26 +91,30 @@
       cursor: pointer;
     }
 
-    .tarjeta-juego {
-      background: rgba(0,0,0,0.3);
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 10px #00e5ff66;
-      text-align: left;
-    }
-
-    .tarjeta-juego img {
+    .tarjeta-juego img, .vista-juego img {
       max-width: 100%;
       border-radius: 10px;
     }
 
-    .tarjeta-juego h3 {
-      color: #0ff;
+    .lista-juegos-lateral {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px #00e5ff55;
+      height: 100%;
     }
 
-    .tarjeta-juego a {
+    .lista-juegos-lateral ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .lista-juegos-lateral li {
+      margin-bottom: 10px;
+      cursor: pointer;
       color: #ccf;
+      text-decoration: underline;
     }
 
     .btn-share {
@@ -157,8 +138,8 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="main-content">
-    <div class="contenedor">
+  <div class="main-layout">
+    <div class="col-izquierda">
       <div id="formularioJuego" class="formulario-juego" style="display: none;">
         <h2>Nuevo Juego</h2>
         <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
@@ -168,13 +149,23 @@
         <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
         <button onclick="guardarJuego()">Guardar</button>
       </div>
-
       <div id="listaJuegos"></div>
     </div>
 
-    <div class="lista-juegos-lateral">
+    <div class="col-centro">
+      <div id="vistaJuego" class="vista-juego">
+        <h3 id="tituloJuego">MuzzGalaxy game</h3>
+        <div id="contenidoJuego">
+          <p style="text-align:center; font-style:italic">Coming soon...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-derecha lista-juegos-lateral">
       <h3>🎮 Juegos Publicados</h3>
       <ul id="nombresJuegos"></ul>
+      <br />
+      <button class="btn-share" onclick="location.href='index.html'">🚀 Únete a PapoClub</button>
     </div>
   </div>
 
@@ -204,8 +195,9 @@
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
-      if (user) {
+      if (user && user.email === "borincano@gmail.com") {
         document.getElementById("formularioJuego").style.display = "block";
+        document.getElementById("contenidoJuego").innerHTML = `<iframe src="https://muzzgalaxy.example.com" width="100%" height="400" style="border:none; border-radius:12px;"></iframe>`;
       }
       cargarJuegos();
     });
@@ -243,17 +235,16 @@
       const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
       const lista = document.getElementById("listaJuegos");
       const nombres = document.getElementById("nombresJuegos");
+      const vista = document.getElementById("vistaJuego");
+
       onSnapshot(q, (snapshot) => {
         lista.innerHTML = "";
         nombres.innerHTML = "";
+
         snapshot.forEach((doc, index) => {
           const j = doc.data();
-          const idJuego = `juego_${index}`;
-
-          // Tarjeta de juego
           const div = document.createElement("div");
           div.className = "tarjeta-juego";
-          div.id = idJuego;
           div.innerHTML = `
             <h3>${j.nombre}</h3>
             <img src="${j.imagen}" alt="${j.nombre}" />
@@ -264,10 +255,17 @@
           `;
           lista.appendChild(div);
 
-          // Lista lateral
           const li = document.createElement("li");
           li.textContent = j.nombre;
-          li.onclick = () => document.getElementById(idJuego).scrollIntoView({ behavior: 'smooth' });
+          li.onclick = () => {
+            document.getElementById("tituloJuego").innerText = j.nombre;
+            document.getElementById("contenidoJuego").innerHTML = `
+              <img src="${j.imagen}" alt="${j.nombre}" />
+              <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
+              <p>📱 Telegram: ${j.telegram}</p>
+              <p>💬 Discord: ${j.discord}</p>
+            `;
+          };
           nombres.appendChild(li);
         });
       });
