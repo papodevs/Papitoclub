@@ -5,15 +5,15 @@
   <title>Sección Juegos - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    * {
-      box-sizing: border-box;
-    }
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
       font-family: 'Segoe UI', sans-serif;
       color: #0ff;
       margin: 0;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
 
     .menu-superior {
@@ -52,15 +52,16 @@
 
     .main-layout {
       display: flex;
-      flex-wrap: wrap;
-      padding-top: 70px;
-      padding: 20px;
+      flex: 1;
+      padding: 80px 20px 20px;
       gap: 20px;
+      flex-wrap: wrap;
     }
 
     .col-izquierda, .col-centro, .col-derecha {
       flex: 1;
-      min-width: 300px;
+      min-width: 280px;
+      overflow-y: auto;
     }
 
     .formulario-juego, .tarjeta-juego, .vista-juego {
@@ -92,16 +93,22 @@
       cursor: pointer;
     }
 
-    .tarjeta-juego img, .vista-juego iframe {
-      width: 100%;
-      max-height: 200px;
-      object-fit: cover;
+    .tarjeta-juego img, .vista-juego img, iframe {
+      max-width: 100%;
       border-radius: 10px;
+    }
+
+    .lista-juegos-lateral {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px #00e5ff55;
     }
 
     .lista-juegos-lateral ul {
       list-style: none;
       padding: 0;
+      margin: 0;
     }
 
     .lista-juegos-lateral li {
@@ -109,6 +116,23 @@
       cursor: pointer;
       color: #ccf;
       text-decoration: underline;
+    }
+
+    .btn-share {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+    }
+
+    @media (max-width: 768px) {
+      .main-layout {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
@@ -123,26 +147,27 @@
 
   <div class="main-layout">
     <div class="col-izquierda">
-      <div id="formularioJuego" class="formulario-juego">
+      <div id="formularioJuego" class="formulario-juego" style="display: none;">
         <h2>Nuevo Juego</h2>
         <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
         <input type="text" id="imagenJuego" placeholder="URL de imagen" />
-        <input type="text" id="paginaJuego" placeholder="Página del juego o link embed" />
+        <input type="text" id="paginaJuego" placeholder="Página del juego" />
         <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
         <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
         <button onclick="guardarJuego()">Guardar</button>
       </div>
       <div id="listaJuegos"></div>
     </div>
+
     <div class="col-centro">
       <div id="vistaJuego" class="vista-juego">
-        <h3>Selecciona un juego para ver</h3>
+        <h3>Selecciona un juego para verlo aquí</h3>
       </div>
     </div>
+
     <div class="col-derecha lista-juegos-lateral">
       <h3>🎮 Juegos Publicados</h3>
       <ul id="nombresJuegos"></ul>
-      <button onclick="location.href='index.html'" style="margin-top: 20px; background: #fff; color: #006994; font-weight: bold; padding: 10px; border-radius: 8px; border: none; cursor: pointer;">Unete a PapoClub</button>
     </div>
   </div>
 
@@ -172,7 +197,17 @@
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
-      document.getElementById("formularioJuego").style.display = user ? "block" : "none";
+      if (user) {
+        if (user.email === "borincano@gmail.com") {
+          document.getElementById("vistaJuego").innerHTML = `
+            <h3>MuzzGalaxy Game</h3>
+            <iframe src="https://example.com/muzzgalaxy" width="100%" height="400" allowfullscreen></iframe>
+          `;
+        }
+        document.getElementById("formularioJuego").style.display = "block";
+      } else {
+        document.getElementById("vistaJuego").innerHTML = `<h3>MuzzGalaxy Game</h3><p style='color:white;'>Coming soon...</p>`;
+      }
       cargarJuegos();
     });
 
@@ -197,7 +232,13 @@
         discord,
         fecha: new Date()
       });
-    };
+
+      document.getElementById("nombreJuego").value = "";
+      document.getElementById("imagenJuego").value = "";
+      document.getElementById("paginaJuego").value = "";
+      document.getElementById("telegramJuego").value = "";
+      document.getElementById("discordJuego").value = "";
+    }
 
     function cargarJuegos() {
       const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
@@ -209,29 +250,27 @@
         lista.innerHTML = "";
         nombres.innerHTML = "";
 
-        snapshot.forEach((doc) => {
+        snapshot.forEach((doc, index) => {
           const j = doc.data();
+          const idJuego = `juego_${index}`;
+
           const div = document.createElement("div");
           div.className = "tarjeta-juego";
+          div.id = idJuego;
           div.innerHTML = `
             <h3>${j.nombre}</h3>
             <img src="${j.imagen}" alt="${j.nombre}" />
             <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
             <p>📱 Telegram: ${j.telegram}</p>
             <p>💬 Discord: ${j.discord}</p>
-            <button onclick="navigator.share ? navigator.share({title: '${j.nombre}', text: 'Descubre este juego en Papoclub (PapoClub promo)', url: window.location.href}) : alert('Tu navegador no soporta esta función.')">Compartir (PapoClub promo)</button>
+            <button class="btn-share" onclick="navigator.share ? navigator.share({title: '${j.nombre}', text: 'Descubre este juego en Papoclub (PapoClub promo)', url: window.location.href}) : alert('Tu navegador no soporta esta función.')">Share (PapoClub promo)</button>
           `;
           lista.appendChild(div);
 
           const li = document.createElement("li");
           li.textContent = j.nombre;
           li.onclick = () => {
-            vista.innerHTML = `
-              <h3>${j.nombre}</h3>
-              <iframe src="${j.pagina}" frameborder="0" style="width:100%; height:300px;"></iframe>
-              <p>📱 Telegram: ${j.telegram}</p>
-              <p>💬 Discord: ${j.discord}</p>
-            `;
+            vista.innerHTML = div.innerHTML;
           };
           nombres.appendChild(li);
         });
@@ -242,7 +281,7 @@
       signOut(auth).then(() => {
         location.href = "index.html";
       });
-    };
+    }
   </script>
 </body>
 </html>
