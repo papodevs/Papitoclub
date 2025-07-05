@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
+      margin: 0;
       padding-top: 70px;
     }
 
@@ -40,7 +40,6 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
 
     .menu-superior button:hover {
@@ -48,86 +47,52 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    .alerta {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      background: red;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 5px;
-      display: none;
-    }
-
-    #contenedorMensajes {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    .contenedor {
       max-width: 600px;
       margin: auto;
       padding: 20px;
     }
 
-    .mensaje {
-      background: rgba(0,0,0,0.4);
+    .chat-box {
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #00e5ff44;
+    }
+
+    .chat-box select,
+    .chat-box textarea,
+    .chat-box button {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    textarea {
+      height: 80px;
+      border-radius: 8px;
       padding: 10px;
-      box-shadow: 0 0 8px #00e5ff66;
-    }
-
-    .mensaje-propio {
-      background-color: rgba(0, 255, 255, 0.1);
-      align-self: flex-end;
-    }
-
-    .chat-control {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding: 0 20px;
-      max-width: 600px;
-      margin: auto;
-    }
-
-    input, textarea, select {
-      border-radius: 10px;
-      border: none;
-      padding: 10px;
-      font-size: 1em;
       background: #002f36;
+      border: none;
       color: #0ff;
+      resize: none;
     }
 
-    button.enviar {
+    button {
       background: #00e5ff;
       color: #003;
-      border: none;
       padding: 10px;
-      font-weight: bold;
       border-radius: 10px;
+      border: none;
+      font-weight: bold;
       cursor: pointer;
     }
 
-    @media (min-width: 768px) {
-      #chatContainer {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-      }
-      #listaUsuarios {
-        width: 200px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 14px;
-        padding: 10px;
-        height: 80vh;
-        overflow-y: auto;
-      }
-      #contenedorMensajes {
-        flex: 1;
-        height: 80vh;
-        overflow-y: auto;
-      }
+    .mensaje {
+      margin: 8px 0;
+      padding: 10px;
+      background: #00353c;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -136,121 +101,111 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta">•</span></button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div id="chatContainer">
-    <div id="listaUsuarios"></div>
-    <div style="flex: 1">
-      <div class="chat-control">
-        <select id="destinatario"></select>
-        <textarea id="mensajeInput" placeholder="Escribe un mensaje..."></textarea>
-        <button class="enviar" onclick="enviarMensaje()">Enviar</button>
-      </div>
-      <div id="contenedorMensajes"></div>
+  <div class="contenedor">
+    <div class="chat-box">
+      <label for="receptor">Enviar a:</label>
+      <select id="receptor"></select>
+      <textarea id="mensajeTexto" placeholder="Escribe tu mensaje..."></textarea>
+      <button onclick="enviarMensaje()">Enviar</button>
     </div>
+
+    <div id="historialMensajes"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
       getFirestore, collection, addDoc, onSnapshot, query,
-      orderBy, doc, getDoc, getDocs, setDoc
+      orderBy, doc, getDocs, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = { /* tus credenciales */ };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser;
-    let chatActivo;
-
-    const noti = document.getElementById("noti");
+    let currentUser = null;
+    let receptorSelect = document.getElementById("receptor");
+    let historialMensajes = document.getElementById("historialMensajes");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
       cargarUsuarios();
-      escucharMensajes();
     });
 
     async function cargarUsuarios() {
-      const usersRef = collection(db, "users");
-      const snapshot = await getDocs(usersRef);
-      const select = document.getElementById("destinatario");
-      const lista = document.getElementById("listaUsuarios");
-      snapshot.forEach(docSnap => {
-        const data = docSnap.data();
-        if (docSnap.id !== currentUser.uid) {
+      const snapshot = await getDocs(collection(db, "users"));
+      receptorSelect.innerHTML = "";
+      snapshot.forEach(docu => {
+        const data = docu.data();
+        if (docu.id !== currentUser.uid) {
           const option = document.createElement("option");
-          option.value = docSnap.id;
+          option.value = docu.id;
           option.textContent = data.nickname || data.email;
-          select.appendChild(option);
-
-          const userBtn = document.createElement("div");
-          userBtn.textContent = data.nickname || data.email;
-          userBtn.style.cursor = 'pointer';
-          userBtn.onclick = () => {
-            select.value = docSnap.id;
-            cargarMensajes(docSnap.id);
-            noti.style.display = 'none';
-          };
-          lista.appendChild(userBtn);
+          receptorSelect.appendChild(option);
         }
       });
+      receptorSelect.onchange = mostrarMensajes;
+      mostrarMensajes();
     }
 
-    function obtenerChatId(uid1, uid2) {
-      return [uid1, uid2].sort().join("_");
+    function getChatId(uid1, uid2) {
+      return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
     }
 
     async function enviarMensaje() {
-      const destinatarioId = document.getElementById("destinatario").value;
-      const texto = document.getElementById("mensajeInput").value.trim();
-      if (!texto) return;
-
-      const chatId = obtenerChatId(currentUser.uid, destinatarioId);
+      const receptorId = receptorSelect.value;
+      const texto = document.getElementById("mensajeTexto").value.trim();
+      if (!texto || !receptorId) return;
+      const chatId = getChatId(currentUser.uid, receptorId);
       await addDoc(collection(db, `privados/${chatId}/mensajes`), {
+        senderUID: currentUser.uid,
+        receiverUID: receptorId,
         texto,
-        fecha: new Date(),
-        remitente: currentUser.uid,
-        receptor: destinatarioId
+        timestamp: new Date()
       });
-      document.getElementById("mensajeInput").value = "";
-      cargarMensajes(destinatarioId);
+      document.getElementById("mensajeTexto").value = "";
     }
 
-    function cargarMensajes(destinatarioId) {
-      const chatId = obtenerChatId(currentUser.uid, destinatarioId);
-      const mensajesRef = query(collection(db, `privados/${chatId}/mensajes`), orderBy("fecha"));
-      const contenedor = document.getElementById("contenedorMensajes");
-
-      onSnapshot(mensajesRef, (snapshot) => {
-        contenedor.innerHTML = "";
+    function mostrarMensajes() {
+      const receptorId = receptorSelect.value;
+      if (!receptorId) return;
+      const chatId = getChatId(currentUser.uid, receptorId);
+      const q = query(collection(db, `privados/${chatId}/mensajes`), orderBy("timestamp"));
+      onSnapshot(q, (snapshot) => {
+        historialMensajes.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
           const div = document.createElement("div");
-          div.className = "mensaje" + (msg.receptor === currentUser.uid ? '' : ' mensaje-propio');
-          div.textContent = msg.texto;
-          contenedor.appendChild(div);
+          div.className = "mensaje";
+          div.innerHTML = `<strong>${msg.senderUID === currentUser.uid ? 'Tú' : 'Ell@'}:</strong> ${msg.texto}`;
+          historialMensajes.appendChild(div);
         });
+        historialMensajes.scrollTop = historialMensajes.scrollHeight;
       });
     }
 
-    function escucharMensajes() {
-      const privadosRef = collection(db, "privados");
-      onSnapshot(privadosRef, () => {
-        noti.style.display = 'inline-block';
-      });
+    function logout() {
+      signOut(auth).then(() => location.href = "index.html");
     }
 
     window.enviarMensaje = enviarMensaje;
-    window.logout = function () {
-      signOut(auth).then(() => location.href = "index.html");
-    }
   </script>
 </body>
 </html>
