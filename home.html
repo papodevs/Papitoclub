@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
+      color: #0ff;
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
-      color: #0ff;
     }
 
     .menu-superior {
@@ -126,14 +126,6 @@
       color: #fff;
       text-shadow: 0 0 8px #0ff;
     }
-
-    .comentarios {
-      margin-top: 10px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 10px;
-      padding: 8px;
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -141,7 +133,7 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">✉️<span id="noti" class="alerta">•</span></button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta">•</span></button>
     <button onclick="logout()">🚪</button>
   </div>
 
@@ -150,10 +142,182 @@
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
       <button onclick="publicarMensaje()">Publicar</button>
     </div>
-
     <div id="listaMensajes"></div>
   </div>
 
-  <!-- Aquí iría el script de Firebase completamente funcional con nick, avatar, likes, RePapo, compartir, comentarios ocultos, y más -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return (location.href = "index.html");
+      currentUser = user;
+      mostrarMensajes();
+      verificarMensajesNuevos();
+    });
+
+    async function publicarMensaje() {
+      const texto = document.getElementById("nuevoMensaje").value.trim();
+      if (!texto) return;
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      const nick = perfil.user || currentUser.email.split("@")[0];
+      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
+
+      await addDoc(collection(db, "publicaciones"), {
+        autorUID: currentUser.uid,
+        autorNick: nick,
+        autorAvatar: avatar,
+        texto,
+        fecha: new Date(),
+        likes: [],
+        repapos: []
+      });
+
+      document.getElementById("nuevoMensaje").value = "";
+    }
+
+    function mostrarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      const contenedor = document.getElementById("listaMensajes");
+
+      onSnapshot(q, (snapshot) => {
+        contenedor.innerHTML = "";
+        snapshot.forEach((docSnap) => {
+          const post = docSnap.data();
+          const id = docSnap.id;
+
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+          tarjeta.innerHTML = `
+            <p><img src="${post.autorAvatar}" alt="👤" width="30" style="border-radius:50%;vertical-align:middle"> 
+            <strong onclick="verPerfil('${post.autorUID}')" style="cursor:pointer">@${post.autorNick}</strong></p>
+            <p>${post.texto}</p>
+            <div class="interacciones">
+              <span onclick="darLike('${id}')">❤️ Like</span>
+              <span onclick="darRePapo('${id}')">🔁 RePapo</span>
+              <span onclick="mostrarComentarios('${id}', this)">💬 comment</span>
+              <span onclick="compartirMensaje('${post.texto}')">📤 share</span>
+            </div>
+            <div id="comentarios-${id}" style="display:none;padding-top:6px;"></div>
+          `;
+          contenedor.appendChild(tarjeta);
+        });
+      });
+    }
+
+    async function darLike(id) {
+      const ref = doc(db, "publicaciones", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      const likes = new Set(data.likes || []);
+      if (likes.has(currentUser.uid)) likes.delete(currentUser.uid);
+      else likes.add(currentUser.uid);
+      await updateDoc(ref, { likes: Array.from(likes) });
+    }
+
+    async function darRePapo(id) {
+      const ref = doc(db, "publicaciones", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      const reps = new Set(data.repapos || []);
+      if (reps.has(currentUser.uid)) reps.delete(currentUser.uid);
+      else reps.add(currentUser.uid);
+      await updateDoc(ref, { repapos: Array.from(reps) });
+    }
+
+    async function mostrarComentarios(postId, boton) {
+      const contenedor = document.getElementById("comentarios-" + postId);
+      contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
+      contenedor.innerHTML = "<textarea id='comentar-" + postId + "' placeholder='Escribe un comentario'></textarea><button onclick=\"comentar('" + postId + "')\">Enviar</button><div id='lista-" + postId + "'></div>";
+
+      const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
+      onSnapshot(q, (snapshot) => {
+        const lista = document.getElementById("lista-" + postId);
+        lista.innerHTML = "";
+        snapshot.forEach(doc => {
+          const c = doc.data();
+          lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="vertical-align:middle;border-radius:50%"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
+        });
+      });
+    }
+
+    async function comentar(postId) {
+      const input = document.getElementById("comentar-" + postId);
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+
+      await addDoc(collection(db, "publicaciones", postId, "comentarios"), {
+        autorUID: currentUser.uid,
+        autorNick: perfil.user || currentUser.email.split("@")[0],
+        autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        texto,
+        fecha: new Date()
+      });
+
+      input.value = "";
+    }
+
+    function compartirMensaje(texto) {
+      if (navigator.share) {
+        navigator.share({ text: texto });
+      } else {
+        alert("Tu navegador no soporta compartir nativo.");
+      }
+    }
+
+    function verificarMensajesNuevos() {
+      const icono = document.getElementById("noti");
+      const mensajesCol = collection(db, "privateMessages");
+      onSnapshot(mensajesCol, snapshot => {
+        let hayNuevo = false;
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          if (msg.receiverUID === currentUser.uid && !msg.visto) {
+            hayNuevo = true;
+          }
+        });
+        icono.style.display = hayNuevo ? "block" : "none";
+      });
+    }
+
+    function verPerfil(uid) {
+      localStorage.setItem("uidPerfil", uid);
+      location.href = "perfil.html";
+    }
+
+    function logout() {
+      signOut(auth).then(() => location.href = "index.html");
+    }
+
+    window.publicarMensaje = publicarMensaje;
+    window.darLike = darLike;
+    window.darRePapo = darRePapo;
+    window.mostrarComentarios = mostrarComentarios;
+    window.comentar = comentar;
+    window.compartirMensaje = compartirMensaje;
+    window.verPerfil = verPerfil;
+    window.logout = logout;
+  </script>
 </body>
 </html>
