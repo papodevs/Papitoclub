@@ -66,6 +66,7 @@
       background: #002f36;
       color: #0ff;
       margin-top: 4px;
+      box-sizing: border-box;
     }
 
     button.enviar {
@@ -77,6 +78,7 @@
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
+      width: 100%;
     }
 
     .mensaje {
@@ -85,11 +87,28 @@
       padding: 12px;
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
+      word-wrap: break-word;
     }
 
     .mensaje strong {
       display: block;
       margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 600px) {
+      .contenedor {
+        padding: 0.5em;
+      }
+
+      input, textarea, button.enviar {
+        font-size: 1em;
+      }
+
+      .menu-superior button {
+        font-size: 1.2em;
+        padding: 4px 8px;
+      }
     }
   </style>
 </head>
@@ -120,8 +139,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, doc, setDoc, addDoc, onSnapshot,
-      query, orderBy, getDoc, getDocs
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, doc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -142,6 +160,8 @@
 
     let currentUser;
     let receptorUID;
+    let usuariosMap = {};
+    let usuariosInfo = {};
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -155,11 +175,17 @@
     async function cargarUsuarios() {
       const usuariosSnap = await getDocs(collection(db, "users"));
       const lista = document.getElementById("usuariosList");
+      lista.innerHTML = "";
+      usuariosMap = {};
+      usuariosInfo = {};
       usuariosSnap.forEach(doc => {
         const u = doc.data();
+        const id = doc.id;
+        const nick = u.nick || u.email;
+        usuariosMap[nick] = id;
+        usuariosInfo[id] = nick;
         const option = document.createElement("option");
-        option.value = u.nick || u.email;
-        option.dataset.uid = doc.id;
+        option.value = nick;
         lista.appendChild(option);
       });
     }
@@ -170,14 +196,7 @@
 
       if (!texto || !destinatarioInput) return;
 
-      const usuariosSnap = await getDocs(collection(db, "users"));
-      receptorUID = null;
-      usuariosSnap.forEach(doc => {
-        const u = doc.data();
-        if (u.nick === destinatarioInput || u.email === destinatarioInput) {
-          receptorUID = doc.id;
-        }
-      });
+      receptorUID = usuariosMap[destinatarioInput];
 
       if (!receptorUID) {
         alert("Usuario no encontrado.");
@@ -197,16 +216,18 @@
       cargarChat(chatId);
     }
 
-    async function cargarChat(chatId) {
+    function cargarChat(chatId) {
       const chat = document.getElementById("chat");
       const q = query(collection(db, `privados/${chatId}/mensajes`), orderBy("fecha"));
       onSnapshot(q, (snap) => {
         chat.innerHTML = "";
         snap.forEach(doc => {
           const m = doc.data();
+          const nick = m.senderUID === currentUser.uid ? "Tú" : (usuariosInfo[m.senderUID] || "Otro");
+          const fecha = new Date(m.fecha?.seconds * 1000).toLocaleString();
           const div = document.createElement("div");
           div.className = "mensaje";
-          div.innerHTML = `<strong>${m.senderUID === currentUser.uid ? "Tú" : "Otro"}</strong>${m.texto}`;
+          div.innerHTML = `<strong>${nick}</strong>${m.texto}<div style='font-size:0.8em;color:#aaa;'>${fecha}</div>`;
           chat.appendChild(div);
         });
       });
