@@ -2,25 +2,21 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Papoclub - Perfil</title>
+  <title>Perfil - Papoclub</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
       padding-top: 70px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      gap: 20px;
     }
 
     .menu-superior {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -44,48 +40,41 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
+
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    form#formPerfil {
-      background: rgba(0,0,0,0.4);
-      box-shadow: 0 0 15px #00e5ffcc;
-      padding: 24px 32px;
-      border-radius: 16px;
-      width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+    .contenedor {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
     }
 
-    form#formPerfil label {
-      font-weight: 600;
-      font-size: 1em;
-      color: #0ff;
-      text-shadow: 0 0 8px #0088aaaa;
+    .formulario-perfil, .tarjeta-perfil {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
+      text-align: center;
     }
 
-    form#formPerfil input {
-      padding: 8px 12px;
+    .formulario-perfil input, .formulario-perfil textarea {
+      width: 90%;
+      margin: 6px auto;
+      padding: 10px;
       border-radius: 10px;
       border: none;
       background: #002f36;
       color: #0ff;
-      font-size: 1em;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    form#formPerfil input[readonly] {
-      opacity: 0.7;
-      cursor: default;
+      display: block;
     }
 
-    form#formPerfil button {
-      margin-top: 8px;
+    .formulario-perfil button {
+      margin-top: 12px;
       background: #00e5ff;
       color: #003;
       border: none;
@@ -93,58 +82,12 @@
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
-      font-size: 1.1em;
     }
 
-    .tarjeta-perfil {
-      position: relative;
-      width: 320px;
-      border-radius: 16px;
-      overflow: hidden;
-      background: rgba(0,0,0,0.4);
-      box-shadow: 0 0 12px #00e5ffcc;
-      padding: 24px 16px 40px 16px;
-      font-weight: 600;
-      text-align: center;
-      color: #0ff;
-      user-select: none;
-    }
-
-    .tarjeta-perfil img.avatar {
-      width: 120px;
-      height: 120px;
+    .tarjeta-perfil img {
+      max-width: 120px;
       border-radius: 50%;
-      border: 3px solid #00e5ff;
-      object-fit: cover;
-      margin-bottom: 16px;
-      background-color: #00495a;
-    }
-
-    .tarjeta-perfil h2 {
-      margin: 0 0 8px 0;
-      font-size: 1.8em;
-      color: #0ff;
-      text-shadow: 0 0 10px #00e5ffaa;
-    }
-
-    .tarjeta-perfil p {
-      margin: 6px 0;
-      font-size: 1em;
-      color: #aafcff;
-      text-shadow: 0 0 8px #0088aaaa;
-      word-wrap: break-word;
-    }
-
-    .tarjeta-perfil a {
-      color: #33eeff;
-      text-decoration: none;
-      font-weight: 700;
-      transition: color 0.3s ease;
-      word-break: break-word;
-    }
-    .tarjeta-perfil a:hover {
-      color: #00e5ff;
-      text-shadow: 0 0 10px #00e5ffcc;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -157,31 +100,23 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <form id="formPerfil" style="display:none">
-    <label for="emailPerfil">Email (no editable)</label>
-    <input type="email" id="emailPerfil" readonly />
-    <label for="nickPerfilInput">Nick de usuario</label>
-    <input type="text" id="nickPerfilInput" maxlength="30" placeholder="Tu nick" />
-    <label for="nombrePerfilInput">Nombre</label>
-    <input type="text" id="nombrePerfilInput" maxlength="50" placeholder="Tu nombre completo" />
-    <label for="webPerfilInput">Página web personal</label>
-    <input type="url" id="webPerfilInput" placeholder="https://tusitio.com" />
-    <label for="avatarPerfilInput">URL de avatar</label>
-    <input type="url" id="avatarPerfilInput" placeholder="https://..." />
-    <button type="submit">Guardar Perfil</button>
-  </form>
+  <div class="contenedor">
+    <div id="formularioPerfil" class="formulario-perfil" style="display:none;">
+      <h2>Crear / Editar Perfil</h2>
+      <input type="text" id="nick" placeholder="Tu nick de usuario" />
+      <input type="text" id="url" placeholder="Tu web personal o contacto" />
+      <input type="text" id="avatar" placeholder="URL de tu avatar" />
+      <textarea id="bio" placeholder="Escribe una breve biografía..."></textarea>
+      <button onclick="guardarPerfil()">Guardar Perfil</button>
+    </div>
 
-  <div class="tarjeta-perfil" id="tarjetaPublica" style="display:none">
-    <img class="avatar" id="avatarPublico" src="https://via.placeholder.com/120?text=Avatar" alt="Avatar" />
-    <h2 id="nombrePublico">Nombre Usuario</h2>
-    <p id="nickPublico">@usuario</p>
-    <p><a id="webPublico" href="#" target="_blank" rel="noopener noreferrer">https://example.com</a></p>
+    <div id="tarjetaPerfil" class="tarjeta-perfil"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, doc, getDoc, setDoc
+      getFirestore, doc, setDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -200,95 +135,64 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    const form = document.getElementById("formPerfil");
-    const emailInput = document.getElementById("emailPerfil");
-    const nickInput = document.getElementById("nickPerfilInput");
-    const nombreInput = document.getElementById("nombrePerfilInput");
-    const webInput = document.getElementById("webPerfilInput");
-    const avatarInput = document.getElementById("avatarPerfilInput");
-
-    const tarjetaPublica = document.getElementById("tarjetaPublica");
-    const avatarPublico = document.getElementById("avatarPublico");
-    const nombrePublico = document.getElementById("nombrePublico");
-    const nickPublico = document.getElementById("nickPublico");
-    const webPublico = document.getElementById("webPublico");
+    let currentUser = null;
+    let perfilID = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        form.style.display = "flex";
-        emailInput.value = user.email || "";
+      const urlParams = new URLSearchParams(window.location.search);
+      const uidParam = urlParams.get("uid");
+      currentUser = user;
+      perfilID = uidParam || user?.uid;
 
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          nickInput.value = data.nick || "";
-          nombreInput.value = data.nombre || "";
-          webInput.value = data.web || "";
-          avatarInput.value = data.avatar || "";
-          // Mostrar la tarjeta pública actualizada
-          mostrarTarjetaPublica(data);
-        } else {
-          // Sin perfil previo, mostrar tarjeta default vacía
-          mostrarTarjetaPublica(null);
-        }
-      } else {
-        alert("Debes iniciar sesión para ver y editar tu perfil.");
+      if (!perfilID) {
         location.href = "index.html";
-      }
-    });
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = auth.currentUser;
-      if (!user) {
-        alert("No autenticado.");
         return;
       }
 
-      const nuevoPerfil = {
-        nick: nickInput.value.trim(),
-        nombre: nombreInput.value.trim(),
-        web: webInput.value.trim(),
-        avatar: avatarInput.value.trim()
-      };
+      const perfilRef = doc(db, "users", perfilID);
+      const perfilSnap = await getDoc(perfilRef);
 
-      try {
-        await setDoc(doc(db, "users", user.uid), nuevoPerfil, { merge: true });
-        alert("Perfil guardado correctamente.");
-        mostrarTarjetaPublica(nuevoPerfil);
-      } catch (error) {
-        alert("Error guardando perfil: " + error.message);
+      if (perfilSnap.exists()) {
+        const p = perfilSnap.data();
+        document.getElementById("tarjetaPerfil").innerHTML = `
+          <img src="${p.avatar}" alt="Avatar de ${p.nick}" />
+          <h2>@${p.nick}</h2>
+          <p>${p.bio}</p>
+          <p><a href="${p.url}" target="_blank">${p.url}</a></p>
+        `;
+      }
+
+      if (user?.uid === perfilID) {
+        document.getElementById("formularioPerfil").style.display = "block";
       }
     });
 
-    function mostrarTarjetaPublica(data) {
-      if (!data) {
-        avatarPublico.src = "https://via.placeholder.com/120?text=Avatar";
-        nombrePublico.textContent = "Nombre Usuario";
-        nickPublico.textContent = "@usuario";
-        webPublico.href = "#";
-        webPublico.textContent = "https://example.com";
-      } else {
-        avatarPublico.src = data.avatar || "https://via.placeholder.com/120?text=Avatar";
-        nombrePublico.textContent = data.nombre || "Nombre Usuario";
-        nickPublico.textContent = data.nick ? "@" + data.nick : "@usuario";
-        if (data.web) {
-          webPublico.href = data.web;
-          webPublico.textContent = data.web;
-        } else {
-          webPublico.href = "#";
-          webPublico.textContent = "https://example.com";
-        }
+    window.guardarPerfil = async function () {
+      const nick = document.getElementById("nick").value.trim();
+      const url = document.getElementById("url").value.trim();
+      const avatar = document.getElementById("avatar").value.trim();
+      const bio = document.getElementById("bio").value.trim();
+
+      if (!nick || !avatar) {
+        alert("Nick y avatar son requeridos");
+        return;
       }
-      tarjetaPublica.style.display = "block";
+
+      await setDoc(doc(db, "users", currentUser.uid), {
+        nick,
+        url,
+        avatar,
+        bio
+      });
+
+      location.reload();
     }
 
     window.logout = function () {
       signOut(auth).then(() => {
         location.href = "index.html";
       });
-    };
+    }
   </script>
 </body>
 </html>
