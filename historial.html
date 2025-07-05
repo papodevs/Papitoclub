@@ -3,20 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <title>Sección Juegos - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #006994, #00b88a);
-      color: #0ff;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+    * {
+      box-sizing: border-box;
     }
+    body {
+      background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
+      color: #0ff;
+      margin: 0;
+      padding: 0;
+    }
+
     .menu-superior {
       position: fixed;
-      top: 0; left: 0; right: 0;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
       box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
@@ -24,90 +28,221 @@
       justify-content: flex-end;
       align-items: center;
       gap: 8px;
-      padding: 0 12px;
+      padding-right: 12px;
+      z-index: 1000;
       backdrop-filter: blur(10px);
       border-bottom: 1px solid #00e5ffcc;
-      z-index: 10000;
     }
+
     .menu-superior button {
       background: none;
       border: none;
       color: #ccf9ff;
-      font-size: 1.5rem;
+      font-size: 1.4em;
       cursor: pointer;
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      user-select: none;
     }
+
     .menu-superior button:hover {
       transform: translateY(-3px);
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
+
     .main-layout {
-      margin-top: 60px;
       display: flex;
-      flex: 1;
-      min-height: 0;
-      height: calc(100vh - 60px);
-      gap: 16px;
-      padding: 16px;
-      box-sizing: border-box;
+      flex-wrap: wrap;
+      padding-top: 70px;
+      padding: 20px;
+      gap: 20px;
     }
+
     .col-izquierda, .col-centro, .col-derecha {
-      background: rgba(0,0,0,0.3);
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .formulario-juego, .tarjeta-juego, .vista-juego {
+      background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
-      box-shadow: 0 0 12px #00e5ff88;
       padding: 16px;
-      overflow-y: auto;
+      margin-bottom: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
+    }
+
+    .formulario-juego input {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #002f36;
       color: #0ff;
     }
-    .col-izquierda {
-      width: 350px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+
+    .formulario-juego button {
+      margin-top: 12px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
     }
-    .col-centro {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
+
+    .tarjeta-juego img, .vista-juego iframe {
+      width: 100%;
+      max-height: 200px;
+      object-fit: cover;
+      border-radius: 10px;
     }
-    .col-derecha {
-      width: 240px;
-      max-height: none;
-    }
-    .col-derecha ul {
-      max-height: none;
-    }
+
     .lista-juegos-lateral ul {
       list-style: none;
       padding: 0;
-      margin: 0;
     }
+
     .lista-juegos-lateral li {
-      padding: 8px 6px;
+      margin-bottom: 10px;
       cursor: pointer;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      background: #003b44;
-      user-select: none;
-      transition: background-color 0.2s ease;
-    }
-    .lista-juegos-lateral li:hover {
-      background: #007f99;
-    }
-    .lista-juegos-lateral li.active {
-      background: #00e5ff;
-      color: #003;
-      font-weight: 700;
+      color: #ccf;
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <!-- CONTENIDO OMITIDO POR BREVIDAD -->
+  <div class="menu-superior">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">🎮</button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="logout()">🚪</button>
+  </div>
+
+  <div class="main-layout">
+    <div class="col-izquierda">
+      <div id="formularioJuego" class="formulario-juego">
+        <h2>Nuevo Juego</h2>
+        <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
+        <input type="text" id="imagenJuego" placeholder="URL de imagen" />
+        <input type="text" id="paginaJuego" placeholder="Página del juego o link embed" />
+        <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
+        <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
+        <button onclick="guardarJuego()">Guardar</button>
+      </div>
+      <div id="listaJuegos"></div>
+    </div>
+    <div class="col-centro">
+      <div id="vistaJuego" class="vista-juego">
+        <h3>Selecciona un juego para ver</h3>
+      </div>
+    </div>
+    <div class="col-derecha lista-juegos-lateral">
+      <h3>🎮 Juegos Publicados</h3>
+      <ul id="nombresJuegos"></ul>
+      <button onclick="location.href='index.html'" style="margin-top: 20px; background: #fff; color: #006994; font-weight: bold; padding: 10px; border-radius: 8px; border: none; cursor: pointer;">Unete a PapoClub</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      document.getElementById("formularioJuego").style.display = user ? "block" : "none";
+      cargarJuegos();
+    });
+
+    window.guardarJuego = async function () {
+      const nombre = document.getElementById("nombreJuego").value.trim();
+      const imagen = document.getElementById("imagenJuego").value.trim();
+      const pagina = document.getElementById("paginaJuego").value.trim();
+      const telegram = document.getElementById("telegramJuego").value.trim();
+      const discord = document.getElementById("discordJuego").value.trim();
+
+      if (!nombre || !imagen) {
+        alert("El nombre y la imagen son obligatorios");
+        return;
+      }
+
+      await addDoc(collection(db, "juegos"), {
+        creadorUID: currentUser?.uid || "anonimo",
+        nombre,
+        imagen,
+        pagina,
+        telegram,
+        discord,
+        fecha: new Date()
+      });
+    };
+
+    function cargarJuegos() {
+      const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
+      const lista = document.getElementById("listaJuegos");
+      const nombres = document.getElementById("nombresJuegos");
+      const vista = document.getElementById("vistaJuego");
+
+      onSnapshot(q, (snapshot) => {
+        lista.innerHTML = "";
+        nombres.innerHTML = "";
+
+        snapshot.forEach((doc) => {
+          const j = doc.data();
+          const div = document.createElement("div");
+          div.className = "tarjeta-juego";
+          div.innerHTML = `
+            <h3>${j.nombre}</h3>
+            <img src="${j.imagen}" alt="${j.nombre}" />
+            <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
+            <p>📱 Telegram: ${j.telegram}</p>
+            <p>💬 Discord: ${j.discord}</p>
+            <button onclick="navigator.share ? navigator.share({title: '${j.nombre}', text: 'Descubre este juego en Papoclub (PapoClub promo)', url: window.location.href}) : alert('Tu navegador no soporta esta función.')">Compartir (PapoClub promo)</button>
+          `;
+          lista.appendChild(div);
+
+          const li = document.createElement("li");
+          li.textContent = j.nombre;
+          li.onclick = () => {
+            vista.innerHTML = `
+              <h3>${j.nombre}</h3>
+              <iframe src="${j.pagina}" frameborder="0" style="width:100%; height:300px;"></iframe>
+              <p>📱 Telegram: ${j.telegram}</p>
+              <p>💬 Discord: ${j.discord}</p>
+            `;
+          };
+          nombres.appendChild(li);
+        });
+      });
+    }
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        location.href = "index.html";
+      });
+    };
+  </script>
 </body>
 </html>
