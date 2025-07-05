@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat Público - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
+      color: #0ff;
+      margin: 0;
+      padding-top: 70px;
+    }
+
+    .contenedor {
+      max-width: 600px;
+      margin: auto;
+      padding: 1em;
+    }
+
+    .mensaje {
+      background: rgba(0,0,0,0.2);
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      box-shadow: 0 0 6px #00e5ff44;
+    }
+
+    .mensaje strong {
+      color: #0ff;
+    }
+
+    textarea {
+      width: 100%;
+      height: 70px;
+      border-radius: 10px;
+      background: #002f36;
+      color: #0ff;
+      border: none;
+      padding: 10px;
+      resize: none;
+    }
+
+    button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="menu-superior"></div>
+
+  <div class="contenedor">
+    <h2>💬 Chat Público</h2>
+    <div id="chat"></div>
+    <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+    <button onclick="enviarMensaje()">Enviar</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    let currentUser;
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return location.href = "index.html";
+      currentUser = user;
+      escucharMensajes();
+    });
+
+    async function enviarMensaje() {
+      const texto = document.getElementById("mensaje").value.trim();
+      if (!texto) return;
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      const nick = perfil.user || currentUser.email.split("@")[0];
+      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
+
+      await addDoc(collection(db, "chatPublico"), {
+        texto,
+        uid: currentUser.uid,
+        nick,
+        avatar,
+        fecha: new Date()
+      });
+
+      document.getElementById("mensaje").value = "";
+    }
+
+    function escucharMensajes() {
+      const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+      const contenedor = document.getElementById("chat");
+
+      onSnapshot(q, (snap) => {
+        contenedor.innerHTML = "";
+        snap.forEach(doc => {
+          const m = doc.data();
+          const fecha = new Date(m.fecha.seconds * 1000).toLocaleTimeString();
+          const div = document.createElement("div");
+          div.className = "mensaje";
+          div.innerHTML = `
+            <p><img src="${m.avatar}" width="25" style="vertical-align:middle;border-radius:50%"> 
+            <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fecha}</span></p>
+            <p>${m.texto}</p>
+          `;
+          contenedor.appendChild(div);
+          contenedor.scrollTop = contenedor.scrollHeight;
+        });
+      });
+    }
+
+    window.enviarMensaje = enviarMensaje;
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
+
+    // Cargar menú
+    fetch("menu.html").then(res => res.text()).then(html => {
+      document.getElementById("menu-superior").innerHTML = html;
+    });
+  </script>
+</body>
+</html>
