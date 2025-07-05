@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Eventos - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
+      color: #0ff;
+      margin: 0;
+      padding-top: 70px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    .menu-superior {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: linear-gradient(145deg, #00e5ff, #0099cc);
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding-right: 12px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #00e5ffcc;
+    }
+
+    .menu-superior button {
+      background: none;
+      border: none;
+      color: #ccf9ff;
+      font-size: 1.4em;
+      cursor: pointer;
+      padding: 6px 10px;
+      border-radius: 12px;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-superior button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+    }
+
+    .main-layout {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .formulario-evento, .tarjeta-evento {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
+      text-align: left;
+    }
+
+    .formulario-evento input, .formulario-evento textarea {
+      width: 97%;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #002f36;
+      color: #0ff;
+      resize: vertical;
+    }
+
+    .formulario-evento button {
+      margin-top: 12px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .tarjeta-evento h3 {
+      margin-top: 0;
+      color: #0ff;
+    }
+
+    .btn-unete {
+      background: #00e5ff;
+      color: #003;
+      font-weight: bold;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 14px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      width: 100%;
+      font-size: 1.1em;
+      text-align: center;
+    }
+
+    .btn-unete:hover {
+      background: #0099cc;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="menu-superior">
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">🎮</button>
+    <button onclick="location.href='eventos.html'">📅</button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="logout()">🚪</button>
+  </div>
+
+  <main class="main-layout">
+
+    <button class="btn-unete" onclick="location.href='index.html'">Únete a PapoClub</button>
+
+    <div id="formularioEvento" class="formulario-evento" style="display:none;">
+      <h2>Crear Nuevo Evento</h2>
+      <input type="text" id="nombreEvento" placeholder="Nombre del evento" required />
+      <input type="date" id="fechaEvento" placeholder="Fecha del evento" required />
+      <input type="text" id="lugarEvento" placeholder="Lugar del evento" />
+      <textarea id="descripcionEvento" placeholder="Descripción del evento" rows="4"></textarea>
+      <input type="text" id="contactoEvento" placeholder="Contacto o URL" />
+      <button onclick="guardarEvento()">Guardar Evento</button>
+    </div>
+
+    <div id="listaEventos"></div>
+
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, query, orderBy, onSnapshot
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getAuth, onAuthStateChanged, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let currentUser = null;
+
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        document.getElementById("formularioEvento").style.display = "block";
+      }
+      cargarEventos();
+    });
+
+    async function guardarEvento() {
+      const nombre = document.getElementById("nombreEvento").value.trim();
+      const fecha = document.getElementById("fechaEvento").value;
+      const lugar = document.getElementById("lugarEvento").value.trim();
+      const descripcion = document.getElementById("descripcionEvento").value.trim();
+      const contacto = document.getElementById("contactoEvento").value.trim();
+
+      if (!nombre || !fecha) {
+        alert("El nombre y la fecha del evento son obligatorios.");
+        return;
+      }
+
+      await addDoc(collection(db, "eventos"), {
+        creadorUID: currentUser?.uid || "anonimo",
+        nombre,
+        fecha,
+        lugar,
+        descripcion,
+        contacto,
+        fechaCreacion: new Date()
+      });
+
+      // Limpiar formulario
+      document.getElementById("nombreEvento").value = "";
+      document.getElementById("fechaEvento").value = "";
+      document.getElementById("lugarEvento").value = "";
+      document.getElementById("descripcionEvento").value = "";
+      document.getElementById("contactoEvento").value = "";
+    }
+
+    function cargarEventos() {
+      const q = query(collection(db, "eventos"), orderBy("fechaCreacion", "desc"));
+      const lista = document.getElementById("listaEventos");
+      onSnapshot(q, (snapshot) => {
+        lista.innerHTML = "";
+        snapshot.forEach(doc => {
+          const e = doc.data();
+          const div = document.createElement("div");
+          div.className = "tarjeta-evento";
+          div.innerHTML = `
+            <h3>${e.nombre}</h3>
+            <p><strong>Fecha:</strong> ${e.fecha}</p>
+            ${e.lugar ? `<p><strong>Lugar:</strong> ${e.lugar}</p>` : ""}
+            ${e.descripcion ? `<p>${e.descripcion}</p>` : ""}
+            ${e.contacto ? `<p><strong>Contacto:</strong> <a href="${e.contacto}" target="_blank" style="color:#0ff;">${e.contacto}</a></p>` : ""}
+          `;
+          lista.appendChild(div);
+        });
+      });
+    }
+
+    window.logout = function () {
+      signOut(auth).then(() => {
+        location.href = "index.html";
+      });
+    }
+  </script>
+
+</body>
+</html>
