@@ -11,7 +11,6 @@
       color: #0ff;
       margin: 0;
       padding-top: 70px;
-      text-align: center;
     }
 
     .menu-superior {
@@ -41,7 +40,6 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
     }
 
     .menu-superior button:hover {
@@ -49,13 +47,41 @@
       box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
     }
 
-    .contenedor {
-      max-width: 900px;
-      margin: auto;
-      padding: 1em;
+    .main-content {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: row;
       justify-content: center;
+      gap: 20px;
+      padding: 1em;
+    }
+
+    .contenedor {
+      flex: 2;
+      max-width: 600px;
+    }
+
+    .lista-juegos-lateral {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 10px;
+      box-shadow: 0 0 10px #00e5ff55;
+      height: fit-content;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .lista-juegos-lateral ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .lista-juegos-lateral li {
+      margin-bottom: 10px;
+      cursor: pointer;
+      color: #ccf;
+      text-decoration: underline;
     }
 
     .formulario-juego {
@@ -64,7 +90,6 @@
       padding: 16px;
       margin-bottom: 20px;
       box-shadow: 0 0 12px #00e5ff88;
-      width: 100%;
     }
 
     .formulario-juego input {
@@ -93,10 +118,9 @@
       background: rgba(0,0,0,0.3);
       border-radius: 12px;
       padding: 16px;
-      margin: 10px;
+      margin-bottom: 20px;
       box-shadow: 0 0 10px #00e5ff66;
       text-align: left;
-      flex: 1 1 300px;
     }
 
     .tarjeta-juego img {
@@ -112,30 +136,15 @@
       color: #ccf;
     }
 
-    .lista-juegos-titulos {
-      width: 200px;
-      margin-left: 20px;
-      text-align: left;
-    }
-
-    .lista-juegos-titulos ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .lista-juegos-titulos li {
-      margin: 8px 0;
-      color: #ccf;
-    }
-
-    @media (max-width: 768px) {
-      .contenedor {
-        flex-direction: column;
-        align-items: center;
-      }
-      .lista-juegos-titulos {
-        margin: 20px auto 0 auto;
-      }
+    .btn-share {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -148,13 +157,13 @@
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="contenedor">
-    <div style="flex: 1">
+  <div class="main-content">
+    <div class="contenedor">
       <div id="formularioJuego" class="formulario-juego" style="display: none;">
         <h2>Nuevo Juego</h2>
         <input type="text" id="nombreJuego" placeholder="Nombre del juego" />
-        <input type="url" id="imagenJuego" placeholder="URL de imagen" />
-        <input type="url" id="paginaJuego" placeholder="Página del juego" />
+        <input type="text" id="imagenJuego" placeholder="URL de imagen" />
+        <input type="text" id="paginaJuego" placeholder="Página del juego" />
         <input type="text" id="telegramJuego" placeholder="Canal de Telegram" />
         <input type="text" id="discordJuego" placeholder="Servidor de Discord" />
         <button onclick="guardarJuego()">Guardar</button>
@@ -162,8 +171,9 @@
 
       <div id="listaJuegos"></div>
     </div>
-    <div class="lista-juegos-titulos">
-      <h3>Juegos Públicos</h3>
+
+    <div class="lista-juegos-lateral">
+      <h3>🎮 Juegos Publicados</h3>
       <ul id="nombresJuegos"></ul>
     </div>
   </div>
@@ -193,13 +203,11 @@
     let currentUser = null;
 
     onAuthStateChanged(auth, (user) => {
+      currentUser = user;
       if (user) {
-        currentUser = user;
         document.getElementById("formularioJuego").style.display = "block";
-        cargarJuegos();
-      } else {
-        cargarJuegos(); // Permite ver los juegos sin login
       }
+      cargarJuegos();
     });
 
     window.guardarJuego = async function () {
@@ -215,7 +223,7 @@
       }
 
       await addDoc(collection(db, "juegos"), {
-        creadorUID: currentUser.uid,
+        creadorUID: currentUser?.uid || "anonimo",
         nombre,
         imagen,
         pagina,
@@ -234,27 +242,33 @@
     function cargarJuegos() {
       const q = query(collection(db, "juegos"), orderBy("fecha", "desc"));
       const lista = document.getElementById("listaJuegos");
-      const listaNombres = document.getElementById("nombresJuegos");
+      const nombres = document.getElementById("nombresJuegos");
       onSnapshot(q, (snapshot) => {
         lista.innerHTML = "";
-        listaNombres.innerHTML = "";
-        snapshot.forEach((doc) => {
+        nombres.innerHTML = "";
+        snapshot.forEach((doc, index) => {
           const j = doc.data();
+          const idJuego = `juego_${index}`;
+
+          // Tarjeta de juego
           const div = document.createElement("div");
           div.className = "tarjeta-juego";
+          div.id = idJuego;
           div.innerHTML = `
             <h3>${j.nombre}</h3>
-            <img src="${j.imagen}" alt="Imagen de ${j.nombre}" />
+            <img src="${j.imagen}" alt="${j.nombre}" />
             <p><a href="${j.pagina}" target="_blank">🌐 Página</a></p>
             <p>📱 Telegram: ${j.telegram}</p>
             <p>💬 Discord: ${j.discord}</p>
-            <button onclick="navigator.share ? navigator.share({ title: '${j.nombre}', text: 'Descúbrelo en PapoClub!', url: '${j.pagina}' }).catch(console.log) : alert('Tu navegador no soporta compartir.')">Share (PapoClub promo)</button>
+            <button class="btn-share" onclick="navigator.share ? navigator.share({title: '${j.nombre}', text: 'Descubre este juego en Papoclub (PapoClub promo)', url: window.location.href}) : alert('Tu navegador no soporta esta función.')">Share (PapoClub promo)</button>
           `;
           lista.appendChild(div);
 
+          // Lista lateral
           const li = document.createElement("li");
           li.textContent = j.nombre;
-          listaNombres.appendChild(li);
+          li.onclick = () => document.getElementById(idJuego).scrollIntoView({ behavior: 'smooth' });
+          nombres.appendChild(li);
         });
       });
     }
