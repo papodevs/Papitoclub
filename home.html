@@ -15,8 +15,7 @@
 
     .menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -130,11 +129,14 @@
 </head>
 <body>
   <div class="menu-superior">
-    <button onclick="location.href='home.html'">🏠</button>
-    <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje">✉️<span id="noti" class="alerta">•</span></button>
-    <button onclick="logout()">🚪</button>
+    <button onclick="location.href='home.html'" title="Inicio">🏠</button>
+    <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
+    <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
+    <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
+      ✉️<span id="noti" class="alerta">•</span>
+    </button>
+    <button onclick="logout()" title="Cerrar sesión">🚪</button>
   </div>
 
   <div class="contenedor">
@@ -310,6 +312,7 @@
       signOut(auth).then(() => location.href = "index.html");
     }
 
+    // Exponer funciones para botones
     window.publicarMensaje = publicarMensaje;
     window.darLike = darLike;
     window.darRePapo = darRePapo;
