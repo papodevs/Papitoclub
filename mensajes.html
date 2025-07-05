@@ -1,3 +1,4 @@
+<!-- COMIENZO DE MENSAJES.HTML -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -43,11 +44,6 @@
       position: relative;
     }
 
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
-    }
-
     .contenedor {
       max-width: 600px;
       margin: auto;
@@ -56,6 +52,7 @@
 
     .campo {
       margin-bottom: 10px;
+      position: relative;
     }
 
     input, textarea {
@@ -67,6 +64,35 @@
       color: #0ff;
       margin-top: 4px;
       box-sizing: border-box;
+      font-size: 1em;
+    }
+
+    #sugerencias {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #003040;
+      border-radius: 12px;
+      box-shadow: 0 0 8px #00e5ff88;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      z-index: 10;
+    }
+
+    .sugerencia {
+      padding: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #0ff;
+      transition: background 0.2s;
+    }
+
+    .sugerencia:hover, .sugerencia.seleccionada {
+      background: #0099cc;
     }
 
     button.enviar {
@@ -95,58 +121,36 @@
       margin-bottom: 4px;
       font-weight: bold;
     }
-
-    @media (max-width: 600px) {
-      .contenedor {
-        padding: 0.5em;
-      }
-
-      input, textarea, button.enviar {
-        font-size: 1em;
-      }
-
-      .menu-superior button {
-        font-size: 1.2em;
-        padding: 4px 8px;
-      }
-    }
   </style>
 </head>
 <body>
   <div class="menu-superior">
-    <button onclick="location.href='home.html'" title="Inicio">🏠</button>
-    <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
-    <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
-    <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
-      ✉️<span id="noti" class="alerta">•</span>
-    </button>
-    <button onclick="logout()" title="Cerrar sesión">🚪</button>
+    <button onclick="location.href='home.html'">🏠</button>
+    <button onclick="location.href='perfil.html'">👤</button>
+    <button onclick="location.href='historial.html'">🎮</button>
+    <button onclick="location.href='eventos.html'">📅</button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
+    <button onclick="logout()">🚪</button>
   </div>
 
   <div class="contenedor">
     <div class="campo">
       <label for="destinatario">Para:</label>
-      <input list="usuariosList" id="destinatario" placeholder="Escribe o selecciona un usuario...">
-      <datalist id="usuariosList"></datalist>
+      <input id="destinatario" placeholder="Escribe un nick..." autocomplete="off">
+      <div id="sugerencias"></div>
     </div>
     <div class="campo">
       <label for="mensaje">Mensaje:</label>
       <textarea id="mensaje" placeholder="Escribe tu mensaje..."></textarea>
     </div>
     <button class="enviar" onclick="enviarMensaje()">Enviar</button>
-
     <div id="chat"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs, doc, getDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -161,85 +165,115 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser;
-    let receptorUID;
+    let currentUser, receptorUID;
     let usuariosMap = {};
     let usuariosInfo = {};
+    let sugerencias = [];
+    let indexSel = -1;
+
+    const input = document.getElementById("destinatario");
+    const sugerenciasDiv = document.getElementById("sugerencias");
 
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        currentUser = user;
-        await cargarUsuarios();
-      } else {
-        location.href = 'index.html';
+      if (!user) return location.href = 'index.html';
+      currentUser = user;
+      const snap = await getDocs(collection(db, "users"));
+      snap.forEach(doc => {
+        const u = doc.data();
+        const nick = u.nick || u.email;
+        usuariosMap[nick] = doc.id;
+        usuariosInfo[doc.id] = {
+          nick,
+          avatar: u.avatar || "https://via.placeholder.com/30?text=👤"
+        };
+      });
+    });
+
+    input.addEventListener("input", () => {
+      const val = input.value.toLowerCase();
+      sugerencias = Object.keys(usuariosMap).filter(n => n.toLowerCase().includes(val));
+      mostrarSugerencias();
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (indexSel < sugerencias.length - 1) indexSel++;
+        actualizarSugerencia();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (indexSel > 0) indexSel--;
+        actualizarSugerencia();
+      } else if (e.key === "Enter" && indexSel >= 0) {
+        e.preventDefault();
+        input.value = sugerencias[indexSel];
+        sugerenciasDiv.style.display = "none";
+        manejarSeleccion();
       }
     });
 
-    async function cargarUsuarios() {
-      const usuariosSnap = await getDocs(collection(db, "users"));
-      const lista = document.getElementById("usuariosList");
-      lista.innerHTML = "";
-      usuariosMap = {};
-      usuariosInfo = {};
-      usuariosSnap.forEach(doc => {
-        const u = doc.data();
-        const id = doc.id;
-        const nick = u.nick || u.email;
-        usuariosMap[nick] = id;
-        usuariosInfo[id] = nick;
-        const option = document.createElement("option");
-        option.value = nick;
-        lista.appendChild(option);
+    function mostrarSugerencias() {
+      sugerenciasDiv.innerHTML = "";
+      sugerencias.forEach((nick, i) => {
+        const div = document.createElement("div");
+        div.className = "sugerencia" + (i === indexSel ? " seleccionada" : "");
+        div.innerHTML = `<img src="${usuariosInfo[usuariosMap[nick]].avatar}" width="28" style="border-radius:50%"> @${nick}`;
+        div.onclick = () => {
+          input.value = nick;
+          sugerenciasDiv.style.display = "none";
+          manejarSeleccion();
+        };
+        sugerenciasDiv.appendChild(div);
       });
+      sugerenciasDiv.style.display = sugerencias.length ? "block" : "none";
+    }
+
+    function actualizarSugerencia() {
+      const items = sugerenciasDiv.querySelectorAll(".sugerencia");
+      items.forEach((el, i) => el.classList.toggle("seleccionada", i === indexSel));
+    }
+
+    function manejarSeleccion() {
+      const nick = input.value.trim();
+      receptorUID = usuariosMap[nick];
+      if (!receptorUID) return;
+      const chatId = [currentUser.uid, receptorUID].sort().join("_");
+      cargarChat(chatId);
     }
 
     async function enviarMensaje() {
       const texto = document.getElementById("mensaje").value.trim();
-      const destinatarioInput = document.getElementById("destinatario").value.trim();
-
-      if (!texto || !destinatarioInput) return;
-
-      receptorUID = usuariosMap[destinatarioInput];
-
-      if (!receptorUID) {
-        alert("Usuario no encontrado.");
-        return;
-      }
-
+      const nick = input.value.trim();
+      receptorUID = usuariosMap[nick];
+      if (!texto || !receptorUID) return;
       const chatId = [currentUser.uid, receptorUID].sort().join("_");
-      const mensaje = {
+      await addDoc(collection(db, `privados/${chatId}/mensajes`), {
         texto,
         senderUID: currentUser.uid,
         receiverUID: receptorUID,
         fecha: new Date()
-      };
-
-      await addDoc(collection(db, `privados/${chatId}/mensajes`), mensaje);
+      });
       document.getElementById("mensaje").value = "";
       cargarChat(chatId);
     }
 
     function cargarChat(chatId) {
-      const chat = document.getElementById("chat");
+      const cont = document.getElementById("chat");
       const q = query(collection(db, `privados/${chatId}/mensajes`), orderBy("fecha"));
-      onSnapshot(q, (snap) => {
-        chat.innerHTML = "";
+      onSnapshot(q, snap => {
+        cont.innerHTML = "";
         snap.forEach(doc => {
           const m = doc.data();
-          const nick = m.senderUID === currentUser.uid ? "Tú" : (usuariosInfo[m.senderUID] || "Otro");
+          const nick = m.senderUID === currentUser.uid ? "Tú" : (usuariosInfo[m.senderUID]?.nick || "Otro");
           const fecha = new Date(m.fecha?.seconds * 1000).toLocaleString();
-          const div = document.createElement("div");
-          div.className = "mensaje";
-          div.innerHTML = `<strong>${nick}</strong>${m.texto}<div style='font-size:0.8em;color:#aaa;'>${fecha}</div>`;
-          chat.appendChild(div);
+          cont.innerHTML += `<div class="mensaje"><strong>${nick}</strong>${m.texto}<div style="font-size:0.8em;color:#aaa;">${fecha}</div></div>`;
         });
       });
     }
 
     window.enviarMensaje = enviarMensaje;
-    window.logout = function () {
-      signOut(auth).then(() => location.href = 'index.html');
-    };
+    window.logout = () => signOut(auth).then(() => location.href = "index.html");
   </script>
 </body>
 </html>
+<!-- FIN DE MENSAJES.HTML -->
