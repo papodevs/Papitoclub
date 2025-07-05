@@ -40,6 +40,7 @@
       padding: 6px 10px;
       border-radius: 12px;
       transition: transform 0.2s ease, box-shadow 0.3s ease;
+      position: relative;
     }
 
     .menu-superior button:hover {
@@ -50,49 +51,45 @@
     .contenedor {
       max-width: 600px;
       margin: auto;
-      padding: 20px;
+      padding: 1em;
     }
 
-    .chat-box {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 10px #00e5ff44;
+    .campo {
+      margin-bottom: 10px;
     }
 
-    .chat-box select,
-    .chat-box textarea,
-    .chat-box button {
+    input, textarea {
       width: 100%;
-      margin-top: 8px;
-    }
-
-    textarea {
-      height: 80px;
-      border-radius: 8px;
-      padding: 10px;
-      background: #002f36;
-      border: none;
-      color: #0ff;
-      resize: none;
-    }
-
-    button {
-      background: #00e5ff;
-      color: #003;
       padding: 10px;
       border-radius: 10px;
       border: none;
+      background: #002f36;
+      color: #0ff;
+      margin-top: 4px;
+    }
+
+    button.enviar {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
       font-weight: bold;
+      border-radius: 10px;
       cursor: pointer;
     }
 
     .mensaje {
-      margin: 8px 0;
-      padding: 10px;
-      background: #00353c;
-      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 0 6px #00e5ff44;
+    }
+
+    .mensaje strong {
+      display: block;
+      margin-bottom: 4px;
     }
   </style>
 </head>
@@ -106,21 +103,25 @@
   </div>
 
   <div class="contenedor">
-    <div class="chat-box">
-      <label for="receptor">Enviar a:</label>
-      <select id="receptor"></select>
-      <textarea id="mensajeTexto" placeholder="Escribe tu mensaje..."></textarea>
-      <button onclick="enviarMensaje()">Enviar</button>
+    <div class="campo">
+      <label for="destinatario">Para:</label>
+      <input list="usuariosList" id="destinatario" placeholder="Escribe o selecciona un usuario...">
+      <datalist id="usuariosList"></datalist>
     </div>
+    <div class="campo">
+      <label for="mensaje">Mensaje:</label>
+      <textarea id="mensaje" placeholder="Escribe tu mensaje..."></textarea>
+    </div>
+    <button class="enviar" onclick="enviarMensaje()">Enviar</button>
 
-    <div id="historialMensajes"></div>
+    <div id="chat"></div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, onSnapshot, query,
-      orderBy, doc, getDocs, getDoc
+      getFirestore, collection, doc, setDoc, addDoc, onSnapshot,
+      query, orderBy, getDoc, getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import {
       getAuth, onAuthStateChanged, signOut
@@ -139,73 +140,82 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    let currentUser = null;
-    let receptorSelect = document.getElementById("receptor");
-    let historialMensajes = document.getElementById("historialMensajes");
+    let currentUser;
+    let receptorUID;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = "index.html";
-      currentUser = user;
-      cargarUsuarios();
+      if (user) {
+        currentUser = user;
+        await cargarUsuarios();
+      } else {
+        location.href = 'index.html';
+      }
     });
 
     async function cargarUsuarios() {
-      const snapshot = await getDocs(collection(db, "users"));
-      receptorSelect.innerHTML = "";
-      snapshot.forEach(docu => {
-        const data = docu.data();
-        if (docu.id !== currentUser.uid) {
-          const option = document.createElement("option");
-          option.value = docu.id;
-          option.textContent = data.nickname || data.email;
-          receptorSelect.appendChild(option);
-        }
+      const usuariosSnap = await getDocs(collection(db, "users"));
+      const lista = document.getElementById("usuariosList");
+      usuariosSnap.forEach(doc => {
+        const u = doc.data();
+        const option = document.createElement("option");
+        option.value = u.nick || u.email;
+        option.dataset.uid = doc.id;
+        lista.appendChild(option);
       });
-      receptorSelect.onchange = mostrarMensajes;
-      mostrarMensajes();
-    }
-
-    function getChatId(uid1, uid2) {
-      return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
     }
 
     async function enviarMensaje() {
-      const receptorId = receptorSelect.value;
-      const texto = document.getElementById("mensajeTexto").value.trim();
-      if (!texto || !receptorId) return;
-      const chatId = getChatId(currentUser.uid, receptorId);
-      await addDoc(collection(db, `privados/${chatId}/mensajes`), {
-        senderUID: currentUser.uid,
-        receiverUID: receptorId,
-        texto,
-        timestamp: new Date()
+      const texto = document.getElementById("mensaje").value.trim();
+      const destinatarioInput = document.getElementById("destinatario").value.trim();
+
+      if (!texto || !destinatarioInput) return;
+
+      const usuariosSnap = await getDocs(collection(db, "users"));
+      receptorUID = null;
+      usuariosSnap.forEach(doc => {
+        const u = doc.data();
+        if (u.nick === destinatarioInput || u.email === destinatarioInput) {
+          receptorUID = doc.id;
+        }
       });
-      document.getElementById("mensajeTexto").value = "";
+
+      if (!receptorUID) {
+        alert("Usuario no encontrado.");
+        return;
+      }
+
+      const chatId = [currentUser.uid, receptorUID].sort().join("_");
+      const mensaje = {
+        texto,
+        senderUID: currentUser.uid,
+        receiverUID: receptorUID,
+        fecha: new Date()
+      };
+
+      await addDoc(collection(db, `privados/${chatId}/mensajes`), mensaje);
+      document.getElementById("mensaje").value = "";
+      cargarChat(chatId);
     }
 
-    function mostrarMensajes() {
-      const receptorId = receptorSelect.value;
-      if (!receptorId) return;
-      const chatId = getChatId(currentUser.uid, receptorId);
-      const q = query(collection(db, `privados/${chatId}/mensajes`), orderBy("timestamp"));
-      onSnapshot(q, (snapshot) => {
-        historialMensajes.innerHTML = "";
-        snapshot.forEach(doc => {
-          const msg = doc.data();
+    async function cargarChat(chatId) {
+      const chat = document.getElementById("chat");
+      const q = query(collection(db, `privados/${chatId}/mensajes`), orderBy("fecha"));
+      onSnapshot(q, (snap) => {
+        chat.innerHTML = "";
+        snap.forEach(doc => {
+          const m = doc.data();
           const div = document.createElement("div");
           div.className = "mensaje";
-          div.innerHTML = `<strong>${msg.senderUID === currentUser.uid ? 'Tú' : 'Ell@'}:</strong> ${msg.texto}`;
-          historialMensajes.appendChild(div);
+          div.innerHTML = `<strong>${m.senderUID === currentUser.uid ? "Tú" : "Otro"}</strong>${m.texto}`;
+          chat.appendChild(div);
         });
-        historialMensajes.scrollTop = historialMensajes.scrollHeight;
       });
-    }
-
-    function logout() {
-      signOut(auth).then(() => location.href = "index.html");
     }
 
     window.enviarMensaje = enviarMensaje;
+    window.logout = function () {
+      signOut(auth).then(() => location.href = 'index.html');
+    };
   </script>
 </body>
 </html>
