@@ -2,16 +2,15 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Perfil - Papoclub</title>
+  <title>Papoclub - Perfil</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
-      text-align: center;
     }
 
     .menu-superior {
@@ -62,83 +61,86 @@
     }
 
     .contenedor {
-      background: rgba(0, 0, 0, 0.3);
-      max-width: 400px;
+      max-width: 600px;
       margin: auto;
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 0 12px #00e5ff88;
+      padding: 1em;
     }
 
-    .perfil-publico {
-      background-size: cover;
-      background-position: center;
+    .formulario-perfil {
+      background: rgba(0,0,0,0.2);
       border-radius: 16px;
-      box-shadow: 0 0 12px #00e5ff55;
-      padding: 20px;
-      margin-top: 20px;
-      color: #fff;
+      padding: 16px;
+      box-shadow: 0 0 10px #00e5ff55;
     }
 
-    h2 {
-      margin-bottom: 20px;
+    .formulario-perfil label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
       color: #0ff;
     }
 
-    input[type="file"], input[type="text"] {
-      display: block;
-      margin: 10px auto;
-      border-radius: 10px;
-      padding: 10px;
+    .formulario-perfil input[type="text"],
+    .formulario-perfil input[type="url"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
       background: #002f36;
       color: #0ff;
-      border: none;
-      width: 90%;
+      margin-top: 6px;
+      font-size: 1em;
     }
 
-    button {
+    .formulario-perfil input[type="file"] {
+      margin-top: 8px;
+      color: #0ff;
+    }
+
+    .formulario-perfil button {
+      margin-top: 16px;
       background: #00e5ff;
       color: #003;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 18px;
       font-weight: bold;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.3s;
-      margin-top: 10px;
-    }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 12px #00e5ff, 0 0 20px #00e5ffaa;
-    }
-
-    img {
-      margin-top: 20px;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #00e5ff;
-      box-shadow: 0 0 8px #00e5ff;
-    }
-
-    .volver-home {
-      margin-top: 20px;
-    }
-
-    .volver-home a {
-      background: #00e5ff;
-      color: #003;
-      padding: 8px 16px;
-      text-decoration: none;
       border-radius: 10px;
-      font-weight: bold;
-      display: inline-block;
+      cursor: pointer;
+      font-size: 1.1em;
     }
 
-    .volver-home a:hover {
-      box-shadow: 0 0 12px #00e5ff, 0 0 24px #00e5ffaa;
+    .tarjeta-publica {
+      background: rgba(0,0,0,0.3);
+      border-radius: 16px;
+      padding: 16px;
+      margin-top: 20px;
+      box-shadow: 0 0 12px #00e5ff88;
+      color: #0ff;
+      text-align: center;
+    }
+
+    .tarjeta-publica img {
+      border-radius: 50%;
+      max-width: 120px;
+      max-height: 120px;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 2px solid #00e5ff;
+    }
+
+    .tarjeta-publica h2 {
+      margin: 6px 0 4px;
+    }
+
+    .tarjeta-publica p {
+      margin: 4px 0;
+      font-size: 1em;
+      word-break: break-word;
+    }
+
+    .tarjeta-publica a {
+      color: #00e5ff;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -147,40 +149,41 @@
     <button onclick="location.href='home.html'">🏠</button>
     <button onclick="location.href='perfil.html'">👤</button>
     <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">
-      ✉️ <span id="noti" class="alerta">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'">✉️</button>
     <button onclick="logout()">🚪</button>
   </div>
 
-  <div class="contenedor" id="contenedorPerfil">
-    <h2>Editar Perfil</h2>
-    <input type="text" id="correo" placeholder="Correo electrónico" disabled />
-    <input type="text" id="nickname" placeholder="Nombre de usuario (nick)" />
-    <input type="text" id="web" placeholder="Sitio web personal" />
-    <input type="text" id="biografia" placeholder="Breve biografía" />
-    <input type="file" id="avatarInput" accept="image/*" />
-    <input type="text" id="avatarUrl" placeholder="O ingresa una URL de avatar" />
-    <input type="text" id="fondoPerfil" placeholder="URL del fondo del perfil" />
-    <button id="subirAvatarBtn">Guardar Perfil</button>
-    <img id="vistaAvatar" src="" alt="Tu Avatar" />
+  <div class="contenedor">
+    <div class="formulario-perfil">
+      <h1>Editar Perfil</h1>
+      <label for="nombre">Nombre Completo</label>
+      <input type="text" id="nombre" placeholder="Tu nombre" />
 
-    <div class="volver-home">
-      <a href="home.html">⬅️ Volver al inicio</a>
+      <label for="nick">Nick de Usuario</label>
+      <input type="text" id="nick" placeholder="Tu nick" />
+
+      <label for="web">Página Web Personal</label>
+      <input type="url" id="web" placeholder="https://tusitio.com" />
+
+      <label for="fondo">URL de Fondo de Perfil</label>
+      <input type="url" id="fondo" placeholder="https://..." />
+
+      <label for="avatarFile">Foto de Perfil (Avatar)</label>
+      <input type="file" id="avatarFile" accept="image/*" />
+
+      <button onclick="guardarPerfil()">Guardar Perfil</button>
+    </div>
+
+    <div id="perfilPublico" class="tarjeta-publica" style="display:none;">
+      <!-- Aquí se mostrará la tarjeta pública luego de guardar -->
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, doc, updateDoc, getDoc, setDoc, collection, query, where, onSnapshot
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import {
-      getAuth, onAuthStateChanged, signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import {
-      getStorage, ref, uploadBytes, getDownloadURL
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -196,112 +199,89 @@
     const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const avatarInput = document.getElementById("avatarInput");
-    const subirBtn = document.getElementById("subirAvatarBtn");
-    const vistaAvatar = document.getElementById("vistaAvatar");
-    const correoInput = document.getElementById("correo");
-    const nicknameInput = document.getElementById("nickname");
-    const webInput = document.getElementById("web");
-    const bioInput = document.getElementById("biografia");
-    const avatarUrlInput = document.getElementById("avatarUrl");
-    const fondoPerfilInput = document.getElementById("fondoPerfil");
-    const contenedorPerfil = document.getElementById("contenedorPerfil");
-    const noti = document.getElementById("noti");
-
-    let currentUser = null;
+    let usuarioActual = null;
 
     onAuthStateChanged(auth, async (user) => {
-      const params = new URLSearchParams(location.search);
-      const perfilId = params.get("id");
-
       if (user) {
-        currentUser = user;
-        if (perfilId && perfilId !== user.uid) {
-          const docSnap = await getDoc(doc(db, "users", perfilId));
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            contenedorPerfil.innerHTML = `
-              <div class="perfil-publico" style="background-image: url('${data.fondo || ''}')">
-                <img src="${data.avatar || ''}" alt="Avatar" />
-                <h2>${data.nickname || 'Usuario sin nick'}</h2>
-                <p><em>${data.biografia || ''}</em></p>
-                <p><a href="${data.web || '#'}" style="color:#0ff" target="_blank">${data.web || ''}</a></p>
-              </div>
-              <div class="volver-home">
-                <a href="home.html">⬅️ Volver al inicio</a>
-              </div>
-            `;
-          } else {
-            contenedorPerfil.innerHTML = `<p style="color: #fff">Perfil no encontrado.</p>`;
-          }
-        } else {
-          correoInput.value = user.email;
-          const docSnap = await getDoc(doc(db, "users", user.uid));
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            if (data.avatar) vistaAvatar.src = data.avatar;
-            if (data.nickname) nicknameInput.value = data.nickname;
-            if (data.web) webInput.value = data.web;
-            if (data.biografia) bioInput.value = data.biografia;
-            if (data.fondo) fondoPerfilInput.value = data.fondo;
-          }
-        }
-
-        // 🔴 Revisión de nuevos mensajes
-        const mensajesRef = collection(db, "privateMessages");
-        const q = query(mensajesRef, where("receiverUID", "==", user.uid), where("leido", "==", false));
-        onSnapshot(q, (snapshot) => {
-          noti.style.display = snapshot.size > 0 ? "inline-block" : "none";
-          if (snapshot.size > 0) {
-            const audio = new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1147-pristine.mp3");
-            audio.play().catch(()=>{});
-          }
-        });
+        usuarioActual = user;
+        cargarPerfil(user.uid);
       } else {
-        alert("Debes iniciar sesión.");
+        alert("Debes iniciar sesión para acceder al perfil.");
         location.href = "index.html";
       }
     });
 
-    subirBtn.addEventListener("click", async () => {
-      if (!currentUser) return alert("Debes iniciar sesión");
-      const nickname = nicknameInput.value.trim();
-      const web = webInput.value.trim();
-      const bio = bioInput.value.trim();
-      const avatarUrlManual = avatarUrlInput.value.trim();
-      const fondo = fondoPerfilInput.value.trim();
-
-      if (!nickname) return alert("Debes ingresar tu nick de usuario");
-
-      let avatarURL = avatarUrlManual;
-
-      const file = avatarInput.files[0];
-      if (file) {
-        const storageRef = ref(storage, `avatars/${currentUser.uid}/avatar.jpg`);
-        await uploadBytes(storageRef, file);
-        avatarURL = await getDownloadURL(storageRef);
-        vistaAvatar.src = avatarURL;
+    async function cargarPerfil(uid) {
+      const docRef = doc(db, "users", uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        document.getElementById("nombre").value = data.nombre || "";
+        document.getElementById("nick").value = data.nick || "";
+        document.getElementById("web").value = data.web || "";
+        document.getElementById("fondo").value = data.fondo || "";
+        mostrarPerfilPublico(uid);
       }
+    }
 
-      await setDoc(doc(db, "users", currentUser.uid), {
-        email: currentUser.email,
-        nickname,
+    async function subirAvatar(uid) {
+      const fileInput = document.getElementById("avatarFile");
+      const file = fileInput.files[0];
+      if (!file) return null;
+      const extension = file.name.split('.').pop();
+      const storageRef = ref(storage, `avatars/${uid}.${extension}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      return url;
+    }
+
+    async function guardarPerfil() {
+      if (!usuarioActual) return;
+      const uid = usuarioActual.uid;
+      const nombre = document.getElementById("nombre").value.trim();
+      const nick = document.getElementById("nick").value.trim();
+      const web = document.getElementById("web").value.trim();
+      const fondo = document.getElementById("fondo").value.trim();
+
+      const avatarURL = await subirAvatar(uid);
+
+      const datos = {
+        nombre,
+        nick,
         web,
-        biografia: bio,
-        avatar: avatarURL || vistaAvatar.src || "",
-        fondo: fondo || ""
-      }, { merge: true });
+        fondo
+      };
+      if (avatarURL) datos.avatar = avatarURL;
 
-      alert("Perfil actualizado correctamente.");
-    });
+      await setDoc(doc(db, "users", uid), datos, { merge: true });
+      alert("Perfil guardado correctamente.");
+      mostrarPerfilPublico(uid);
+    }
 
-    function logout() {
+    async function mostrarPerfilPublico(uid) {
+      const docRef = doc(db, "users", uid);
+      const docSnap = await getDoc(docRef);
+      const cont = document.getElementById("perfilPublico");
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        cont.style.display = "block";
+        cont.innerHTML = `
+          <img src="${data.avatar || 'https://via.placeholder.com/120?text=Avatar'}" alt="Avatar" />
+          <h2>${data.nick || "Sin nick"}</h2>
+          <p><strong>Nombre:</strong> ${data.nombre || "-"}</p>
+          <p><a href="${data.web || '#'}" target="_blank" rel="noopener noreferrer">${data.web || ""}</a></p>
+          <div style="background-image:url('${data.fondo || ''}');height:100px;background-size:cover;background-position:center;margin-top:10px;border-radius:12px;"></div>
+        `;
+      } else {
+        cont.style.display = "none";
+      }
+    }
+
+    window.logout = function () {
       signOut(auth).then(() => {
         location.href = "index.html";
       });
     }
-
-    window.logout = logout;
   </script>
 </body>
 </html>
