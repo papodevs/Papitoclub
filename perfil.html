@@ -86,14 +86,16 @@
     }
   </style>
 </head>
-<body>
-  <div class="menu-superior">
-    <button onclick="location.href='home.html'">🏠</button>
-    <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
-    <button onclick="logout()">🚪</button>
-  </div>
+<div class="menu-superior">
+    <button onclick="location.href='home.html'" title="Inicio">🏠</button>
+    <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
+    <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
+    <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
+    <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
+      ✉️<span id="noti" class="alerta">•</span>
+    </button>
+    <button onclick="logout()" title="Cerrar sesión">🚪</button>
+</div>
 
   <div id="formularioPerfil" class="formulario-perfil" style="display: none;">
     <h2>Crear/Editar Perfil</h2>
