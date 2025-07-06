@@ -12,7 +12,7 @@
       margin: 0;
       padding-top: 70px;
       height: 100vh;
-      overflow: hidden;
+      overflow: auto; /* permitimos scroll */
       display: flex;
       flex-direction: row;
     }
@@ -41,7 +41,7 @@
       height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
-      overflow: hidden;
+      overflow-y: auto; /* permitimos scroll vertical */
     }
 
     .chat-publico h2 {
@@ -106,6 +106,20 @@
       margin: 4px 0;
     }
 
+    .chat-input {
+      display: flex;
+      gap: 8px;
+      margin-top: auto; /* pega abajo del chat */
+      padding: 8px;
+      box-shadow: 0 0 10px #00e5ff55;
+    }
+
+    .chat-input textarea {
+      flex: 1;
+      height: 50px;
+    }
+
+    /* Botón flotante para móvil */
     #btnIrChat {
       display: none;
       position: fixed;
@@ -121,6 +135,7 @@
       box-shadow: 0 0 8px #00e5ffaa;
     }
 
+    /* Responsive móvil */
     @media (max-width: 900px) {
       body {
         display: block;
