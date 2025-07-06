@@ -12,74 +12,52 @@
       margin: 0;
       padding-top: 70px;
       display: flex;
+      flex-direction: row;
       height: 100vh;
       overflow: hidden;
     }
+
     #menu-superior {
       position: fixed;
       top: 0; left: 0;
       width: 100%;
       z-index: 1000;
     }
+
     .publicaciones {
-      flex: 1.15;
-      max-width: 62%;
+      flex: 1.1;
+      max-width: 60%;
       padding: 1em;
       overflow-y: auto;
-      box-sizing: border-box;
+      height: calc(100vh - 70px);
     }
+
     .chat-publico {
-      flex: 0.85;
-      max-width: 38%;
+      flex: 0.9;
+      max-width: 40%;
       padding: 1em;
       border-left: 2px solid #00e5ff55;
+      height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
-      box-sizing: border-box;
-      transition: max-width 0.3s ease;
+      overflow: hidden;
     }
-    .chat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .chat-header h2 {
-      margin: 0;
+
+    .chat-publico h2 {
+      margin-top: 0;
       user-select: none;
     }
-    .toggle-chat-btn {
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      padding: 5px 10px;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-      user-select: none;
-      transition: background-color 0.3s ease;
-    }
-    .toggle-chat-btn:hover {
-      background-color: #0099cc;
-    }
-    #mensajes-chat {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 10px;
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 8px;
-      box-shadow: 0 0 10px #00e5ff55;
-      transition: max-height 0.3s ease;
-    }
-    .chat-input {
+
+    .nueva-publicacion, .chat-input {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
+      margin-bottom: 16px;
       box-shadow: 0 0 10px #00e5ff55;
     }
+
     textarea {
-      width: 97%;
+      width: 100%;
       border-radius: 8px;
       border: none;
       padding: 10px;
@@ -88,6 +66,7 @@
       background: #002f36;
       color: #0ff;
     }
+
     button {
       margin-top: 8px;
       background: #00e5ff;
@@ -97,14 +76,13 @@
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-    .nueva-publicacion {
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 0 10px #00e5ff55;
+
+    button:hover {
+      background-color: #0099cc;
     }
+
     .tarjeta {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
@@ -112,6 +90,7 @@
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
     }
+
     .interacciones {
       display: flex;
       justify-content: space-between;
@@ -119,11 +98,81 @@
       font-size: 0.9em;
       color: #0ff;
     }
+
     .mensaje-chat {
       background: rgba(0,0,0,0.2);
       padding: 8px;
       border-radius: 10px;
       margin: 4px 0;
+    }
+
+    #listaMensajes {
+      overflow-y: auto;
+      max-height: calc(100vh - 190px);
+    }
+
+    #mensajes-chat {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: #00e5ff44 transparent;
+    }
+
+    #mensajes-chat::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    #mensajes-chat::-webkit-scrollbar-thumb {
+      background-color: #00e5ff44;
+      border-radius: 4px;
+    }
+
+    /* BOTON CHAT PARA MOBILE */
+    #btnIrChat {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00e5ff;
+      color: #003;
+      padding: 12px 16px;
+      border-radius: 30px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1100;
+      box-shadow: 0 0 8px #00e5ffaa;
+    }
+
+    /* MOBILE */
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+        padding-top: 60px;
+        height: auto;
+        overflow: visible;
+      }
+
+      .chat-publico {
+        display: none;
+      }
+
+      .publicaciones {
+        max-width: 100%;
+        flex: none;
+        padding: 1em;
+        height: auto;
+      }
+
+      #listaMensajes {
+        max-height: none;
+        overflow-y: visible;
+      }
+
+      #btnIrChat {
+        display: block;
+      }
     }
   </style>
 </head>
@@ -139,16 +188,15 @@
   </div>
 
   <div class="chat-publico">
-    <div class="chat-header">
-      <h2>💬 Chat Público</h2>
-      <button id="toggleChat" class="toggle-chat-btn">Contraer</button>
-    </div>
+    <h2>💬 Chat Público</h2>
     <div id="mensajes-chat"></div>
     <div class="chat-input">
       <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
       <button onclick="enviarMensaje()">Enviar</button>
     </div>
   </div>
+
+  <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -173,11 +221,17 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
+      cargarMenu();
       mostrarMensajes();
       escucharMensajesPublicos();
     });
 
-    // Posts públicos
+    async function cargarMenu() {
+      const res = await fetch("menu.html");
+      const html = await res.text();
+      document.getElementById("menu-superior").innerHTML = html;
+    }
+
     async function publicarMensaje() {
       const texto = document.getElementById("nuevoMensaje").value.trim();
       if (!texto) return;
@@ -239,25 +293,20 @@
 
     async function mostrarComentarios(postId, boton) {
       const contenedor = document.getElementById("comentarios-" + postId);
-      if (contenedor.style.display === "none" || contenedor.style.display === "") {
-        contenedor.style.display = "block";
-        contenedor.innerHTML = `
-          <textarea id='comentar-${postId}' placeholder='Escribe un comentario'></textarea>
-          <button onclick="comentar('${postId}')">Enviar</button>
-          <div id='lista-${postId}'></div>`;
-        const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
-        onSnapshot(q, (snapshot) => {
-          const lista = document.getElementById("lista-" + postId);
-          lista.innerHTML = "";
-          snapshot.forEach(doc => {
-            const c = doc.data();
-            lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="border-radius:50%;vertical-align:middle"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
-          });
+      contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
+      contenedor.innerHTML = `
+        <textarea id='comentar-${postId}' placeholder='Escribe un comentario'></textarea>
+        <button onclick="comentar('${postId}')">Enviar</button>
+        <div id='lista-${postId}'></div>`;
+      const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
+      onSnapshot(q, (snapshot) => {
+        const lista = document.getElementById("lista-" + postId);
+        lista.innerHTML = "";
+        snapshot.forEach(doc => {
+          const c = doc.data();
+          lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="border-radius:50%;vertical-align:middle"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
         });
-      } else {
-        contenedor.style.display = "none";
-        contenedor.innerHTML = "";
-      }
+      });
     }
 
     async function comentar(postId) {
@@ -284,10 +333,9 @@
       }
     }
 
-    // Chat público
     async function enviarMensaje() {
       const texto = document.getElementById("mensaje").value.trim();
-      if (!texto) return;
+      if (!texto) return alert("Escribe un mensaje antes de enviar.");
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
       await addDoc(collection(db, "chatPublico"), {
@@ -304,6 +352,7 @@
       const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
       const contenedor = document.getElementById("mensajes-chat");
       onSnapshot(q, (snap) => {
+        const wasAtBottom = (contenedor.scrollTop + contenedor.clientHeight >= contenedor.scrollHeight - 10);
         contenedor.innerHTML = "";
         snap.forEach(doc => {
           const m = doc.data();
@@ -314,24 +363,9 @@
               <p>${m.texto}</p>
             </div>`;
         });
-        contenedor.scrollTop = contenedor.scrollHeight;
+        if (wasAtBottom) contenedor.scrollTop = contenedor.scrollHeight;
       });
     }
-
-    // Toggle chat
-    const toggleChatBtn = document.getElementById("toggleChat");
-    const chatPublicoDiv = document.querySelector(".chat-publico");
-    toggleChatBtn.addEventListener("click", () => {
-      if (chatPublicoDiv.style.maxWidth === "38%") {
-        chatPublicoDiv.style.maxWidth = "0";
-        chatPublicoDiv.style.flex = "0 0 0";
-        toggleChatBtn.textContent = "Expandir";
-      } else {
-        chatPublicoDiv.style.maxWidth = "38%";
-        chatPublicoDiv.style.flex = "0.85";
-        toggleChatBtn.textContent = "Contraer";
-      }
-    });
 
     function logout() {
       signOut(auth).then(() => location.href = "index.html");
@@ -346,11 +380,6 @@
     window.compartirMensaje = compartirMensaje;
     window.enviarMensaje = enviarMensaje;
     window.logout = logout;
-
-    // Cargar menú superior
-    fetch("menu.html").then(res => res.text()).then(html => {
-      document.getElementById("menu-superior").innerHTML = html;
-    });
   </script>
 </body>
 </html>
