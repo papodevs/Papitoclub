@@ -12,44 +12,72 @@
       margin: 0;
       padding-top: 70px;
       display: flex;
-      flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
     }
-
     #menu-superior {
       position: fixed;
       top: 0; left: 0;
       width: 100%;
       z-index: 1000;
     }
-
     .publicaciones {
-      flex: 1.1;
-      max-width: 60%;
+      flex: 1.15;
+      max-width: 62%;
       padding: 1em;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
-
     .chat-publico {
-      flex: 0.9;
-      max-width: 40%;
+      flex: 0.85;
+      max-width: 38%;
       padding: 1em;
       border-left: 2px solid #00e5ff55;
-      height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
+      box-sizing: border-box;
+      transition: max-width 0.3s ease;
     }
-
-    .chat-publico h2 {
-      margin-top: 0;
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
     }
-
-    .nueva-publicacion, .chat-input {
+    .chat-header h2 {
+      margin: 0;
+      user-select: none;
+    }
+    .toggle-chat-btn {
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 5px 10px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s ease;
+    }
+    .toggle-chat-btn:hover {
+      background-color: #0099cc;
+    }
+    #mensajes-chat {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 8px;
+      box-shadow: 0 0 10px #00e5ff55;
+      transition: max-height 0.3s ease;
+    }
+    .chat-input {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
-      margin-bottom: 16px;
       box-shadow: 0 0 10px #00e5ff55;
     }
-
     textarea {
       width: 100%;
       border-radius: 8px;
@@ -60,7 +88,6 @@
       background: #002f36;
       color: #0ff;
     }
-
     button {
       margin-top: 8px;
       background: #00e5ff;
@@ -71,7 +98,13 @@
       border-radius: 10px;
       cursor: pointer;
     }
-
+    .nueva-publicacion {
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px #00e5ff55;
+    }
     .tarjeta {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
@@ -79,7 +112,6 @@
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
     }
-
     .interacciones {
       display: flex;
       justify-content: space-between;
@@ -87,18 +119,11 @@
       font-size: 0.9em;
       color: #0ff;
     }
-
     .mensaje-chat {
       background: rgba(0,0,0,0.2);
       padding: 8px;
       border-radius: 10px;
       margin: 4px 0;
-    }
-
-    #mensajes-chat {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -114,7 +139,10 @@
   </div>
 
   <div class="chat-publico">
-    <h2>💬 Chat Público</h2>
+    <div class="chat-header">
+      <h2>💬 Chat Público</h2>
+      <button id="toggleChat" class="toggle-chat-btn">Contraer</button>
+    </div>
     <div id="mensajes-chat"></div>
     <div class="chat-input">
       <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
@@ -149,6 +177,7 @@
       escucharMensajesPublicos();
     });
 
+    // Posts públicos
     async function publicarMensaje() {
       const texto = document.getElementById("nuevoMensaje").value.trim();
       if (!texto) return;
@@ -210,20 +239,25 @@
 
     async function mostrarComentarios(postId, boton) {
       const contenedor = document.getElementById("comentarios-" + postId);
-      contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
-      contenedor.innerHTML = `
-        <textarea id='comentar-${postId}' placeholder='Escribe un comentario'></textarea>
-        <button onclick="comentar('${postId}')">Enviar</button>
-        <div id='lista-${postId}'></div>`;
-      const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
-      onSnapshot(q, (snapshot) => {
-        const lista = document.getElementById("lista-" + postId);
-        lista.innerHTML = "";
-        snapshot.forEach(doc => {
-          const c = doc.data();
-          lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="border-radius:50%;vertical-align:middle"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
+      if (contenedor.style.display === "none" || contenedor.style.display === "") {
+        contenedor.style.display = "block";
+        contenedor.innerHTML = `
+          <textarea id='comentar-${postId}' placeholder='Escribe un comentario'></textarea>
+          <button onclick="comentar('${postId}')">Enviar</button>
+          <div id='lista-${postId}'></div>`;
+        const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
+        onSnapshot(q, (snapshot) => {
+          const lista = document.getElementById("lista-" + postId);
+          lista.innerHTML = "";
+          snapshot.forEach(doc => {
+            const c = doc.data();
+            lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="border-radius:50%;vertical-align:middle"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
+          });
         });
-      });
+      } else {
+        contenedor.style.display = "none";
+        contenedor.innerHTML = "";
+      }
     }
 
     async function comentar(postId) {
@@ -250,6 +284,7 @@
       }
     }
 
+    // Chat público
     async function enviarMensaje() {
       const texto = document.getElementById("mensaje").value.trim();
       if (!texto) return;
@@ -282,6 +317,21 @@
         contenedor.scrollTop = contenedor.scrollHeight;
       });
     }
+
+    // Toggle chat
+    const toggleChatBtn = document.getElementById("toggleChat");
+    const chatPublicoDiv = document.querySelector(".chat-publico");
+    toggleChatBtn.addEventListener("click", () => {
+      if (chatPublicoDiv.style.maxWidth === "38%") {
+        chatPublicoDiv.style.maxWidth = "0";
+        chatPublicoDiv.style.flex = "0 0 0";
+        toggleChatBtn.textContent = "Expandir";
+      } else {
+        chatPublicoDiv.style.maxWidth = "38%";
+        chatPublicoDiv.style.flex = "0.85";
+        toggleChatBtn.textContent = "Contraer";
+      }
+    });
 
     function logout() {
       signOut(auth).then(() => location.href = "index.html");
