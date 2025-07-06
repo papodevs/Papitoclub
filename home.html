@@ -107,72 +107,175 @@
     }
 
     #listaMensajes {
-      overflow-y: auto;
-      max-height: calc(100vh - 190px);
+<style>
+  body {
+    background: linear-gradient(135deg, #006994, #00b88a);
+    color: #0ff;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding-top: 70px;
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #menu-superior {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+
+  .publicaciones {
+    flex: 1.1;
+    max-width: 60%;
+    padding: 1em;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+  }
+
+  .chat-publico {
+    flex: 0.9;
+    max-width: 40%;
+    padding: 1em;
+    border-left: 2px solid #00e5ff55;
+    height: calc(100vh - 70px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .nueva-publicacion,
+  .chat-input {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 10px #00e5ff55;
+  }
+
+  textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    padding: 10px;
+    font-size: 1em;
+    resize: none;
+    background: #002f36;
+    color: #0ff;
+  }
+
+  button {
+    margin-top: 8px;
+    background: #00e5ff;
+    color: #003;
+    border: none;
+    padding: 10px 16px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0099cc;
+  }
+
+  .tarjeta {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 6px #00e5ff44;
+  }
+
+  .interacciones {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #0ff;
+  }
+
+  .mensaje-chat {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 10px;
+    margin: 4px 0;
+  }
+
+  #listaMensajes {
+    overflow-y: auto;
+    max-height: calc(100vh - 190px);
+  }
+
+  #mensajes-chat {
+    flex: 1;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: #00e5ff44 transparent;
+  }
+
+  #mensajes-chat::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #mensajes-chat::-webkit-scrollbar-thumb {
+    background-color: #00e5ff44;
+    border-radius: 4px;
+  }
+
+  /* BOTÓN CHAT PARA MOBILE */
+  #btnIrChat {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #00e5ff;
+    color: #003;
+    padding: 12px 16px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1100;
+    box-shadow: 0 0 8px #00e5ffaa;
+  }
+
+  /* MOBILE */
+  @media (max-width: 900px) {
+    body {
+      display: block !important; /* ✅ esto corrige el problema */
+      flex-direction: column;
+      padding-top: 60px;
+      height: auto;
+      overflow: visible;
     }
 
-    #mensajes-chat {
-      flex: 1;
-      overflow-y: auto;
-      margin-bottom: 10px;
-      padding-right: 4px;
-      scrollbar-width: thin;
-      scrollbar-color: #00e5ff44 transparent;
+    .chat-publico {
+      display: none !important;
     }
 
-    #mensajes-chat::-webkit-scrollbar {
-      width: 8px;
+    .publicaciones {
+      max-width: 100%;
+      flex: none;
+      padding: 1em;
+      height: auto;
     }
 
-    #mensajes-chat::-webkit-scrollbar-thumb {
-      background-color: #00e5ff44;
-      border-radius: 4px;
+    #listaMensajes {
+      max-height: none;
+      overflow-y: visible;
     }
 
     #btnIrChat {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #00e5ff;
-      color: #003;
-      padding: 12px 16px;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 1100;
-      box-shadow: 0 0 8px #00e5ffaa;
+      display: block;
     }
-
-    @media (max-width: 900px) {
-      body {
-        flex-direction: column;
-        padding-top: 60px;
-        height: auto;
-        overflow: visible;
-      }
-
-      .chat-publico {
-        display: none;
-      }
-
-      .publicaciones {
-        max-width: 100%;
-        flex: none;
-        padding: 1em;
-        height: auto;
-      }
-
-      #listaMensajes {
-        max-height: none;
-        overflow-y: visible;
-      }
-
-      #btnIrChat {
-        display: block;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
   <div id="menu-superior"></div>
