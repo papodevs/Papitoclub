@@ -11,41 +11,64 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+      justify-content: center;
     }
 
     #menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       z-index: 1000;
     }
 
-    .layout {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
-      max-width: 1300px;
-      margin: auto;
-      padding: 10px;
-    }
-
     .publicaciones, .chat-publico {
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 12px;
-      box-shadow: 0 0 10px #00e5ff55;
-      flex: 1;
-      min-height: 400px;
+      padding: 1em;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
     }
 
     .publicaciones {
-      flex: 1.05;
+      width: 60%;
     }
 
-    .nueva-publicacion textarea {
+    .chat-publico {
+      width: 30%;
+      background-color: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      box-shadow: 0 0 6px #00e5ff44;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-mensajes {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+
+    .mensaje-publico {
+      padding: 10px;
+      border-bottom: 1px solid #00e5ff22;
+    }
+
+    .mensaje-publico p {
+      margin: 0;
+    }
+
+    .nueva-publicacion, .nueva-linea-chat {
+      background: rgba(0,0,0,0.2);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 0 10px #00e5ff55;
+    }
+
+    .nueva-publicacion textarea,
+    .nueva-linea-chat textarea {
       width: 100%;
-      height: 80px;
+      height: 60px;
       border-radius: 8px;
       border: none;
       padding: 10px;
@@ -55,7 +78,8 @@
       color: #0ff;
     }
 
-    .nueva-publicacion button {
+    .nueva-publicacion button,
+    .nueva-linea-chat button {
       margin-top: 8px;
       background: #00e5ff;
       color: #003;
@@ -91,63 +115,30 @@
       color: #fff;
       text-shadow: 0 0 8px #0ff;
     }
-
-    .chat-mensajes {
-      max-height: 400px;
-      overflow-y: auto;
-      margin-bottom: 8px;
-    }
-
-    .mensaje {
-      background: rgba(0,0,0,0.2);
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 10px;
-      box-shadow: 0 0 6px #00e5ff44;
-    }
-
-    .toggle-btn {
-      background: none;
-      color: #0ff;
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 8px;
-      border: none;
-    }
-
-    @media (max-width: 768px) {
-      .layout {
-        flex-direction: column;
-      }
-      .chat-publico {
-        display: none;
-      }
-    }
   </style>
 </head>
 <body>
   <div id="menu-superior"></div>
 
-  <div class="layout">
-    <div class="publicaciones">
-      <div class="nueva-publicacion">
-        <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
-        <button onclick="publicarMensaje()">Publicar</button>
-      </div>
-      <div id="listaMensajes"></div>
+  <div class="publicaciones">
+    <div class="nueva-publicacion">
+      <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
+      <button onclick="publicarMensaje()">Publicar</button>
     </div>
+    <div id="listaMensajes"></div>
+  </div>
 
-    <div class="chat-publico">
-      <button class="toggle-btn" onclick="alternarChat()">🔽 Chat Público</button>
-      <div id="chatBox" class="chat-mensajes"></div>
-      <textarea id="mensajeChat" placeholder="Escribe un mensaje..."></textarea>
+  <div class="chat-publico">
+    <div class="chat-mensajes" id="chat"></div>
+    <div class="nueva-linea-chat">
+      <textarea id="mensajeChat" placeholder="Escribe en el chat público..."></textarea>
       <button onclick="enviarMensajeChat()">Enviar</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -162,12 +153,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    let currentUser;
+    let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return location.href = "index.html";
+      if (!user) return (location.href = "index.html");
       currentUser = user;
-      cargarPublicaciones();
+      mostrarMensajes();
       escucharChat();
     });
 
@@ -176,37 +167,47 @@
       if (!texto) return;
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      const nick = perfil.user || currentUser.email.split("@")[0];
+      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
+
       await addDoc(collection(db, "publicaciones"), {
-        texto,
         autorUID: currentUser.uid,
-        autorNick: perfil.user || currentUser.email.split("@")[0],
-        autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        autorNick: nick,
+        autorAvatar: avatar,
+        texto,
         fecha: new Date(),
         likes: [],
         repapos: []
       });
+
       document.getElementById("nuevoMensaje").value = "";
     }
 
-    function cargarPublicaciones() {
+    function mostrarMensajes() {
       const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
       const contenedor = document.getElementById("listaMensajes");
-      onSnapshot(q, (snap) => {
+
+      onSnapshot(q, (snapshot) => {
         contenedor.innerHTML = "";
-        snap.forEach(doc => {
-          const post = doc.data();
-          const id = doc.id;
-          const div = document.createElement("div");
-          div.className = "tarjeta";
-          div.innerHTML = `
-            <p><img src="${post.autorAvatar}" width="30" style="border-radius:50%;vertical-align:middle"> 
+        snapshot.forEach((docSnap) => {
+          const post = docSnap.data();
+          const id = docSnap.id;
+
+          const tarjeta = document.createElement("div");
+          tarjeta.className = "tarjeta";
+          tarjeta.innerHTML = `
+            <p><img src="${post.autorAvatar}" alt="👤" width="30" style="border-radius:50%;vertical-align:middle"> 
             <strong>@${post.autorNick}</strong></p>
             <p>${post.texto}</p>
             <div class="interacciones">
               <span onclick="darLike('${id}')">❤️ Like</span>
               <span onclick="darRePapo('${id}')">🔁 RePapo</span>
-            </div>`;
-          contenedor.appendChild(div);
+              <span onclick="mostrarComentarios('${id}', this)">💬 comment</span>
+              <span onclick="compartirMensaje('${post.texto}')">📤 share</span>
+            </div>
+            <div id="comentarios-${id}" style="display:none;padding-top:6px;"></div>
+          `;
+          contenedor.appendChild(tarjeta);
         });
       });
     }
@@ -214,68 +215,52 @@
     async function enviarMensajeChat() {
       const texto = document.getElementById("mensajeChat").value.trim();
       if (!texto) return;
+
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      const nick = perfil.user || currentUser.email.split("@")[0];
+      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
+
       await addDoc(collection(db, "chatPublico"), {
         texto,
         uid: currentUser.uid,
-        nick: perfil.user || currentUser.email.split("@")[0],
-        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        nick,
+        avatar,
         fecha: new Date()
       });
+
       document.getElementById("mensajeChat").value = "";
     }
 
     function escucharChat() {
-      const q = query(collection(db, "chatPublico"), orderBy("fecha"));
-      const contenedor = document.getElementById("chatBox");
+      const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+      const contenedor = document.getElementById("chat");
+
       onSnapshot(q, (snap) => {
         contenedor.innerHTML = "";
         snap.forEach(doc => {
           const m = doc.data();
           const div = document.createElement("div");
-          div.className = "mensaje";
+          div.className = "mensaje-publico";
           div.innerHTML = `
-            <p><img src="${m.avatar}" width="25" style="border-radius:50%;vertical-align:middle"> <strong>@${m.nick}</strong></p>
-            <p>${m.texto}</p>`;
+            <p><img src="${m.avatar}" width="25" style="vertical-align:middle;border-radius:50%"> 
+            <strong>@${m.nick}</strong></p>
+            <p>${m.texto}</p>
+          `;
           contenedor.appendChild(div);
         });
         contenedor.scrollTop = contenedor.scrollHeight;
       });
     }
 
-    function alternarChat() {
-      const chat = document.querySelector(".chat-mensajes");
-      chat.style.display = chat.style.display === "none" ? "block" : "none";
-    }
+    // cargar menú superior externo
+    fetch("menu.html")
+      .then(res => res.text())
+      .then(html => document.getElementById("menu-superior").innerHTML = html);
 
-    async function darLike(id) {
-      const ref = doc(db, "publicaciones", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      const likes = new Set(data.likes || []);
-      likes.has(currentUser.uid) ? likes.delete(currentUser.uid) : likes.add(currentUser.uid);
-      await updateDoc(ref, { likes: Array.from(likes) });
-    }
-
-    async function darRePapo(id) {
-      const ref = doc(db, "publicaciones", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      const repapos = new Set(data.repapos || []);
-      repapos.has(currentUser.uid) ? repapos.delete(currentUser.uid) : repapos.add(currentUser.uid);
-      await updateDoc(ref, { repapos: Array.from(repapos) });
-    }
-
+    // exponer funciones globalmente
     window.publicarMensaje = publicarMensaje;
     window.enviarMensajeChat = enviarMensajeChat;
-    window.alternarChat = alternarChat;
-    window.darLike = darLike;
-    window.darRePapo = darRePapo;
-
-    fetch("menu.html").then(res => res.text()).then(html => {
-      document.getElementById("menu-superior").innerHTML = html;
-    });
   </script>
 </body>
 </html>
