@@ -81,15 +81,26 @@
 
     button:hover {
       background-color: #0099cc;
-    }
-
     .tarjeta {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 14px;
-      box-shadow: 0 0 6px #00e5ff44;
-    }
+  background: rgba(0, 255, 255, 0.07);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 20px 0;
+  box-shadow:
+    0 0 10px rgba(0, 229, 255, 0.4),
+    0 0 20px rgba(0, 229, 255, 0.2),
+    inset 0 0 10px rgba(0, 229, 255, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.tarjeta:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow:
+    0 0 14px rgba(0, 255, 255, 0.6),
+    0 0 30px rgba(0, 255, 255, 0.4),
+    inset 0 0 12px rgba(0, 255, 255, 0.2);
+}
+
 
     .interacciones {
       display: flex;
