@@ -88,7 +88,7 @@
       border-radius: 14px;
       padding: 12px;
       margin-bottom: 14px;
-      box-shadow: 0 0 6px #00e5ff44;
+      box-shadow: 0 0 12px #00f6ff55;
     }
 
     .interacciones {
@@ -129,7 +129,6 @@
       border-radius: 4px;
     }
 
-    /* BOTON CHAT PARA MOBILE */
     #btnIrChat {
       display: none;
       position: fixed;
@@ -145,7 +144,6 @@
       box-shadow: 0 0 8px #00e5ffaa;
     }
 
-    /* MOBILE */
     @media (max-width: 900px) {
       body {
         flex-direction: column;
@@ -179,23 +177,26 @@
 <body>
   <div id="menu-superior"></div>
 
+  <!-- 📝 PUBLICACIONES -->
   <div class="publicaciones">
     <div class="nueva-publicacion">
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
       <button onclick="publicarMensaje()">Publicar</button>
     </div>
-    
     <div id="listaMensajes"></div>
-  <div class="chat-publico">
-  <h2>💬 CHAT</h2>
-  <div id="mensajes-chat"></div>
-  <div class="chat-input">
-    <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
-    <button onclick="enviarMensaje()">Send</button>
   </div>
-</div>
 
+  <!-- 💬 CHAT PÚBLICO -->
+  <div class="chat-publico">
+    <h2>💬 CHAT</h2>
+    <div id="mensajes-chat"></div>
+    <div class="chat-input">
+      <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+      <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+  </div>
 
+  <!-- BOTÓN CHAT PARA MÓVIL -->
   <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
 
   <script type="module">
@@ -215,7 +216,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
     let currentUser;
 
     onAuthStateChanged(auth, async (user) => {
@@ -291,7 +291,7 @@
       await updateDoc(ref, { repapos: Array.from(repapos) });
     }
 
-    async function mostrarComentarios(postId, boton) {
+    async function mostrarComentarios(postId) {
       const contenedor = document.getElementById("comentarios-" + postId);
       contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
       contenedor.innerHTML = `
@@ -371,7 +371,6 @@
       signOut(auth).then(() => location.href = "index.html");
     }
 
-    // Exponer funciones globalmente
     window.publicarMensaje = publicarMensaje;
     window.darLike = darLike;
     window.darRePapo = darRePapo;
