@@ -26,14 +26,29 @@
     }
 
     .publicaciones {
-      flex: 1;
-      max-width: 100%;
+      flex: 1.1;
+      max-width: 60%;
       padding: 1em;
       overflow-y: auto;
       height: calc(100vh - 70px);
     }
 
-    .nueva-publicacion {
+    .chat-publico {
+      flex: 0.9;
+      max-width: 40%;
+      padding: 1em;
+      border-left: 2px solid #00e5ff55;
+      height: calc(100vh - 70px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-publico h2 {
+      margin-top: 0;
+    }
+
+    .nueva-publicacion, .chat-input {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
@@ -61,7 +76,6 @@
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
     }
 
     button:hover {
@@ -81,10 +95,22 @@
       justify-content: space-between;
       margin-top: 8px;
       font-size: 0.9em;
-      color: #0ff;
     }
 
-    /* ✅ BOTÓN FLOTANTE SOLO para MOBILE */
+    .mensaje-chat {
+      background: rgba(0,0,0,0.2);
+      padding: 8px;
+      border-radius: 10px;
+      margin: 4px 0;
+    }
+
+    #mensajes-chat {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+
+    /* ✅ BOTÓN FLOTANTE solo para MOBILE */
     #btnIrChat {
       display: none;
       position: fixed;
@@ -100,23 +126,26 @@
       box-shadow: 0 0 8px #00e5ffaa;
     }
 
-    /* ✅ RESPONSIVE PARA MÓVIL */
+    /* ✅ RESPONSIVE */
     @media (max-width: 900px) {
       body {
-        display: block !important;
+        display: block;
         flex-direction: column;
-        padding-top: 60px;
         height: auto;
         overflow: visible;
       }
 
+      .chat-publico {
+        display: none;
+      }
+
       .publicaciones {
-        max-width: 97%;
+        max-width: 95%;
         height: auto;
       }
 
       #btnIrChat {
-        display: block !important;
+        display: block;
       }
     }
   </style>
@@ -124,7 +153,7 @@
 <body>
   <div id="menu-superior"></div>
 
-  <!-- ✅ Sección de publicaciones -->
+  <!-- ✅ PUBLICACIONES -->
   <div class="publicaciones">
     <div class="nueva-publicacion">
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
@@ -133,14 +162,23 @@
     <div id="listaMensajes"></div>
   </div>
 
-  <!-- ✅ Botón flotante SOLO visible en MÓVIL -->
+  <!-- ✅ CHAT PÚBLICO (solo visible en desktop) -->
+  <div class="chat-publico">
+    <h2>💬 Chat</h2>
+    <div id="mensajes-chat"></div>
+    <div class="chat-input">
+      <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+      <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+  </div>
+
+  <!-- ✅ BOTÓN flotante SOLO para MOBILE -->
   <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
 
-  <!-- ✅ Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -161,6 +199,7 @@
       currentUser = user;
       cargarMenu();
       mostrarMensajes();
+      escucharMensajesChat();
     });
 
     async function cargarMenu() {
@@ -207,6 +246,39 @@
               <div id="comentarios-${id}" style="display:none;padding-top:6px;"></div>
             </div>`;
         });
+      });
+    }
+
+    async function enviarMensaje() {
+      const texto = document.getElementById("mensaje").value.trim();
+      if (!texto) return;
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      await addDoc(collection(db, "chatPublico"), {
+        texto,
+        uid: currentUser.uid,
+        nick: perfil.nick || currentUser.email.split("@")[0],
+        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        fecha: new Date()
+      });
+      document.getElementById("mensaje").value = "";
+    }
+
+    function escucharMensajesChat() {
+      const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+      const contenedor = document.getElementById("mensajes-chat");
+      onSnapshot(q, (snap) => {
+        contenedor.innerHTML = "";
+        snap.forEach(doc => {
+          const m = doc.data();
+          const hora = new Date(m.fecha.seconds * 1000).toLocaleTimeString();
+          contenedor.innerHTML += `
+            <div class="mensaje-chat">
+              <p><img src="${m.avatar}" width="25" style="border-radius:50%;vertical-align:middle"> <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${hora}</span></p>
+              <p>${m.texto}</p>
+            </div>`;
+        });
+        contenedor.scrollTop = contenedor.scrollHeight;
       });
     }
 
@@ -276,6 +348,7 @@
     window.mostrarComentarios = mostrarComentarios;
     window.comentar = comentar;
     window.compartirMensaje = compartirMensaje;
+    window.enviarMensaje = enviarMensaje;
   </script>
 </body>
 </html>
