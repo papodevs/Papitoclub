@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
@@ -16,7 +16,6 @@
       display: flex;
       flex-direction: row;
     }
-
     #menu-superior {
       position: fixed;
       top: 0;
@@ -24,7 +23,6 @@
       width: 100%;
       z-index: 1000;
     }
-
     .publicaciones {
       flex: 1;
       max-width: 60%;
@@ -32,7 +30,6 @@
       overflow-y: auto;
       height: calc(100vh - 70px);
     }
-
     .chat-publico {
       flex: 1;
       max-width: 40%;
@@ -43,11 +40,9 @@
       flex-direction: column;
       overflow-y: auto;
     }
-
     .chat-publico h2 {
       margin-top: 0;
     }
-
     .nueva-publicacion, .chat-input {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
@@ -55,7 +50,6 @@
       margin-bottom: 16px;
       box-shadow: 0 0 10px #00e5ff55;
     }
-
     textarea {
       width: 100%;
       border-radius: 8px;
@@ -66,7 +60,6 @@
       background: #002f36;
       color: #0ff;
     }
-
     button {
       margin-top: 8px;
       background: #00e5ff;
@@ -78,11 +71,9 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     button:hover {
       background-color: #0099cc;
     }
-
     .tarjeta {
       background: rgba(0, 0, 0, 0.3);
       border-radius: 14px;
@@ -90,22 +81,42 @@
       margin-bottom: 14px;
       box-shadow: 0 0 6px #00e5ff44;
     }
-
     .interacciones {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-around;
       margin-top: 8px;
       font-size: 0.9em;
       color: #0ff;
+      gap: 8px;
+      user-select: none;
     }
-
-    .mensaje-chat {
+    .interacciones span {
+      cursor: pointer;
+    }
+    .comentarios, .respuestas {
+      margin-left: 24px;
+      margin-top: 10px;
+    }
+    .comentario, .respuesta {
       background: rgba(0,0,0,0.2);
-      padding: 8px;
+      padding: 10px;
       border-radius: 10px;
-      margin: 4px 0;
+      margin: 6px 0;
     }
-
+    .comentario-header, .respuesta-header {
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .comentario-header img, .respuesta-header img {
+      width: 25px;
+      height: 25px;
+      border-radius: 50%;
+      vertical-align: middle;
+    }
     .chat-input {
       display: flex;
       gap: 8px;
@@ -113,12 +124,10 @@
       padding: 8px;
       box-shadow: 0 0 10px #00e5ff55;
     }
-
     .chat-input textarea {
       flex: 1;
       height: 50px;
     }
-
     #btnIrChat {
       display: none;
       position: fixed;
@@ -133,7 +142,6 @@
       z-index: 1100;
       box-shadow: 0 0 8px #00e5ffaa;
     }
-
     @media (max-width: 900px) {
       body {
         display: block;
@@ -141,16 +149,13 @@
         overflow: visible;
         height: auto;
       }
-
       .chat-publico {
         display: none;
       }
-
       .publicaciones {
         max-width: 97%;
         height: auto;
       }
-
       #btnIrChat {
         display: block;
       }
@@ -159,6 +164,7 @@
 </head>
 <body>
   <div id="menu-superior"></div>
+
   <div class="publicaciones">
     <div class="nueva-publicacion">
       <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
@@ -166,6 +172,7 @@
     </div>
     <div id="listaMensajes"></div>
   </div>
+
   <div class="chat-publico">
     <h2>💬 CHAT</h2>
     <div id="mensajes-chat" style="flex:1; overflow-y:auto"></div>
@@ -174,7 +181,345 @@
       <button onclick="enviarMensaje()">Enviar</button>
     </div>
   </div>
+
   <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
-  <!-- Scripts Firebase + lógica publicaciones, likes, comentarios, respuestas -->
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc,
+      getDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    let currentUser;
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return location.href = "index.html";
+      currentUser = user;
+      cargarMenu();
+      mostrarMensajes();
+      escucharMensajesPublicos();
+    });
+
+    async function cargarMenu() {
+      const res = await fetch("menu.html");
+      const html = await res.text();
+      document.getElementById("menu-superior").innerHTML = html;
+    }
+
+    // Publicar post nuevo
+    async function publicarMensaje() {
+      const texto = document.getElementById("nuevoMensaje").value.trim();
+      if (!texto) return;
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      await addDoc(collection(db, "publicaciones"), {
+        autorUID: currentUser.uid,
+        autorNick: perfil.user || currentUser.email.split("@")[0],
+        autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        texto,
+        fecha: serverTimestamp(),
+        likes: [],
+        repapos: []
+      });
+      document.getElementById("nuevoMensaje").value = "";
+    }
+
+    // Mostrar posts y sus interacciones
+    function mostrarMensajes() {
+      const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+      const contenedor = document.getElementById("listaMensajes");
+      onSnapshot(q, snapshot => {
+        contenedor.innerHTML = "";
+        snapshot.forEach(docSnap => {
+          const post = docSnap.data();
+          const id = docSnap.id;
+
+          const likeCount = (post.likes || []).length;
+          const repapoCount = (post.repapos || []).length;
+
+          // Detectar si usuario dio like o repapo para estilo
+          const liked = (post.likes || []).includes(currentUser.uid);
+          const repaped = (post.repapos || []).includes(currentUser.uid);
+
+          contenedor.innerHTML += `
+            <div class="tarjeta" data-id="${id}">
+              <p><img src="${post.autorAvatar}" width="30" style="border-radius:50%;vertical-align:middle"> <strong>@${post.autorNick}</strong></p>
+              <p>${post.texto}</p>
+              <div class="interacciones">
+                <span style="color:${liked ? '#ff4444' : '#0ff'}" onclick="darLike('${id}', this)">❤️ Like (${likeCount})</span>
+                <span style="color:${repaped ? '#44ff44' : '#0ff'}" onclick="darRePapo('${id}', this)">🔁 RePapo (${repapoCount})</span>
+                <span onclick="toggleComentarios('${id}', this)">💬 Comment</span>
+                <span onclick="compartirPost('${id}')">📤 Share</span>
+              </div>
+              <div class="comentarios" id="comentarios-${id}" style="display:none;"></div>
+            </div>`;
+        });
+      });
+    }
+
+    // Dar like o quitar
+    async function darLike(id, el) {
+      const ref = doc(db, "publicaciones", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      const likes = new Set(data.likes || []);
+      if (likes.has(currentUser.uid)) likes.delete(currentUser.uid);
+      else likes.add(currentUser.uid);
+      await updateDoc(ref, { likes: Array.from(likes) });
+    }
+
+    // Dar repapo o quitar
+    async function darRePapo(id, el) {
+      const ref = doc(db, "publicaciones", id);
+      const snap = await getDoc(ref);
+      const data = snap.data();
+      const repapos = new Set(data.repapos || []);
+      if (repapos.has(currentUser.uid)) repapos.delete(currentUser.uid);
+      else repapos.add(currentUser.uid);
+      await updateDoc(ref, { repapos: Array.from(repapos) });
+    }
+
+    // Compartir post (simple alerta, se puede mejorar)
+    function compartirPost(id) {
+      const url = `${location.origin}${location.pathname}#post-${id}`;
+      navigator.clipboard.writeText(url).then(() => {
+        alert('Enlace copiado al portapapeles:\n' + url);
+      });
+    }
+
+    // Mostrar u ocultar sección comentarios con carga dinámica
+    function toggleComentarios(postId, boton) {
+      const cont = document.getElementById(`comentarios-${postId}`);
+      if (cont.style.display === "none") {
+        cont.style.display = "block";
+        boton.style.fontWeight = "bold";
+        cargarComentarios(postId);
+      } else {
+        cont.style.display = "none";
+        boton.style.fontWeight = "normal";
+        cont.innerHTML = "";
+      }
+    }
+
+    // Cargar comentarios y respuestas anidados de Firestore
+    function cargarComentarios(postId) {
+      const cont = document.getElementById(`comentarios-${postId}`);
+      const colRef = collection(db, "publicaciones", postId, "comentarios");
+      const q = query(colRef, orderBy("fecha", "asc"));
+      onSnapshot(q, snap => {
+        cont.innerHTML = ""; // limpiar
+
+        // Añadir caja para nuevo comentario general
+        cont.innerHTML += crearCajaComentario(postId);
+
+        snap.forEach(docSnap => {
+          const c = docSnap.data();
+          const cId = docSnap.id;
+          cont.innerHTML += crearComentarioHTML(postId, cId, c);
+        });
+      });
+    }
+
+    // Crear caja para comentar un post (nuevo comentario)
+    function crearCajaComentario(postId) {
+      return `
+        <div class="chat-input" style="margin-top:10px;">
+          <textarea id="inputComentario-${postId}" placeholder="Escribe un comentario..."></textarea>
+          <button onclick="publicarComentario('${postId}')">Comentar</button>
+        </div>
+      `;
+    }
+
+    // Crear HTML de comentario con botón responder y contenedor respuestas
+    function crearComentarioHTML(postId, cId, c) {
+      const fecha = c.fecha?.toDate ? c.fecha.toDate().toLocaleString() : '';
+      return `
+        <div class="comentario" id="comentario-${cId}">
+          <div class="comentario-header">
+            <img src="${c.avatar}" alt="avatar" />
+            <span>@${c.nick}</span>
+            <small style="margin-left:auto; font-size:0.8em; color:#aaa;">${fecha}</small>
+          </div>
+          <p>${c.texto}</p>
+          <div>
+            <button onclick="mostrarResponder('${postId}', '${cId}')">Responder</button>
+          </div>
+          <div class="respuestas" id="respuestas-${cId}"></div>
+        </div>
+      `;
+    }
+
+    // Mostrar caja para responder a comentario (solo una a la vez)
+    function mostrarResponder(postId, cId) {
+      const contResp = document.getElementById(`respuestas-${cId}`);
+      // Verificar si ya tiene textarea
+      if (contResp.querySelector("textarea")) return;
+      const html = `
+        <div class="chat-input" style="margin-top:8px;">
+          <textarea id="inputRespuesta-${cId}" placeholder="Escribe una respuesta..."></textarea>
+          <button onclick="publicarRespuesta('${postId}', '${cId}')">Responder</button>
+        </div>
+      `;
+      contResp.insertAdjacentHTML("beforeend", html);
+    }
+
+    // Publicar comentario en Firestore
+    async function publicarComentario(postId) {
+      const input = document.getElementById(`inputComentario-${postId}`);
+      if (!input) return;
+      const texto = input.value.trim();
+      if (!texto) return alert("Escribe un comentario antes de enviar.");
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+
+      const colRef = collection(db, "publicaciones", postId, "comentarios");
+      await addDoc(colRef, {
+        texto,
+        uid: currentUser.uid,
+        nick: perfil.user || currentUser.email.split("@")[0],
+        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        fecha: serverTimestamp()
+      });
+      input.value = "";
+    }
+
+    // Publicar respuesta en Firestore en subcolección 'respuestas'
+    async function publicarRespuesta(postId, cId) {
+      const input = document.getElementById(`inputRespuesta-${cId}`);
+      if (!input) return;
+      const texto = input.value.trim();
+      if (!texto) return alert("Escribe una respuesta antes de enviar.");
+
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+
+      const colRef = collection(db, "publicaciones", postId, "comentarios", cId, "respuestas");
+      await addDoc(colRef, {
+        texto,
+        uid: currentUser.uid,
+        nick: perfil.user || currentUser.email.split("@")[0],
+        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        fecha: serverTimestamp()
+      });
+      input.value = "";
+      // Opcional: eliminar textarea después de enviar
+      input.parentElement.remove();
+    }
+
+    // Cargar respuestas anidadas para cada comentario
+    function cargarRespuestas(postId, cId, contResp) {
+      const colRef = collection(db, "publicaciones", postId, "comentarios", cId, "respuestas");
+      const q = query(colRef, orderBy("fecha", "asc"));
+      onSnapshot(q, snap => {
+        contResp.innerHTML = ""; // limpiar
+        snap.forEach(docSnap => {
+          const r = docSnap.data();
+          const fecha = r.fecha?.toDate ? r.fecha.toDate().toLocaleString() : '';
+          contResp.innerHTML += `
+            <div class="respuesta">
+              <div class="respuesta-header">
+                <img src="${r.avatar}" alt="avatar" />
+                <span>@${r.nick}</span>
+                <small style="margin-left:auto; font-size:0.8em; color:#aaa;">${fecha}</small>
+              </div>
+              <p>${r.texto}</p>
+            </div>
+          `;
+        });
+      });
+    }
+
+    // Escuchar mensajes públicos y mostrar en chat
+    function escucharMensajesPublicos() {
+      const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+      const contenedor = document.getElementById("mensajes-chat");
+      onSnapshot(q, snap => {
+        contenedor.innerHTML = "";
+        snap.forEach(doc => {
+          const m = doc.data();
+          const fecha = m.fecha?.toDate ? m.fecha.toDate().toLocaleTimeString() : '';
+          contenedor.innerHTML += `
+            <div class="mensaje-chat">
+              <p><img src="${m.avatar}" width="25" style="border-radius:50%;vertical-align:middle"> <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fecha}</span></p>
+              <p>${m.texto}</p>
+            </div>`;
+        });
+        contenedor.scrollTop = contenedor.scrollHeight;
+      });
+    }
+
+    // Enviar mensaje chat público
+    async function enviarMensaje() {
+      const texto = document.getElementById("mensaje").value.trim();
+      if (!texto) return alert("Escribe un mensaje antes de enviar.");
+      const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+      const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      await addDoc(collection(db, "chatPublico"), {
+        texto,
+        uid: currentUser.uid,
+        nick: perfil.user || currentUser.email.split("@")[0],
+        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+        fecha: serverTimestamp()
+      });
+      document.getElementById("mensaje").value = "";
+    }
+
+    // Escuchar respuestas de cada comentario para actualizar en vivo
+    function observarRespuestas(postId, cId) {
+      const contResp = document.getElementById(`respuestas-${cId}`);
+      if (!contResp) return;
+      cargarRespuestas(postId, cId, contResp);
+    }
+
+    // Actualizar la escucha de respuestas cada vez que se cargan comentarios
+    function cargarComentarios(postId) {
+      const cont = document.getElementById(`comentarios-${postId}`);
+      const colRef = collection(db, "publicaciones", postId, "comentarios");
+      const q = query(colRef, orderBy("fecha", "asc"));
+      onSnapshot(q, snap => {
+        cont.innerHTML = ""; // limpiar
+
+        // Añadir caja para nuevo comentario general
+        cont.innerHTML += crearCajaComentario(postId);
+
+        snap.forEach(docSnap => {
+          const c = docSnap.data();
+          const cId = docSnap.id;
+          cont.innerHTML += crearComentarioHTML(postId, cId, c);
+
+          // Esperar que el DOM esté actualizado para observar respuestas
+          setTimeout(() => {
+            observarRespuestas(postId, cId);
+          }, 0);
+        });
+      });
+    }
+
+    // Expone funciones globales para botones inline
+    window.publicarMensaje = publicarMensaje;
+    window.darLike = darLike;
+    window.darRePapo = darRePapo;
+    window.toggleComentarios = toggleComentarios;
+    window.compartirPost = compartirPost;
+    window.publicarComentario = publicarComentario;
+    window.mostrarResponder = mostrarResponder;
+    window.publicarRespuesta = publicarRespuesta;
+    window.enviarMensaje = enviarMensaje;
+  </script>
 </body>
 </html>
