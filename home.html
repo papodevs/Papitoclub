@@ -11,10 +11,10 @@
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
-      height: 100vh;
-      overflow: hidden;
       display: flex;
       flex-direction: row;
+      height: 100vh;
+      overflow: hidden;
     }
 
     #menu-superior {
@@ -84,7 +84,7 @@
       color: #0ff;
     }
 
-    /* ✅ BOTÓN FLOTANTE solo para MOBILE */
+    /* ✅ BOTÓN FLOTANTE SOLO para MOBILE */
     #btnIrChat {
       display: none;
       position: fixed;
@@ -100,21 +100,23 @@
       box-shadow: 0 0 8px #00e5ffaa;
     }
 
-    /* ✅ ESTILO RESPONSIVE */
+    /* ✅ RESPONSIVE PARA MÓVIL */
     @media (max-width: 900px) {
       body {
+        display: block !important;
         flex-direction: column;
-        overflow: visible;
+        padding-top: 60px;
         height: auto;
+        overflow: visible;
       }
 
       .publicaciones {
-        max-width: 95%;
+        max-width: 97%;
         height: auto;
       }
 
       #btnIrChat {
-        display: block;
+        display: block !important;
       }
     }
   </style>
@@ -131,10 +133,10 @@
     <div id="listaMensajes"></div>
   </div>
 
-  <!-- ✅ Botón flotante visible SOLO en MOBILE -->
+  <!-- ✅ Botón flotante SOLO visible en MÓVIL -->
   <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
 
-  <!-- ✅ Script principal con Firebase -->
+  <!-- ✅ Script principal -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
