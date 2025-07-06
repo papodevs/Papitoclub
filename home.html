@@ -13,59 +13,49 @@
       padding-top: 70px;
     }
 
-    .menu-superior {
+    #menu-superior {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: 60px;
-      background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      padding-right: 12px;
       z-index: 1000;
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid #00e5ffcc;
     }
 
-    .menu-superior button {
-      background: none;
-      border: none;
-      color: #ccf9ff;
-      font-size: 1.4em;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 12px;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-      position: relative;
-    }
-
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
-    }
-
-    .alerta {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: red;
-      color: white;
-      font-size: 0.7em;
-      border-radius: 50%;
-      padding: 2px 5px;
-      display: none;
-    }
-
-    .contenedor {
-      max-width: 600px;
+    .contenedor-principal {
+      display: flex;
+      max-width: 1200px;
       margin: auto;
       padding: 1em;
+      gap: 20px;
     }
 
-    .nueva-publicacion {
+    .publicaciones {
+      flex: 1.1;
+    }
+
+    .chat-publico {
+      flex: 0.9;
+      background: rgba(0,0,0,0.2);
+      border-radius: 14px;
+      padding: 12px;
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+      box-shadow: 0 0 10px #00e5ff55;
+    }
+
+    .mensaje {
+      background: rgba(0,0,0,0.2);
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 10px;
+      box-shadow: 0 0 6px #00e5ff44;
+    }
+
+    .mensaje strong {
+      color: #0ff;
+    }
+
+    .nueva-publicacion, .chat-escribir {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
@@ -73,24 +63,24 @@
       box-shadow: 0 0 10px #00e5ff55;
     }
 
-    .nueva-publicacion textarea {
+    textarea {
       width: 100%;
-      height: 80px;
-      border-radius: 8px;
-      border: none;
-      padding: 10px;
-      font-size: 1em;
-      resize: none;
+      height: 70px;
+      border-radius: 10px;
       background: #002f36;
       color: #0ff;
+      border: none;
+      padding: 10px;
+      resize: none;
     }
 
-    .nueva-publicacion button {
-      margin-top: 8px;
+    button {
+      margin-top: 10px;
+      width: 100%;
+      padding: 10px;
       background: #00e5ff;
       color: #003;
       border: none;
-      padding: 10px 16px;
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
@@ -104,10 +94,6 @@
       box-shadow: 0 0 6px #00e5ff44;
     }
 
-    .tarjeta p {
-      margin: 0;
-    }
-
     .interacciones {
       display: flex;
       justify-content: space-between;
@@ -115,36 +101,27 @@
       font-size: 0.9em;
       color: #0ff;
     }
-
-    .interacciones span {
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .interacciones span:hover {
-      color: #fff;
-      text-shadow: 0 0 8px #0ff;
-    }
   </style>
 </head>
 <body>
-  <div class="menu-superior">
-    <button onclick="location.href='home.html'" title="Inicio">🏠</button>
-    <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
-    <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
-    <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
-      ✉️<span id="noti" class="alerta">•</span>
-    </button>
-    <button onclick="logout()" title="Cerrar sesión">🚪</button>
-  </div>
-
-  <div class="contenedor">
-    <div class="nueva-publicacion">
-      <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
-      <button onclick="publicarMensaje()">Publicar</button>
+  <div id="menu-superior"></div>
+  <div class="contenedor-principal">
+    <div class="publicaciones">
+      <div class="nueva-publicacion">
+        <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
+        <button onclick="publicarMensaje()">Publicar</button>
+      </div>
+      <div id="listaMensajes"></div>
     </div>
-    <div id="listaMensajes"></div>
+
+    <div class="chat-publico">
+      <h3>💬 Chat Público</h3>
+      <div id="chat"></div>
+      <div class="chat-escribir">
+        <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+        <button onclick="enviarMensaje()">Enviar</button>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -152,32 +129,23 @@
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "76712370993",
-      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
-    };
+    const firebaseConfig = { /* tu config */ };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
     let currentUser = null;
 
     onAuthStateChanged(auth, async (user) => {
-      if (!user) return (location.href = "index.html");
+      if (!user) return location.href = "index.html";
       currentUser = user;
       mostrarMensajes();
-      verificarMensajesNuevos();
+      escucharMensajesPublicos();
     });
 
     async function publicarMensaje() {
       const texto = document.getElementById("nuevoMensaje").value.trim();
       if (!texto) return;
-
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
       const nick = perfil.user || currentUser.email.split("@")[0];
@@ -204,123 +172,74 @@
         contenedor.innerHTML = "";
         snapshot.forEach((docSnap) => {
           const post = docSnap.data();
-          const id = docSnap.id;
-
           const tarjeta = document.createElement("div");
           tarjeta.className = "tarjeta";
           tarjeta.innerHTML = `
             <p><img src="${post.autorAvatar}" alt="👤" width="30" style="border-radius:50%;vertical-align:middle"> 
-            <strong onclick="verPerfil('${post.autorUID}')" style="cursor:pointer">@${post.autorNick}</strong></p>
+            <strong>@${post.autorNick}</strong></p>
             <p>${post.texto}</p>
             <div class="interacciones">
-              <span onclick="darLike('${id}')">❤️ Like</span>
-              <span onclick="darRePapo('${id}')">🔁 RePapo</span>
-              <span onclick="mostrarComentarios('${id}', this)">💬 comment</span>
-              <span onclick="compartirMensaje('${post.texto}')">📤 share</span>
+              <span>❤️ Like</span>
+              <span>🔁 RePapo</span>
+              <span>💬 comment</span>
+              <span>📤 share</span>
             </div>
-            <div id="comentarios-${id}" style="display:none;padding-top:6px;"></div>
           `;
           contenedor.appendChild(tarjeta);
         });
       });
     }
 
-    async function darLike(id) {
-      const ref = doc(db, "publicaciones", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      const likes = new Set(data.likes || []);
-      if (likes.has(currentUser.uid)) likes.delete(currentUser.uid);
-      else likes.add(currentUser.uid);
-      await updateDoc(ref, { likes: Array.from(likes) });
-    }
-
-    async function darRePapo(id) {
-      const ref = doc(db, "publicaciones", id);
-      const snap = await getDoc(ref);
-      const data = snap.data();
-      const reps = new Set(data.repapos || []);
-      if (reps.has(currentUser.uid)) reps.delete(currentUser.uid);
-      else reps.add(currentUser.uid);
-      await updateDoc(ref, { repapos: Array.from(reps) });
-    }
-
-    async function mostrarComentarios(postId, boton) {
-      const contenedor = document.getElementById("comentarios-" + postId);
-      contenedor.style.display = contenedor.style.display === "none" ? "block" : "none";
-      contenedor.innerHTML = "<textarea id='comentar-" + postId + "' placeholder='Escribe un comentario'></textarea><button onclick=\"comentar('" + postId + "')\">Enviar</button><div id='lista-" + postId + "'></div>";
-
-      const q = query(collection(db, "publicaciones", postId, "comentarios"), orderBy("fecha", "asc"));
-      onSnapshot(q, (snapshot) => {
-        const lista = document.getElementById("lista-" + postId);
-        lista.innerHTML = "";
-        snapshot.forEach(doc => {
-          const c = doc.data();
-          lista.innerHTML += `<p><img src="${c.autorAvatar}" width="20" style="vertical-align:middle;border-radius:50%"> <strong>@${c.autorNick}</strong>: ${c.texto}</p>`;
-        });
-      });
-    }
-
-    async function comentar(postId) {
-      const input = document.getElementById("comentar-" + postId);
-      const texto = input.value.trim();
+    async function enviarMensaje() {
+      const texto = document.getElementById("mensaje").value.trim();
       if (!texto) return;
-
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+      const nick = perfil.user || currentUser.email.split("@")[0];
+      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
 
-      await addDoc(collection(db, "publicaciones", postId, "comentarios"), {
-        autorUID: currentUser.uid,
-        autorNick: perfil.user || currentUser.email.split("@")[0],
-        autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      await addDoc(collection(db, "chatPublico"), {
         texto,
+        uid: currentUser.uid,
+        nick,
+        avatar,
         fecha: new Date()
       });
 
-      input.value = "";
+      document.getElementById("mensaje").value = "";
     }
 
-    function compartirMensaje(texto) {
-      if (navigator.share) {
-        navigator.share({ text: texto });
-      } else {
-        alert("Tu navegador no soporta compartir nativo.");
-      }
-    }
+    function escucharMensajesPublicos() {
+      const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+      const contenedor = document.getElementById("chat");
 
-    function verificarMensajesNuevos() {
-      const icono = document.getElementById("noti");
-      const mensajesCol = collection(db, "privateMessages");
-      onSnapshot(mensajesCol, snapshot => {
-        let hayNuevo = false;
-        snapshot.forEach(doc => {
-          const msg = doc.data();
-          if (msg.receiverUID === currentUser.uid && !msg.visto) {
-            hayNuevo = true;
-          }
+      onSnapshot(q, (snap) => {
+        contenedor.innerHTML = "";
+        snap.forEach(doc => {
+          const m = doc.data();
+          const fecha = new Date(m.fecha.seconds * 1000).toLocaleTimeString();
+          const div = document.createElement("div");
+          div.className = "mensaje";
+          div.innerHTML = `
+            <p><img src="${m.avatar}" width="25" style="vertical-align:middle;border-radius:50%"> 
+            <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fecha}</span></p>
+            <p>${m.texto}</p>
+          `;
+          contenedor.appendChild(div);
+          contenedor.scrollTop = contenedor.scrollHeight;
         });
-        icono.style.display = hayNuevo ? "block" : "none";
       });
     }
 
-    function verPerfil(uid) {
-      localStorage.setItem("uidPerfil", uid);
-      location.href = "perfil.html";
-    }
+    // Cargar menú superior desde archivo externo
+    fetch("menu.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("menu-superior").innerHTML = html;
+      });
 
-    function logout() {
-      signOut(auth).then(() => location.href = "index.html");
-    }
-
-    // Exponer funciones para botones
     window.publicarMensaje = publicarMensaje;
-    window.darLike = darLike;
-    window.darRePapo = darRePapo;
-    window.mostrarComentarios = mostrarComentarios;
-    window.comentar = comentar;
-    window.compartirMensaje = compartirMensaje;
-    window.verPerfil = verPerfil;
-    window.logout = logout;
+    window.enviarMensaje = enviarMensaje;
   </script>
 </body>
 </html>
