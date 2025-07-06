@@ -19,8 +19,7 @@
 
     #menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       z-index: 1000;
     }
@@ -44,8 +43,13 @@
       overflow: hidden;
     }
 
+    .chat-publico h2 {
+      margin-top: 0;
+      user-select: none;
+    }
+
     .nueva-publicacion, .chat-input {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0,0,0,0.2);
       border-radius: 16px;
       padding: 12px;
       margin-bottom: 16px;
@@ -84,7 +88,7 @@
       border-radius: 14px;
       padding: 12px;
       margin-bottom: 14px;
-      box-shadow: 0 0 6px #00e5ff44;
+      box-shadow: 0 0 12px #00f6ff55;
     }
 
     .interacciones {
@@ -96,7 +100,7 @@
     }
 
     .mensaje-chat {
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(0,0,0,0.2);
       padding: 8px;
       border-radius: 10px;
       margin: 4px 0;
@@ -138,9 +142,10 @@
     @media (max-width: 900px) {
       body {
         display: block !important;
+        flex-direction: column;
+        padding-top: 60px;
         height: auto;
         overflow: visible;
-        padding-top: 60px;
       }
 
       .chat-publico {
@@ -180,9 +185,4 @@
     </div>
   </div>
 
-  <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
-
-  <!-- Aquí se conserva tu script Firebase con eventos y funciones -->
-  <!-- Puedes pegar el script JavaScript debajo de este comentario -->
-</body>
-</html>
+  <button id="btnIrChat" onclick="location.href='chat.html'">Ch
