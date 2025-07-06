@@ -2,83 +2,114 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Chat Público - Papoclub</title>
+  <title>Papoclub - Chat Público</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
       color: #0ff;
+      font-family: 'Segoe UI', sans-serif;
       margin: 0;
       padding-top: 70px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
-
-    .contenedor {
-      max-width: 600px;
-      margin: auto;
+    #menu-superior {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      z-index: 1000;
+    }
+    .chat-publico {
+      flex: 1;
       padding: 1em;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 70px);
+      background: rgba(0,0,0,0.15);
     }
-
-    .mensaje {
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .chat-header h2 {
+      margin: 0;
+      user-select: none;
+    }
+    #mensajes-chat {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding-right: 4px;
+      scrollbar-width: thin;
+      scrollbar-color: #00e5ff44 transparent;
+    }
+    #mensajes-chat::-webkit-scrollbar {
+      width: 8px;
+    }
+    #mensajes-chat::-webkit-scrollbar-thumb {
+      background-color: #00e5ff44;
+      border-radius: 4px;
+    }
+    .chat-input {
       background: rgba(0,0,0,0.2);
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 10px;
-      box-shadow: 0 0 6px #00e5ff44;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 0 10px #00e5ff55;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
-
-    .mensaje strong {
-      color: #0ff;
-    }
-
-    textarea {
+    .chat-input textarea {
       width: 100%;
       height: 70px;
-      border-radius: 10px;
-      background: #002f36;
-      color: #0ff;
+      border-radius: 8px;
       border: none;
       padding: 10px;
+      font-size: 1em;
       resize: none;
+      background: #002f36;
+      color: #0ff;
     }
-
-    button {
-      margin-top: 10px;
-      width: 100%;
-      padding: 10px;
+    .chat-input button {
+      align-self: flex-end;
       background: #00e5ff;
       color: #003;
       border: none;
+      padding: 8px 20px;
       font-weight: bold;
       border-radius: 10px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-
-    /* Asegura que el menú esté bien posicionado */
-    #menu-superior {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      z-index: 1000;
+    .chat-input button:hover {
+      background: #0099cc;
     }
   </style>
 </head>
 <body>
-  <!-- Aquí se carga el menú desde menu.html -->
   <div id="menu-superior"></div>
 
-  <div class="contenedor">
-    <h2>💬 Chat Público</h2>
-    <div id="chat"></div>
-    <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
-    <button onclick="enviarMensaje()">Enviar</button>
+  <div class="chat-publico">
+    <div class="chat-header">
+      <h2>💬 Chat Público</h2>
+      <button onclick="location.href='home.html'">Volver a Home</button>
+    </div>
+    <div id="mensajes-chat"></div>
+    <div class="chat-input">
+      <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+      <button id="btnEnviar">Enviar</button>
+    </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
@@ -92,65 +123,58 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+
     let currentUser;
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return location.href = "index.html";
       currentUser = user;
-      escucharMensajes();
+      cargarMenu();
+      escucharMensajesPublicos();
     });
+
+    async function cargarMenu() {
+      const res = await fetch("menu.html");
+      const html = await res.text();
+      document.getElementById("menu-superior").innerHTML = html;
+    }
 
     async function enviarMensaje() {
       const texto = document.getElementById("mensaje").value.trim();
-      if (!texto) return;
-
+      if (!texto) return alert("Escribe un mensaje antes de enviar.");
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
-      const nick = perfil.user || currentUser.email.split("@")[0];
-      const avatar = perfil.avatar || "https://via.placeholder.com/30?text=👤";
-
       await addDoc(collection(db, "chatPublico"), {
         texto,
         uid: currentUser.uid,
-        nick,
-        avatar,
+        nick: perfil.user || currentUser.email.split("@")[0],
+        avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
         fecha: new Date()
       });
-
       document.getElementById("mensaje").value = "";
     }
 
-    function escucharMensajes() {
+    function escucharMensajesPublicos() {
       const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
-      const contenedor = document.getElementById("chat");
-
+      const contenedor = document.getElementById("mensajes-chat");
       onSnapshot(q, (snap) => {
+        const wasAtBottom = (contenedor.scrollTop + contenedor.clientHeight >= contenedor.scrollHeight - 10);
         contenedor.innerHTML = "";
         snap.forEach(doc => {
           const m = doc.data();
           const fecha = new Date(m.fecha.seconds * 1000).toLocaleTimeString();
-          const div = document.createElement("div");
-          div.className = "mensaje";
-          div.innerHTML = `
-            <p><img src="${m.avatar}" width="25" style="vertical-align:middle;border-radius:50%"> 
-            <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fecha}</span></p>
-            <p>${m.texto}</p>
-          `;
-          contenedor.appendChild(div);
-          contenedor.scrollTop = contenedor.scrollHeight;
+          contenedor.innerHTML += `
+            <div class="mensaje-chat">
+              <p><img src="${m.avatar}" width="25" style="border-radius:50%;vertical-align:middle"> <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fecha}</span></p>
+              <p>${m.texto}</p>
+            </div>`;
         });
+        if (wasAtBottom) contenedor.scrollTop = contenedor.scrollHeight;
       });
     }
 
-    window.enviarMensaje = enviarMensaje;
-    window.logout = () => signOut(auth).then(() => location.href = "index.html");
+    document.getElementById("btnEnviar").addEventListener("click", enviarMensaje);
 
-    // 👉 Cargar el menú externo
-    fetch("menu.html")
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById("menu-superior").innerHTML = html;
-      });
   </script>
 </body>
 </html>
