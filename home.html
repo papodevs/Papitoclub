@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       background: linear-gradient(135deg, #006994, #00b88a);
@@ -245,14 +245,17 @@
     box-shadow: 0 0 8px #00e5ffaa;
   }
 
-  /* MOBILE */
+  /* SOLO MÓVIL */
   @media (max-width: 900px) {
+    #btnIrChat {
+      display: block;
+    }
+
     body {
-      display: block !important; /* ✅ esto corrige el problema */
-      flex-direction: column;
-      padding-top: 60px;
+      display: block !important;
       height: auto;
       overflow: visible;
+      padding-top: 60px;
     }
 
     .chat-publico {
@@ -265,7 +268,7 @@
       padding: 1em;
       height: auto;
     }
-
+  }
     #listaMensajes {
       max-height: none;
       overflow-y: visible;
