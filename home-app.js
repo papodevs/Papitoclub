@@ -61,21 +61,26 @@ async function obtenerPerfil(uid) {
   return perfilSnap.exists() ? perfilSnap.data() : {};
 }
 
-// Publicar nuevo mensaje
+// Publicar nuevo mensaje (post)
 export async function publicarMensaje() {
   const texto = document.getElementById("nuevoMensaje").value.trim();
-  if (!texto) return;
+  if (!texto) return alert("Escribe algo para publicar.");
   const perfil = await obtenerPerfil(currentUser.uid);
-  await addDoc(collection(db, "publicaciones"), {
-    autorUID: currentUser.uid,
-    autorNick: perfil.nick || currentUser.email.split("@")[0],
-    autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
-    texto,
-    fecha: new Date(),
-    likes: [],
-    repapos: []
-  });
-  document.getElementById("nuevoMensaje").value = "";
+  try {
+    await addDoc(collection(db, "publicaciones"), {
+      autorUID: currentUser.uid,
+      autorNick: perfil.nick || currentUser.email.split("@")[0],
+      autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      texto,
+      fecha: new Date(),
+      likes: [],
+      repapos: []
+    });
+    document.getElementById("nuevoMensaje").value = "";
+  } catch (err) {
+    console.error("Error al publicar:", err);
+    alert("Error al publicar. Intenta de nuevo.");
+  }
 }
 
 // Mostrar mensajes (posts) con actualización en tiempo real
@@ -140,17 +145,22 @@ export function toggleComentarios(id) {
 // Enviar comentario a un post
 export async function enviarComentario(postId) {
   const texto = document.getElementById("comentario-" + postId).value.trim();
-  if (!texto) return;
+  if (!texto) return alert("Escribe un comentario.");
   const perfil = await obtenerPerfil(currentUser.uid);
-  await addDoc(collection(db, `publicaciones/${postId}/comentarios`), {
-    uid: currentUser.uid,
-    nick: perfil.nick || currentUser.email.split("@")[0],
-    avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
-    texto,
-    fecha: new Date()
-  });
-  document.getElementById("comentario-" + postId).value = "";
-  cargarComentarios(postId);
+  try {
+    await addDoc(collection(db, `publicaciones/${postId}/comentarios`), {
+      uid: currentUser.uid,
+      nick: perfil.nick || currentUser.email.split("@")[0],
+      avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      texto,
+      fecha: new Date()
+    });
+    document.getElementById("comentario-" + postId).value = "";
+    cargarComentarios(postId);
+  } catch (err) {
+    console.error("Error al comentar:", err);
+    alert("No se pudo enviar el comentario.");
+  }
 }
 
 // Cargar y mostrar comentarios en tiempo real para un post
@@ -191,28 +201,79 @@ export function escucharMensajesPublicos() {
   });
 }
 
-// Enviar mensaje al chat público
+// Enviar mensaje al chat público (sección lateral)
 export async function enviarMensaje() {
-  const texto = document.getElementById("mensaje").value.trim();
-  if (!texto) return;
+  const inputChat = document.getElementById("mensaje");
+  const texto = inputChat.value.trim();
+  if (!texto) {
+    alert("Escribe un mensaje para enviar.");
+    return;
+  }
+
   const perfil = await obtenerPerfil(currentUser.uid);
-  await addDoc(collection(db, "chatPublico"), {
-    texto,
-    uid: currentUser.uid,
-    nick: perfil.nick || currentUser.email.split("@")[0],
-    avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
-    fecha: new Date()
-  });
-  document.getElementById("mensaje").value = "";
+  try {
+    await addDoc(collection(db, "chatPublico"), {
+      texto,
+      uid: currentUser.uid,
+      nick: perfil.nick || currentUser.email.split("@")[0],
+      avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      fecha: new Date()
+    });
+    inputChat.value = "";
+  } catch (err) {
+    console.error("Error al enviar mensaje público:", err);
+    alert("No se pudo enviar el mensaje. Intenta más tarde.");
+  }
+}
+
+// Enviar mensaje desde modal chat (mobile)
+export async function enviarMensajeChatModal(texto) {
+  if (!texto) {
+    alert("Escribe un mensaje para enviar.");
+    return;
+  }
+  const perfil = await obtenerPerfil(currentUser.uid);
+  try {
+    await addDoc(collection(db, "chatPublico"), {
+      texto,
+      uid: currentUser.uid,
+      nick: perfil.nick || currentUser.email.split("@")[0],
+      avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      fecha: new Date()
+    });
+    // Limpiar textarea modal
+    const modalInput = document.getElementById("mensajeModal");
+    if (modalInput) modalInput.value = "";
+  } catch (err) {
+    console.error("Error al enviar mensaje público (modal):", err);
+    alert("No se pudo enviar el mensaje. Intenta más tarde.");
+  }
 }
 
 // Inicializar eventos UI para interacción
 export function inicializarEventosUI() {
-  // Botón flotante chat en mobile
-  const btnChat = document.getElementById('btn-flotante-chat');
-  if (btnChat) {
-    btnChat.addEventListener('click', () => {
-      window.location.href = 'chat.html';
+  // Botón publicar post
+  const btnPublicar = document.querySelector(".nuevo-mensaje button");
+  if (btnPublicar) {
+    btnPublicar.addEventListener('click', () => {
+      publicarMensaje();
+    });
+  }
+
+  // Botón enviar mensaje chat público en sección lateral (desktop)
+  const btnEnviar = document.getElementById('btnEnviar');
+  if (btnEnviar) {
+    btnEnviar.addEventListener('click', () => {
+      enviarMensaje();
+    });
+  }
+
+  // Botón enviar mensaje chat público en modal (mobile)
+  const btnEnviarModal = document.getElementById('btnEnviarModal');
+  if (btnEnviarModal) {
+    btnEnviarModal.addEventListener('click', () => {
+      const texto = document.getElementById('mensajeModal').value.trim();
+      enviarMensajeChatModal(texto);
     });
   }
 
@@ -261,22 +322,6 @@ export function inicializarEventosUI() {
       }
     });
   }
-
-  // Botón publicar post
-  const btnPublicar = document.getElementById('btnPublicar');
-  if (btnPublicar) {
-    btnPublicar.addEventListener('click', () => {
-      publicarMensaje();
-    });
-  }
-
-  // Botón enviar mensaje chat público
-  const btnEnviar = document.getElementById('btnEnviar');
-  if (btnEnviar) {
-    btnEnviar.addEventListener('click', () => {
-      enviarMensaje();
-    });
-  }
 }
 
 // Exportar funciones globales para uso desde HTML
@@ -286,5 +331,6 @@ window.darRePapo = darRePapo;
 window.toggleComentarios = toggleComentarios;
 window.enviarComentario = enviarComentario;
 window.enviarMensaje = enviarMensaje;
+window.enviarMensajeChatModal = enviarMensajeChatModal;
 window.logout = () => signOut(auth).then(() => location.href = "index.html");
 window.inicializarEventosUI = inicializarEventosUI;
