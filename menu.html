@@ -1,72 +1,119 @@
 <!-- menu.html -->
 <style>
-  .menu-superior {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
+  nav.menu3d {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-around;
     align-items: center;
-    gap: 8px;
-    padding-right: 12px;
-    z-index: 1000;
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid #00e5ffcc;
+    background: linear-gradient(145deg, #004c6d, #00917a);
+    box-shadow: 0 6px 20px #00e5ff55;
+    padding: 12px 0;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    z-index: 9999;
+    border-bottom: 2px solid #00e5ff33;
   }
 
-  .menu-superior button {
-    background: none;
-    border: none;
-    color: #ccf9ff;
-    font-size: 1.4em;
-    cursor: pointer;
-    padding: 6px 10px;
-    border-radius: 12px;
-    transition: transform 0.2s ease, box-shadow 0.3s ease;
+  nav.menu3d a {
+    color: #0ff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 10px 16px;
+    border-radius: 14px;
+    transition: all 0.2s ease-in-out;
+    font-size: 1rem;
+    text-shadow: 0 0 4px #000;
     position: relative;
   }
 
-  .menu-superior button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
+  nav.menu3d a:hover,
+  nav.menu3d a:focus {
+    background-color: #00e5ff33;
+    transform: scale(1.05);
+    box-shadow: 0 0 8px #00e5ff77;
+    outline: none;
   }
 
-  .alerta {
+  nav.menu3d .notif {
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: -5px;
+    right: -6px;
     background: red;
     color: white;
-    font-size: 0.7em;
+    font-size: 0.6rem;
+    padding: 3px 5px;
     border-radius: 50%;
-    padding: 2px 5px;
-    display: none;
+    font-weight: bold;
+    box-shadow: 0 0 4px #000;
   }
 
-  /* Icono de chat solo visible en mobile */
-  .boton-chat-mobile {
-    display: none;
-  }
-
-  @media (max-width: 768px) {
-    .boton-chat-mobile {
-      display: inline-block !important;
+  @media (max-width: 600px) {
+    nav.menu3d a {
+      font-size: 0.9rem;
+      padding: 8px 10px;
     }
   }
 </style>
 
-<div class="menu-superior">
-  <button onclick="location.href='home.html'" title="Inicio">🏠</button>
-  <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
-  <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
-  <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
-  <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
-    ✉️<span id="noti" class="alerta">•</span>
-  </button>
-  <button id="btnIrChat" onclick="location.href='/chat.html'">Chat público 💬</button>
-  <button onclick="logout()" title="Cerrar sesión">🚪</button>
-</div>
+<nav class="menu3d">
+  <a href="home.html">🏠 Inicio</a>
+  <a href="perfil.html">👤 Perfil</a>
+  <a href="historial.html">🎮 Juegos</a>
+  <a href="mensajes.html" id="iconoMensajes">✉️ Privado</a>
+  <a href="chat.html">💬 Chat</a>
+  <a href="#" onclick="logout()">🚪 Salir</a>
+</nav>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+    authDomain: "papoclub-737ac.firebaseapp.com",
+    projectId: "papoclub-737ac",
+    storageBucket: "papoclub-737ac.appspot.com",
+    messagingSenderId: "76712370993",
+    appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return;
+
+    const mensajesQuery = query(
+      collection(db, "notificacionesMensajes"),
+      where("destinatario", "==", user.uid),
+      where("leido", "==", false)
+    );
+
+    const icono = document.getElementById("iconoMensajes");
+
+    onSnapshot(mensajesQuery, (snapshot) => {
+      const existente = document.querySelector("#iconoMensajes .notif");
+
+      if (snapshot.size > 0) {
+        if (!existente) {
+          const punto = document.createElement("span");
+          punto.className = "notif";
+          punto.textContent = "!";
+          icono.appendChild(punto);
+        }
+      } else {
+        if (existente) existente.remove();
+      }
+    });
+  });
+
+  window.logout = () => {
+    import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js")
+      .then(({ getAuth, signOut }) => {
+        const auth = getAuth();
+        signOut(auth).then(() => location.href = "index.html");
+      });
+  };
+</script>
