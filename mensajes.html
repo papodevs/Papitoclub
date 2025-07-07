@@ -136,7 +136,7 @@
   <div class="contenedor">
     <div class="campo">
       <label for="destinatario">Para:</label>
-      <input id="destinatario" placeholder="Escribe un nick..." autocomplete="off">
+      <input id="destinatario" placeholder="Escribe un nick..." autocomplete="off" />
       <div id="sugerencias"></div>
     </div>
     <div class="campo">
@@ -180,7 +180,7 @@
       const snap = await getDocs(collection(db, "users"));
       snap.forEach(doc => {
         const u = doc.data();
-        const nick = u.nick || u.email;
+        const nick = u.nick || u.email.split("@")[0];
         usuariosMap[nick] = doc.id;
         usuariosInfo[doc.id] = {
           nick,
@@ -192,6 +192,7 @@
     input.addEventListener("input", () => {
       const val = input.value.toLowerCase();
       sugerencias = Object.keys(usuariosMap).filter(n => n.toLowerCase().includes(val));
+      indexSel = -1;
       mostrarSugerencias();
     });
 
@@ -245,7 +246,7 @@
       const texto = document.getElementById("mensaje").value.trim();
       const nick = input.value.trim();
       receptorUID = usuariosMap[nick];
-      if (!texto || !receptorUID) return;
+      if (!texto || !receptorUID) return alert("Completa destinatario y mensaje");
       const chatId = [currentUser.uid, receptorUID].sort().join("_");
       await addDoc(collection(db, `privados/${chatId}/mensajes`), {
         texto,
