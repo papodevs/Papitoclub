@@ -16,40 +16,6 @@
       height: 100vh;
     }
 
-    .menu-superior {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 60px;
-      background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: 8px;
-      padding-right: 12px;
-      z-index: 1000;
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid #00e5ffcc;
-    }
-
-    .menu-superior button {
-      background: none;
-      border: none;
-      color: #ccf9ff;
-      font-size: 1.4em;
-      cursor: pointer;
-      padding: 6px 10px;
-      border-radius: 12px;
-      transition: transform 0.2s ease, box-shadow 0.3s ease;
-    }
-
-    .menu-superior button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 0 12px #00e5ff, 0 0 30px #00e5ffaa;
-    }
-
     .main-layout {
       flex: 1;
       padding: 20px;
@@ -119,17 +85,9 @@
 </head>
 <body>
 
-  <div class="menu-superior">
-    <button onclick="location.href='home.html'">🏠</button>
-    <button onclick="location.href='perfil.html'">👤</button>
-    <button onclick="location.href='historial.html'">🎮</button>
-    <button onclick="location.href='eventos.html'">📅</button>
-    <button onclick="location.href='mensajes.html'">✉️</button>
-    <button onclick="logout()">🚪</button>
-  </div>
+  <div id="menu-superior"></div>
 
   <main class="main-layout">
-
     <button class="btn-unete" onclick="location.href='index.html'">Únete a PapoClub</button>
 
     <div id="formularioEvento" class="formulario-evento" style="display:none;">
@@ -143,7 +101,6 @@
     </div>
 
     <div id="listaEventos"></div>
-
   </main>
 
   <script type="module">
@@ -170,11 +127,20 @@
 
     let currentUser = null;
 
-    onAuthStateChanged(auth, (user) => {
+    async function cargarMenu() {
+      const res = await fetch("menu.html");
+      const html = await res.text();
+      document.getElementById("menu-superior").innerHTML = html;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
       currentUser = user;
+      await cargarMenu();
+
       if (user) {
         document.getElementById("formularioEvento").style.display = "block";
       }
+
       cargarEventos();
     });
 
@@ -200,7 +166,6 @@
         fechaCreacion: new Date()
       });
 
-      // Limpiar formulario
       document.getElementById("nombreEvento").value = "";
       document.getElementById("fechaEvento").value = "";
       document.getElementById("lugarEvento").value = "";
@@ -211,19 +176,20 @@
     function cargarEventos() {
       const q = query(collection(db, "eventos"), orderBy("fechaCreacion", "desc"));
       const lista = document.getElementById("listaEventos");
+
       onSnapshot(q, (snapshot) => {
         lista.innerHTML = "";
         snapshot.forEach(doc => {
           const e = doc.data();
           const div = document.createElement("div");
           div.className = "tarjeta-evento";
-          div.innerHTML = `
-            <h3>${e.nombre}</h3>
-            <p><strong>Fecha:</strong> ${e.fecha}</p>
-            ${e.lugar ? `<p><strong>Lugar:</strong> ${e.lugar}</p>` : ""}
-            ${e.descripcion ? `<p>${e.descripcion}</p>` : ""}
-            ${e.contacto ? `<p><strong>Contacto:</strong> <a href="${e.contacto}" target="_blank" style="color:#0ff;">${e.contacto}</a></p>` : ""}
-          `;
+          div.innerHTML = \`
+            <h3>\${e.nombre}</h3>
+            <p><strong>Fecha:</strong> \${e.fecha}</p>
+            \${e.lugar ? \`<p><strong>Lugar:</strong> \${e.lugar}</p>\` : ""}
+            \${e.descripcion ? \`<p>\${e.descripcion}</p>\` : ""}
+            \${e.contacto ? \`<p><strong>Contacto:</strong> <a href="\${e.contacto}" target="_blank" style="color:#0ff;">\${e.contacto}</a></p>\` : ""}
+          \`;
           lista.appendChild(div);
         });
       });
@@ -233,7 +199,7 @@
       signOut(auth).then(() => {
         location.href = "index.html";
       });
-    }
+    };
   </script>
 
 </body>
