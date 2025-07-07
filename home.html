@@ -49,21 +49,21 @@
       flex: 1 1 0;
       display: flex;
       flex-direction: column;
-      align-items: center;
+      align-items: center; /* para centrar el contenido */
     }
 
     .nuevo-mensaje {
+      width: 80% !important;
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+      padding: 25px;
       background: rgba(0, 50, 70, 0.6);
       border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
       box-shadow: 0 0 12px #00e5ffcc, inset 0 0 6px #00e5ffaa;
       border: 2px solid rgba(0, 229, 255, 0.8);
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      width: 100%;
-      max-width: 700px;
+      gap: 12px;
     }
 
     .nuevo-mensaje textarea {
@@ -89,17 +89,24 @@
       border: none;
       cursor: pointer;
       box-shadow: 0 0 12px #00e5ffcc;
+      transition: background-color 0.3s ease;
+    }
+    .nuevo-mensaje button:hover {
+      background: #0099cc;
     }
 
     #listaMensajes {
-      width: 100%;
-      max-width: 700px;
+      width: 80% !important;
+      max-width: 800px;
+      margin: 0 auto;
     }
 
     #listaMensajes .tarjeta {
+      width: 100% !important;
+      padding: 25px !important;
+      box-sizing: border-box;
       background: rgba(0, 105, 148, 0.05);
       border-radius: 16px;
-      padding: 20px;
       margin-bottom: 22px;
       box-shadow:
         0 0 12px rgba(0, 229, 255, 0.6),
@@ -107,10 +114,6 @@
       border: 2px solid rgba(0, 229, 255, 0.8);
       backdrop-filter: blur(3px);
       transition: transform 0.2s ease;
-      width: 97%;
-      box-sizing: border-box;
-      margin-left: auto;
-      margin-right: auto;
     }
     #listaMensajes .tarjeta:hover {
       transform: translateY(-2px);
@@ -145,6 +148,10 @@
       align-items: center;
       cursor: pointer;
       z-index: 1001;
+      transition: box-shadow 0.3s ease;
+    }
+    #btnChatFlotante:hover {
+      box-shadow: 0 0 20px #00e5ffee, 0 0 30px #00e5ffbb;
     }
 
     @media (min-width: 901px) {
@@ -163,22 +170,7 @@
       }
     }
 
-    @media (max-width: 900px) {
-      .nuevo-mensaje {
-        width: 97% !important;
-      }
-      #listaMensajes {
-        width: 100%;
-      }
-      #listaMensajes .tarjeta {
-        width: 90% !important;
-        padding: 30px !important;
-        box-sizing: border-box;
-        margin-left: auto;
-        margin-right: auto;
-      }
-    }
-
+    /* Modal chat */
     .modal-chat {
       display: none;
       position: fixed;
