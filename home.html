@@ -1,448 +1,142 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Papoclub - Home</title>
-<style>
-  /* Reset y básicos */
-  body {
-    margin: 0; font-family: 'Segoe UI', sans-serif;
-    background: linear-gradient(135deg, #006994, #00b88a);
-    color: #0ff;
-    display: flex; flex-direction: column; height: 100vh;
-  }
-
-  /* Menu superior 3D (recreando estilo Papoclub) */
-  #menu-superior {
-    position: fixed; top: 0; left: 0; right: 0;
-    height: 60px;
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    box-shadow:
-      inset 0 1px 2px #00e5ffaa,
-      0 5px 10px #0099ccaa;
-    display: flex; align-items: center; justify-content: flex-end;
-    padding: 0 12px; z-index: 1000;
-    border-bottom: 2px solid #00b8d9cc;
-    font-weight: bold;
-  }
-  #menu-superior button {
-    background: none;
-    border: none;
-    color: #ccf9ff;
-    font-size: 1.5em;
-    cursor: pointer;
-    padding: 0 12px;
-    user-select: none;
-    filter: drop-shadow(0 0 1px #00dfff);
-    transition: transform 0.2s ease;
-  }
-  #menu-superior button:hover {
-    transform: scale(1.1);
-    color: #00ffff;
-  }
-
-  main {
-    display: flex;
-    flex: 1;
-    padding: 70px 12px 12px 12px;
-    gap: 16px;
-    box-sizing: border-box;
-    height: calc(100vh - 70px);
-  }
-
-  /* IZQUIERDA - Crear post + posts */
-  #seccion-izquierda {
-    flex: 0 0 48%;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    overflow-y: auto;
-  }
-
-  /* Tarjeta 3D base */
-  .tarjeta {
-    background: linear-gradient(145deg, #003040, #004050);
-    border-radius: 14px;
-    padding: 12px;
-    box-shadow:
-      4px 4px 6px #002830,
-      -4px -4px 6px #005960;
-    color: #0ff;
-  }
-
-  /* Crear post textarea + boton */
-  #crear-post {
-    display: flex;
-    flex-direction: column;
-  }
-  #nuevoMensaje {
-    background: linear-gradient(145deg, #004050, #002f36);
-    border-radius: 14px;
-    border: none;
-    color: #0ff;
-    font-size: 1.1em;
-    padding: 12px;
-    resize: vertical;
-    min-height: 100px;
-    box-shadow:
-      inset 2px 2px 5px #001f26,
-      inset -2px -2px 5px #005966;
-    margin-bottom: 12px;
-    font-family: 'Segoe UI', sans-serif;
-  }
-  #btnPublicar {
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    border: none;
-    padding: 12px;
-    border-radius: 14px;
-    color: #003;
-    font-weight: bold;
-    font-size: 1.1em;
-    cursor: pointer;
-    box-shadow:
-      4px 4px 6px #005960,
-      -4px -4px 6px #00e5ff;
-    transition: background 0.3s ease;
-  }
-  #btnPublicar:hover {
-    background: linear-gradient(145deg, #0099cc, #00e5ff);
-  }
-
-  /* Lista posts */
-  #listaMensajes {
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-  }
-
-  /* Post individual */
-  .post-tarjeta {
-    background: linear-gradient(145deg, #004850, #003040);
-    border-radius: 14px;
-    padding: 12px;
-    box-shadow:
-      5px 5px 8px #002820,
-      -5px -5px 8px #006070;
-  }
-  .post-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .post-header img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid #00e5ff;
-    filter: drop-shadow(0 0 3px #00e5ff);
-  }
-  .post-nick {
-    font-weight: bold;
-    font-size: 1.1em;
-  }
-  .post-texto {
-    margin-bottom: 8px;
-    white-space: pre-wrap;
-  }
-
-  /* Botones de interacción */
-  .interacciones {
-    display: flex;
-    gap: 20px;
-    font-size: 0.9em;
-    user-select: none;
-  }
-  .interacciones span {
-    cursor: pointer;
-    color: #0ff;
-    padding: 4px 8px;
-    border-radius: 10px;
-    box-shadow:
-      inset 2px 2px 5px #007f9d,
-      inset -2px -2px 5px #00e5ff;
-    transition: background-color 0.2s ease;
-  }
-  .interacciones span:hover {
-    background-color: #0099cc55;
-  }
-
-  /* Comentarios */
-  .comentarios {
-    margin-top: 8px;
-    background: linear-gradient(145deg, #003050, #004060);
-    border-radius: 14px;
-    padding: 8px;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-  .comentario {
-    margin-bottom: 8px;
-    border-bottom: 1px solid #0088aa55;
-    padding-bottom: 6px;
-  }
-  .comentario:last-child {
-    border: none;
-  }
-  .comentario strong {
-    display: block;
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-bottom: 2px;
-  }
-  .comentario-texto {
-    font-size: 0.9em;
-    white-space: pre-wrap;
-  }
-  .comentario-fecha {
-    font-size: 0.75em;
-    color: #00cfffcc;
-  }
-  .input-comentario {
-    margin-top: 8px;
-    display: flex;
-    gap: 8px;
-  }
-  .input-comentario textarea {
-    flex: 1;
-    resize: none;
-    border-radius: 14px;
-    border: none;
-    padding: 8px;
-    font-size: 0.9em;
-    background: #002f36;
-    color: #0ff;
-    box-shadow:
-      inset 2px 2px 5px #001f26,
-      inset -2px -2px 5px #005966;
-  }
-  .input-comentario button {
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    border: none;
-    padding: 8px 16px;
-    border-radius: 14px;
-    color: #003;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow:
-      4px 4px 6px #005960,
-      -4px -4px 6px #00e5ff;
-    transition: background 0.3s ease;
-  }
-  .input-comentario button:hover {
-    background: linear-gradient(145deg, #0099cc, #00e5ff);
-  }
-
-  /* Lado derecho - chat público */
-  #seccion-derecha {
-    flex: 0 0 48%;
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(145deg, #003040, #004050);
-    border-radius: 14px;
-    box-shadow:
-      5px 5px 8px #002820,
-      -5px -5px 8px #006070;
-    padding: 12px;
-    height: 100%;
-  }
-  #mensajes-chat {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-  .mensaje-chat {
-    margin-bottom: 8px;
-    border-bottom: 1px solid #00b8d9cc;
-    padding-bottom: 6px;
-  }
-  .mensaje-chat:last-child {
-    border: none;
-  }
-  .mensaje-chat strong {
-    color: #0ff;
-    font-weight: bold;
-  }
-  .mensaje-chat p {
-    margin: 2px 0;
-  }
-  .mensaje-chat img {
-    width: 25px;
-    height: 25px;
-    border-radius: 50%;
-    vertical-align: middle;
-    margin-right: 6px;
-    border: 2px solid #00e5ff;
-    filter: drop-shadow(0 0 3px #00e5ff);
-  }
-  #input-chat {
-    margin-top: 8px;
-    display: flex;
-    gap: 8px;
-  }
-  #input-chat textarea {
-    flex: 1;
-    resize: none;
-    border-radius: 14px;
-    border: none;
-    padding: 8px;
-    font-size: 1em;
-    background: #002f36;
-    color: #0ff;
-    box-shadow:
-      inset 2px 2px 5px #001f26,
-      inset -2px -2px 5px #005966;
-  }
-  #input-chat button {
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    border: none;
-    padding: 12px 20px;
-    border-radius: 14px;
-    color: #003;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow:
-      4px 4px 6px #005960,
-      -4px -4px 6px #00e5ff;
-    transition: background 0.3s ease;
-  }
-  #input-chat button:hover {
-    background: linear-gradient(145deg, #0099cc, #00e5ff);
-  }
-
-  /* BOTON FLOTA CHAT (mobile) */
-  #btn-flotante-chat {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(145deg, #00e5ff, #0099cc);
-    color: #003;
-    border: none;
-    padding: 14px 20px;
-    border-radius: 50px;
-    font-weight: bold;
-    font-size: 1.2em;
-    cursor: pointer;
-    box-shadow:
-      4px 4px 6px #005960,
-      -4px -4px 6px #00e5ff;
-    z-index: 2000;
-    user-select: none;
-    transition: background 0.3s ease;
-  }
-  #btn-flotante-chat:hover {
-    background: linear-gradient(145deg, #0099cc, #00e5ff);
-  }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    main {
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Papoclub - Home</title>
+  <link rel="stylesheet" href="estilos.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #006994, #00b88a);
+      color: #0ff;
+      display: flex;
       flex-direction: column;
-      padding: 70px 8px 8px 8px;
+      padding-top: 70px;
     }
-    #seccion-izquierda, #seccion-derecha {
-      flex: unset;
+
+    #menu-superior {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
-      height: auto;
+      height: 60px;
+      background: linear-gradient(145deg, #00e5ff, #0099cc);
+      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid #00e5ffcc;
     }
-    #seccion-derecha {
-      margin-top: 16px;
-      height: 300px;
+
+    main {
+      display: flex;
+      flex-direction: row;
+      padding: 1em;
+      gap: 1em;
     }
-    #btn-flotante-chat {
-      display: block;
+
+    .columna {
+      flex: 1;
     }
-    #mensajes-chat {
-      height: calc(100% - 60px);
+
+    .tarjeta-post, .tarjeta-chat {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 16px;
+      padding: 1em;
+      margin-bottom: 1em;
+      box-shadow: 0 0 8px #00e5ff55, 0 4px 8px rgba(0, 0, 0, 0.4);
     }
-  }
-</style>
+
+    textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 1em;
+      background: #002f36;
+      color: #0ff;
+    }
+
+    button {
+      margin-top: 8px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 8px 20px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .interacciones span {
+      margin-right: 1em;
+      cursor: pointer;
+    }
+
+    .mensaje-chat {
+      border-top: 1px solid #00e5ff33;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .boton-chat-mobile {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #00e5ff;
+      color: #003;
+      font-size: 1.4em;
+      border: none;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      box-shadow: 0 0 8px #00e5ffaa;
+      z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+      .columna.chat-publico {
+        display: none;
+      }
+      .boton-chat-mobile {
+        display: block;
+      }
+    }
+  </style>
 </head>
 <body>
   <div id="menu-superior"></div>
 
   <main>
-    <section id="seccion-izquierda">
-      <div id="crear-post" class="tarjeta">
-        <textarea id="nuevoMensaje" placeholder="¿Qué estás pensando?"></textarea>
-        <button id="btnPublicar">Publicar</button>
+    <div class="columna">
+      <div class="tarjeta-post">
+        <textarea id="nuevoMensaje" placeholder="¿En qué estás pensando?"></textarea>
+        <button onclick="publicarMensaje()">Publicar</button>
       </div>
-
       <div id="listaMensajes"></div>
-    </section>
+    </div>
 
-    <section id="seccion-derecha" class="tarjeta">
-      <div id="mensajes-chat"></div>
-
-      <div id="input-chat">
-        <textarea id="mensaje" placeholder="Escribe un mensaje público..."></textarea>
-        <button id="btnEnviar">Enviar</button>
+    <div class="columna chat-publico">
+      <div class="tarjeta-chat">
+        <h3>Chat Público</h3>
+        <div id="mensajes-chat" style="max-height: 300px; overflow-y: auto;"></div>
+        <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
+        <button onclick="enviarMensaje()">Enviar</button>
       </div>
-    </section>
+    </div>
   </main>
 
-  <button id="btn-flotante-chat" title="Chat">Chat</button>
+  <button class="boton-chat-mobile" onclick="location.href='chat.html'">💬</button>
 
   <script type="module" src="home-app.js"></script>
-  <script>
-    // Botón flotante chat mobile envía a chat.html
-    const btnChat = document.getElementById('btn-flotante-chat');
-    btnChat.addEventListener('click', () => {
-      window.location.href = 'chat.html';
-    });
-
-    // Delegar botones interactivos para posts (Like, RePapo, Comment, Share)
-    document.getElementById('listaMensajes').addEventListener('click', async (e) => {
-      if (!e.target.matches('span[data-action]')) return;
-      const id = e.target.dataset.id;
-      const action = e.target.dataset.action;
-      if (action === 'like') {
-        window.darLike(id);
-      } else if (action === 'repapo') {
-        window.darRePapo(id);
-      } else if (action === 'comment') {
-        const commentBox = document.getElementById(`comentarios-${id}`);
-        if (!commentBox) return;
-        commentBox.style.display = (commentBox.style.display === 'block') ? 'none' : 'block';
-      } else if (action === 'share') {
-        const postLink = `${location.origin}${location.pathname}#${id}`;
-        if (navigator.share) {
-          navigator.share({
-            title: 'Papoclub Post',
-            text: 'Mira este post en Papoclub',
-            url: postLink
-          });
-        } else {
-          // Fallback copiar link
-          await navigator.clipboard.writeText(postLink);
-          alert('Link copiado al portapapeles para compartir');
-        }
-      }
-    });
-
-    // Escuchar enter en input comentario para enviar
-    document.getElementById('listaMensajes').addEventListener('keypress', (e) => {
-      if (!e.target.matches('textarea[id^="comentario-"]')) return;
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        const postId = e.target.id.replace('comentario-', '');
-        window.enviarComentario(postId);
-      }
-    });
-
-    // Evento botón publicar
-    document.getElementById('btnPublicar').addEventListener('click', () => {
-      window.publicarMensaje();
-    });
-
-    // Evento botón enviar chat público
-    document.getElementById('btnEnviar').addEventListener('click', () => {
-      window.enviarMensaje();
-    });
-  </script>
 </body>
 </html>
