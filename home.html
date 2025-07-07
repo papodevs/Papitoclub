@@ -1,228 +1,545 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    /* Fondo y fuente */
+<meta charset="UTF-8" />
+<title>Papoclub - Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  body {
+    background: linear-gradient(135deg, #006994, #00b88a);
+    color: #0ff;
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding-top: 70px;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #menu-superior {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    z-index: 1000;
+  }
+  .left-panel {
+    flex: 1;
+    max-width: 60%;
+    padding: 1em;
+    overflow-y: auto;
+    height: calc(100vh - 70px);
+  }
+  .right-panel {
+    flex: 1;
+    max-width: 40%;
+    border-left: 2px solid #00e5ff55;
+    padding: 1em;
+    height: calc(100vh - 70px);
+    display: flex;
+    flex-direction: column;
+  }
+  /* Nuevo post */
+  .new-post, .chat-input {
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 0 10px #00e5ff55;
+  }
+  textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: none;
+    padding: 10px;
+    font-size: 1em;
+    resize: none;
+    background: #002f36;
+    color: #0ff;
+  }
+  button {
+    margin-top: 8px;
+    background: #00e5ff;
+    color: #003;
+    border: none;
+    padding: 10px 16px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  /* Tarjetas post */
+  .post-card {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 14px;
+    padding: 12px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 6px #00e5ff44;
+  }
+  .post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .post-header img {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+  }
+  .post-text {
+    white-space: pre-wrap;
+  }
+  .actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 8px;
+    font-size: 0.9em;
+    color: #0ff;
+    user-select: none;
+  }
+  .actions span {
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+  }
+  .actions span:hover {
+    background-color: #00e5ff44;
+  }
+  /* Comentarios */
+  .comments-section {
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .comments-toggle {
+    cursor: pointer;
+    color: #0ff;
+    font-weight: bold;
+    margin-top: 10px;
+  }
+  .comment-input textarea {
+    background: #002f36;
+    color: #0ff;
+    border-radius: 8px;
+    padding: 8px;
+    border: none;
+    width: 100%;
+    resize: none;
+  }
+  .comment-input button {
+    margin-top: 6px;
+    width: 100%;
+  }
+  .comment {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .comment img {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+  }
+  .comment-content {
+    background: #003640cc;
+    padding: 6px 10px;
+    border-radius: 10px;
+    flex: 1;
+    white-space: pre-wrap;
+  }
+  .comment-meta {
+    font-size: 0.75em;
+    color: #aaa;
+  }
+  /* Chat publico */
+  .chat-header {
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+  }
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: inset 0 0 10px #00e5ff66;
+  }
+  .chat-message {
+    margin-bottom: 10px;
+  }
+  .chat-message p {
+    margin: 2px 0;
+  }
+  .chat-message strong {
+    color: #00e5ff;
+  }
+  .chat-message img {
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  /* Botón flotante chat mobile */
+  #btnChatMobile {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #00e5ff;
+    color: #003;
+    padding: 12px 20px;
+    font-weight: bold;
+    border-radius: 30px;
+    cursor: pointer;
+    z-index: 1100;
+    box-shadow: 0 0 15px #00e5ffcc;
+  }
+  /* Responsive */
+  @media (max-width: 900px) {
     body {
-      background: linear-gradient(135deg, #006994, #00b88a);
-      color: #0ff;
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding-top: 70px;
-      display: flex;
-      flex-direction: row;
-      height: 100vh;
-      overflow: hidden;
+      display: block;
+      padding-top: 60px;
+      height: auto;
     }
-
-    /* Menú superior 3D */
-    #menu-superior {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%;
-      height: 70px;
-      background: #003f5c;
-      box-shadow: 0 4px 8px #00e5ff88;
-      z-index: 1000;
-      /* Aquí puedes agregar más estilos 3D */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 1.3em;
-      letter-spacing: 1.2px;
-      text-shadow: 0 0 6px #00e5ffaa;
-      color: #00e5ff;
+    .left-panel {
+      max-width: 100%;
+      height: auto;
+      overflow: visible;
+      padding: 1em 0.5em;
     }
-
-    /* Contenedor publicaciones */
-    .publicaciones {
-      flex: 1;
-      max-width: 60%;
-      padding: 1em;
-      overflow-y: auto;
-      height: calc(100vh - 70px);
-      box-sizing: border-box;
-    }
-
-    /* Chat público a la derecha */
-    .chat-publico {
-      flex: 1;
-      max-width: 40%;
-      padding: 1em;
-      border-left: 2px solid #00e5ff55;
-      height: calc(100vh - 70px);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-
-    /* Formulario para nueva publicación y chat input */
-    .nueva-publicacion, .chat-input {
-      background: rgba(0,0,0,0.2);
-      border-radius: 16px;
-      padding: 12px;
-      margin-bottom: 16px;
-      box-shadow: 0 0 10px #00e5ff55;
-    }
-
-    /* Textareas con estilo Papoclub */
-    textarea {
-      width: 100%;
-      border-radius: 8px;
-      border: none;
-      padding: 10px;
-      font-size: 1em;
-      resize: none;
-      background: #002f36;
-      color: #0ff;
-      font-family: 'Segoe UI', sans-serif;
-    }
-
-    /* Botones */
-    button {
-      margin-top: 8px;
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      padding: 10px 16px;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    button:hover {
-      background: #00c4d6;
-    }
-
-    /* Tarjetas de publicaciones */
-    .tarjeta {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 12px;
-      margin-bottom: 14px;
-      box-shadow: 0 0 6px #00e5ff44;
-      word-break: break-word;
-    }
-
-    /* Área de interacciones */
-    .interacciones {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 8px;
-      font-size: 0.9em;
-      color: #0ff;
-      user-select: none;
-    }
-    .interacciones span {
-      cursor: pointer;
-      transition: color 0.3s ease;
-    }
-    .interacciones span:hover {
-      color: #00c4d6;
-    }
-
-    /* Comentarios dentro de publicación */
-    .comentarios {
-      margin-top: 10px;
-      background: rgba(0, 0, 0, 0.2);
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    /* Mensajes de chat */
-    .mensaje-chat {
-      background: rgba(0,0,0,0.2);
-      padding: 8px;
-      border-radius: 10px;
-      margin: 4px 0;
-      word-break: break-word;
-    }
-
-    /* Botón flotante para chat en móvil */
-    #btnIrChat {
+    .right-panel {
       display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #00e5ff;
-      color: #003;
-      padding: 12px 16px;
-      border-radius: 30px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 1100;
-      font-family: 'Segoe UI', sans-serif;
-      box-shadow: 0 0 10px #00e5ffaa;
-      transition: background 0.3s ease;
     }
-    #btnIrChat:hover {
-      background: #00c4d6;
+    #btnChatMobile {
+      display: block;
     }
-
-    /* Responsive para móvil */
-    @media (max-width: 900px) {
-      body {
-        display: block;
-        height: auto;
-        padding-top: 0;
-      }
-      .chat-publico {
-        display: none;
-      }
-      .publicaciones {
-        max-width: 97%;
-        height: auto;
-        padding: 1em 1em 6em 1em;
-      }
-      #btnIrChat {
-        display: block;
-      }
-      #menu-superior {
-        position: sticky;
-        top: 0;
-        height: 60px;
-        font-size: 1.1em;
-      }
-    }
-  </style>
+  }
+</style>
 </head>
 <body>
-  <div id="menu-superior">Papoclub</div>
+  <div id="menu-superior"></div>
 
-  <div class="publicaciones">
-    <div class="nueva-publicacion">
-      <textarea id="nuevoMensaje" rows="3" placeholder="¿Qué estás pensando?"></textarea>
-      <button onclick="publicarMensaje()">Publicar</button>
+  <section class="left-panel">
+    <div class="new-post">
+      <textarea id="inputPost" placeholder="¿Qué estás pensando?"></textarea>
+      <button id="btnPublicar">Publicar</button>
     </div>
-    <div id="listaMensajes"></div>
-  </div>
+    <div id="postsContainer"></div>
+  </section>
 
-  <div class="chat-publico">
-    <h2>💬 CHAT</h2>
-    <div id="mensajes-chat" style="flex:1; overflow-y:auto"></div>
+  <section class="right-panel">
+    <div class="chat-header">💬 Chat Público</div>
+    <div id="chat-messages"></div>
     <div class="chat-input">
-      <textarea id="mensaje" rows="2" placeholder="Escribe un mensaje..."></textarea>
-      <button onclick="enviarMensaje()">Enviar</button>
+      <textarea id="inputChat" placeholder="Escribe un mensaje..."></textarea>
+      <button id="btnEnviarChat">Enviar</button>
     </div>
-  </div>
+  </section>
 
-  <button id="btnIrChat" onclick="location.href='chat.html'">Chat público 💬</button>
+  <button id="btnChatMobile" title="Ir a Chat">Chat 💬</button>
 
-  <script type="module">
-    import * as homeApp from './home-app.js';
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore,
+    collection,
+    addDoc,
+    onSnapshot,
+    query,
+    orderBy,
+    doc,
+    updateDoc,
+    getDoc,
+    where
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    window.publicarMensaje = homeApp.publicarMensaje;
-    window.darLike = homeApp.darLike;
-    window.darRePapo = homeApp.darRePapo;
-    window.toggleComentarios = homeApp.toggleComentarios;
-    window.enviarComentario = homeApp.enviarComentario;
-    window.enviarMensaje = homeApp.enviarMensaje;
-  </script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+    authDomain: "papoclub-737ac.firebaseapp.com",
+    projectId: "papoclub-737ac",
+    storageBucket: "papoclub-737ac.appspot.com",
+    messagingSenderId: "76712370993",
+    appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  let currentUser = null;
+
+  // --- Carga menú ---
+  async function cargarMenu() {
+    const res = await fetch("menu.html");
+    const html = await res.text();
+    document.getElementById("menu-superior").innerHTML = html;
+
+    if (!window.logout) {
+      window.logout = () => {
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js").then(({ getAuth, signOut }) => {
+          const auth = getAuth();
+          signOut(auth).then(() => location.href = "index.html");
+        });
+      };
+    }
+  }
+
+  // --- Publicar post ---
+  async function publicarPost() {
+    const texto = document.getElementById("inputPost").value.trim();
+    if (!texto) return alert("Escribe algo para publicar.");
+    const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+    await addDoc(collection(db, "publicaciones"), {
+      autorUID: currentUser.uid,
+      autorNick: perfil.nick || currentUser.email.split("@")[0],
+      autorAvatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      texto,
+      fecha: new Date(),
+      likes: [],
+      repapos: []
+    });
+    document.getElementById("inputPost").value = "";
+  }
+
+  // --- Render posts con interacciones ---
+  function renderPosts() {
+    const q = query(collection(db, "publicaciones"), orderBy("fecha", "desc"));
+    const contenedor = document.getElementById("postsContainer");
+    onSnapshot(q, async (snapshot) => {
+      contenedor.innerHTML = "";
+      for (const docSnap of snapshot.docs) {
+        const post = docSnap.data();
+        const id = docSnap.id;
+        // Obtener comentarios para el post
+        const comentariosQuery = query(collection(db, `publicaciones/${id}/comentarios`), orderBy("fecha", "asc"));
+        const comentariosSnap = await getDocs(comentariosQuery);
+        let comentariosHTML = "";
+        for (const cSnap of comentariosSnap.docs) {
+          const c = cSnap.data();
+          const fecha = c.fecha?.toDate ? c.fecha.toDate() : c.fecha;
+          const fechaStr = fecha ? fecha.toLocaleString() : "";
+          comentariosHTML += `
+            <div class="comment">
+              <img src="${c.avatar || "https://via.placeholder.com/25?text=👤"}" alt="avatar" />
+              <div class="comment-content">
+                <div>${c.texto}</div>
+                <div class="comment-meta">@${c.nick} · ${fechaStr}</div>
+              </div>
+            </div>`;
+        }
+
+        contenedor.innerHTML += `
+          <div class="post-card" id="post-${id}">
+            <div class="post-header">
+              <img src="${post.autorAvatar}" alt="avatar" />
+              <strong>@${post.autorNick}</strong>
+            </div>
+            <div class="post-text">${post.texto}</div>
+            <div class="actions">
+              <span onclick="toggleComentarios('${id}')">💬 Comentarios</span>
+              <span onclick="darLike('${id}')">❤️ Like (${(post.likes || []).length})</span>
+              <span onclick="darRePapo('${id}')">🔁 RePapo (${(post.repapos || []).length})</span>
+              <span onclick="mostrarOpcionesShare('${id}', event)">📤 Share</span>
+            </div>
+            <div class="comments-section" id="comments-${id}" style="display:none">
+              <div class="comment-input">
+                <textarea id="input-comment-${id}" placeholder="Escribe un comentario..."></textarea>
+                <button onclick="enviarComentario('${id}')">Comentar</button>
+              </div>
+              <div class="comments-list" id="comments-list-${id}">
+                ${comentariosHTML}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+    });
+  }
+
+  // --- Toggle comentarios ---
+  function toggleComentarios(id) {
+    const sec = document.getElementById("comments-" + id);
+    if (!sec) return;
+    sec.style.display = sec.style.display === "none" ? "block" : "none";
+  }
+
+  // --- Dar like ---
+  async function darLike(postId) {
+    const ref = doc(db, "publicaciones", postId);
+    const snap = await getDoc(ref);
+    const data = snap.data();
+    const likes = new Set(data.likes || []);
+    if (likes.has(currentUser.uid)) likes.delete(currentUser.uid);
+    else likes.add(currentUser.uid);
+    await updateDoc(ref, { likes: Array.from(likes) });
+  }
+
+  // --- Dar RePapo (retweet) ---
+  async function darRePapo(postId) {
+    const ref = doc(db, "publicaciones", postId);
+    const snap = await getDoc(ref);
+    const data = snap.data();
+    const repapos = new Set(data.repapos || []);
+    if (repapos.has(currentUser.uid)) repapos.delete(currentUser.uid);
+    else repapos.add(currentUser.uid);
+    await updateDoc(ref, { repapos: Array.from(repapos) });
+
+    if (!repapos.has(currentUser.uid)) return; // si removió no crear repost
+
+    // Crear post con mismo texto pero autor actual
+    await addDoc(collection(db, "publicaciones"), {
+      autorUID: currentUser.uid,
+      autorNick: (await getDoc(doc(db, "users", currentUser.uid))).data()?.nick || currentUser.email.split("@")[0],
+      autorAvatar: (await getDoc(doc(db, "users", currentUser.uid))).data()?.avatar || "https://via.placeholder.com/30?text=👤",
+      texto: data.texto,
+      fecha: new Date(),
+      likes: [],
+      repapos: []
+    });
+  }
+
+  // --- Compartir post (opciones popup simple) ---
+  function mostrarOpcionesShare(postId, event) {
+    const opciones = [
+      { name: "X (Twitter)", url: `https://twitter.com/intent/tweet?text=${encodeURIComponent(location.href + "#post-" + postId + " papoclub sistem")}` },
+      { name: "Facebook", url: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(location.href + "#post-" + postId)}` },
+      { name: "WhatsApp", url: `https://api.whatsapp.com/send?text=${encodeURIComponent(location.href + "#post-" + postId + " papoclub sistem")}` },
+      { name: "Email", url: `mailto:?subject=Post Papoclub&body=${encodeURIComponent(location.href + "#post-" + postId + " papoclub sistem")}` }
+    ];
+    // Crear menú emergente simple
+    let popup = document.getElementById("share-popup");
+    if (popup) {
+      popup.remove();
+      if (popup.dataset.postId === postId) return; // Si ya abierto para este post, cierra y no abre
+    }
+    popup = document.createElement("div");
+    popup.id = "share-popup";
+    popup.style.position = "fixed";
+    popup.style.top = (event.clientY + 10) + "px";
+    popup.style.left = (event.clientX + 10) + "px";
+    popup.style.background = "#002f36";
+    popup.style.color = "#0ff";
+    popup.style.padding = "10px";
+    popup.style.borderRadius = "8px";
+    popup.style.boxShadow = "0 0 10px #00e5ffaa";
+    popup.style.zIndex = 1500;
+    popup.dataset.postId = postId;
+
+    opciones.forEach(opt => {
+      const a = document.createElement("a");
+      a.href = opt.url;
+      a.textContent = opt.name;
+      a.style.color = "#0ff";
+      a.style.display = "block";
+      a.style.padding = "6px 0";
+      a.style.textDecoration = "none";
+      a.target = "_blank";
+      popup.appendChild(a);
+    });
+
+    document.body.appendChild(popup);
+
+    // Cerrar popup al hacer click afuera
+    const cerrarPopup = (ev) => {
+      if (!popup.contains(ev.target)) {
+        popup.remove();
+        document.removeEventListener("click", cerrarPopup);
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener("click", cerrarPopup);
+    }, 0);
+  }
+
+  // --- Enviar comentario ---
+  async function enviarComentario(postId) {
+    const input = document.getElementById("input-comment-" + postId);
+    const texto = input.value.trim();
+    if (!texto) return alert("Escribe un comentario.");
+    const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+    await addDoc(collection(db, `publicaciones/${postId}/comentarios`), {
+      uid: currentUser.uid,
+      nick: perfil.nick || currentUser.email.split("@")[0],
+      avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      texto,
+      fecha: new Date()
+    });
+    input.value = "";
+  }
+
+  // --- Escuchar chat público ---
+  function escucharChat() {
+    const q = query(collection(db, "chatPublico"), orderBy("fecha", "asc"));
+    const contenedor = document.getElementById("chat-messages");
+    onSnapshot(q, (snapshot) => {
+      contenedor.innerHTML = "";
+      snapshot.forEach(docSnap => {
+        const m = docSnap.data();
+        const fecha = m.fecha?.toDate ? m.fecha.toDate() : new Date(m.fecha);
+        const fechaStr = fecha.toLocaleTimeString();
+        const div = document.createElement("div");
+        div.className = "chat-message";
+        div.innerHTML = `
+          <p><img src="${m.avatar || 'https://via.placeholder.com/25?text=👤'}" alt="avatar" /> <strong>@${m.nick}</strong> <span style="font-size:0.8em;color:#ccc;">${fechaStr}</span></p>
+          <p>${m.texto}</p>
+        `;
+        contenedor.appendChild(div);
+      });
+      contenedor.scrollTop = contenedor.scrollHeight;
+    });
+  }
+
+  // --- Enviar mensaje chat ---
+  async function enviarMensajeChat() {
+    const texto = document.getElementById("inputChat").value.trim();
+    if (!texto) return alert("Escribe un mensaje.");
+    const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
+    const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+    await addDoc(collection(db, "chatPublico"), {
+      uid: currentUser.uid,
+      nick: perfil.nick || currentUser.email.split("@")[0],
+      avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
+      texto,
+      fecha: new Date()
+    });
+    document.getElementById("inputChat").value = "";
+  }
+
+  // --- Detectar mobile para botón chat ---
+  function esMobile() {
+    return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  }
+
+  document.getElementById("btnChatMobile").addEventListener("click", () => {
+    location.href = "chat.html";
+  });
+
+  // --- Inicialización ---
+  onAuthStateChanged(auth, async user => {
+    if (!user) return location.href = "index.html";
+    currentUser = user;
+    cargarMenu();
+    renderPosts();
+    escucharChat();
+  });
+
+  document.getElementById("btnPublicar").addEventListener("click", publicarPost);
+  document.getElementById("btnEnviarChat").addEventListener("click", enviarMensajeChat);
+
+  // Exponer funciones para onclick global
+  window.toggleComentarios = toggleComentarios;
+  window.darLike = darLike;
+  window.darRePapo = darRePapo;
+  window.mostrarOpcionesShare = mostrarOpcionesShare;
+  window.enviarComentario = enviarComentario;
+</script>
 </body>
 </html>
