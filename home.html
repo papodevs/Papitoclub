@@ -198,7 +198,7 @@
       margin-top: 12px;
     }
     .comentarios textarea {
-      width: 100%;
+      width: 97%;
       border-radius: 12px;
       border: none;
       background: rgba(0, 105, 148, 0.1);
@@ -369,23 +369,17 @@
 
     /* RESPONSIVE */
     @media (max-width: 900px) {
-      .contenedor-principal {
-        flex-direction: column;
-        padding-bottom: 80px;
-      }
-      .lado-derecho {
-        width: 100%;
-        margin-top: 16px;
-      }
-      #btnChatFlotante {
-        display: flex;
-      }
-    }
-    @media (min-width: 901px) {
-      #btnChatFlotante {
-        display: none;
-      }
-    }
+  .contenedor-principal {
+    flex-direction: column;
+    padding-bottom: 80px;
+  }
+  .lado-derecho {
+    display: none; /* OCULTA el chat público en mobile */
+  }
+  #btnChatFlotante {
+    display: flex;
+  }
+}
   </style>
 </head>
 <body>
