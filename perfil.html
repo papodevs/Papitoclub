@@ -1,162 +1,163 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Perfil - Papoclub</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      background: linear-gradient(135deg, #006994, #00b88a);
-      font-family: 'Segoe UI', sans-serif;
-      color: #0ff;
-      margin: 0;
-      padding-top: 70px;
-      text-align: center;
-    }
+  <meta charset="UTF-8" />
+  <title>Perfil - Papoclub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #006994, #00b88a);
+      font-family: 'Segoe UI', sans-serif;
+      color: #0ff;
+      margin: 0;
+      padding-top: 70px;
+      text-align: center;
+    }
 
-    .formulario-perfil, .tarjeta-perfil {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 16px;
-      margin: 40px auto;
-      box-shadow: 0 0 12px #00e5ff88;
-      max-width: 400px;
-      text-align: left;
-    }
+    .formulario-perfil, .tarjeta-perfil {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin: 40px auto;
+      box-shadow: 0 0 12px #00e5ff88;
+      max-width: 400px;
+      text-align: left;
+    }
 
-    .formulario-perfil input, .formulario-perfil textarea {
-      width: 100%;
-      margin: 6px 0;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      background: #002f36;
-      color: #0ff;
-    }
+    .formulario-perfil input, .formulario-perfil textarea {
+      width: 100%;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #002f36;
+      color: #0ff;
+    }
 
-    .formulario-perfil button {
-      margin-top: 12px;
-      background: #00e5ff;
-      color: #003;
-      border: none;
-      padding: 10px 16px;
-      font-weight: bold;
-      border-radius: 10px;
-      cursor: pointer;
-    }
+    .formulario-perfil button {
+      margin-top: 12px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+    }
 
-    .tarjeta-perfil img {
-      max-width: 100%;
-      border-radius: 12px;
-      margin-bottom: 10px;
-    }
-  </style>
+    .tarjeta-perfil img {
+      max-width: 100%;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-  <div id="menu-superior"></div>
+  <div id="menu-superior"></div>
 
-  <div id="formularioPerfil" class="formulario-perfil" style="display: none;">
-    <h2>Crear/Editar Perfil</h2>
-    <input type="text" id="nick" placeholder="Nick o nombre de usuario" />
-    <input type="text" id="avatar" placeholder="URL de la imagen de perfil" />
-    <textarea id="bio" placeholder="Biografía o descripción personal"></textarea>
-    <input type="text" id="link" placeholder="Página personal o contacto" />
-    <button onclick="guardarPerfil()">Guardar</button>
-  </div>
+  <div id="formularioPerfil" class="formulario-perfil" style="display: none;">
+    <h2>Crear/Editar Perfil</h2>
+    <input type="text" id="nick" placeholder="Nick o nombre de usuario" />
+    <input type="text" id="avatar" placeholder="URL de la imagen de perfil" />
+    <textarea id="bio" placeholder="Biografía o descripción personal"></textarea>
+    <input type="text" id="link" placeholder="Página personal o contacto" />
+    <button onclick="guardarPerfil()">Guardar</button>
+  </div>
 
-  <div id="vistaPerfil" class="tarjeta-perfil"></div>
+  <div id="vistaPerfil" class="tarjeta-perfil"></div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
-      authDomain: "papoclub-737ac.firebaseapp.com",
-      projectId: "papoclub-737ac",
-      storageBucket: "papoclub-737ac.appspot.com",
-      messagingSenderId: "76712370993",
-      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
-    };
+    const firebaseConfig = {
+      apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+      authDomain: "papoclub-737ac.firebaseapp.com",
+      projectId: "papoclub-737ac",
+      storageBucket: "papoclub-737ac.appspot.com",
+      messagingSenderId: "76712370993",
+      appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+    };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
 
-    let currentUser = null;
-    let profileUserId = null;
+    let currentUser = null;
+    let profileUserId = null;
 
-    function obtenerUIDDesdeURL() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("uid");
-    }
+    async function cargarMenu() {
+      const res = await fetch("menu.html");
+      const html = await res.text();
+      document.getElementById("menu-superior").innerHTML = html;
 
-    async function cargarMenu() {
-      const res = await fetch("menu.html");
-      const html = await res.text();
-      document.getElementById("menu-superior").innerHTML = html;
+      // Asignar logout después de cargar el menú
+      if (!window.logout) {
+        window.logout = () => {
+          signOut(auth).then(() => location.href = "index.html");
+        };
+      }
+    }
 
-      // Definir logout si no existe globalmente
-      if (!window.logout) {
-        window.logout = () => {
-          signOut(auth).then(() => location.href = "index.html");
-        };
-      }
-    }
+    function obtenerUIDDesdeURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("uid");
+    }
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user;
-      profileUserId = obtenerUIDDesdeURL() || user?.uid;
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user;
+      profileUserId = obtenerUIDDesdeURL() || user?.uid;
 
-      if (!profileUserId) {
-        alert("Debes iniciar sesión para ver perfiles.");
-        location.href = "index.html";
-        return;
-      }
+      await cargarMenu();
 
-      if (user && profileUserId === user.uid) {
-        document.getElementById("formularioPerfil").style.display = "block";
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          document.getElementById("nick").value = data.nick || "";
-          document.getElementById("avatar").value = data.avatar || "";
-          document.getElementById("bio").value = data.bio || "";
-          document.getElementById("link").value = data.link || "";
-        }
-      }
+      if (!profileUserId) {
+        alert("Debes iniciar sesión para ver perfiles.");
+        location.href = "index.html";
+        return;
+      }
 
-      const perfilSnap = await getDoc(doc(db, "users", profileUserId));
-      if (perfilSnap.exists()) {
-        const data = perfilSnap.data();
-        document.getElementById("vistaPerfil").innerHTML = `
-          <img src="${data.avatar || ''}" alt="Avatar" />
-          <h2>@${data.nick || 'Usuario'}</h2>
-          <p>${data.bio || ''}</p>
-          <p><a href="${data.link}" target="_blank">${data.link}</a></p>
-        `;
-      } else {
-        document.getElementById("vistaPerfil").innerHTML = "<p>No se encontró información de este perfil.</p>";
-      }
-    });
+      if (user && profileUserId === user.uid) {
+        document.getElementById("formularioPerfil").style.display = "block";
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          document.getElementById("nick").value = data.nick || "";
+          document.getElementById("avatar").value = data.avatar || "";
+          document.getElementById("bio").value = data.bio || "";
+          document.getElementById("link").value = data.link || "";
+        }
+      }
 
-    window.guardarPerfil = async function () {
-      if (!currentUser) return;
-      const uid = currentUser.uid;
-      const data = {
-        nick: document.getElementById("nick").value.trim(),
-        avatar: document.getElementById("avatar").value.trim(),
-        bio: document.getElementById("bio").value.trim(),
-        link: document.getElementById("link").value.trim(),
-      };
-      await setDoc(doc(db, "users", uid), data);
-      alert("Perfil guardado correctamente.");
-      location.reload();
-    };
+      const perfilSnap = await getDoc(doc(db, "users", profileUserId));
+      if (perfilSnap.exists()) {
+        const data = perfilSnap.data();
+        document.getElementById("vistaPerfil").innerHTML = `
+          <img src="${data.avatar || ''}" alt="Avatar" />
+          <h2>@${data.nick || 'Usuario'}</h2>
+          <p>${data.bio || ''}</p>
+          <p><a href="${data.link}" target="_blank">${data.link}</a></p>
+        `;
+      } else {
+        document.getElementById("vistaPerfil").innerHTML = "<p>No se encontró información de este perfil.</p>";
+      }
+    });
 
-    // Cargar menú al inicio
-    cargarMenu();
-  </script>
+    window.guardarPerfil = async function () {
+      if (!currentUser) return;
+      const uid = currentUser.uid;
+      const data = {
+        nick: document.getElementById("nick").value.trim(),
+        avatar: document.getElementById("avatar").value.trim(),
+        bio: document.getElementById("bio").value.trim(),
+        link: document.getElementById("link").value.trim(),
+      };
+      await setDoc(doc(db, "users", uid), data);
+      alert("Perfil guardado correctamente.");
+      location.reload();
+    };
+
+    cargarMenu();
+  </script>
 </body>
 </html>
