@@ -3,206 +3,235 @@
 <head>
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <style>
     body {
       margin: 0;
-      background: linear-gradient(135deg, #006994, #00b88a);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #006994, #00b88a);
       color: #0ff;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding-top: 70px;
-      overflow-x: hidden;
+      padding-top: 60px;
     }
 
     #menu-superior {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
-      box-shadow: 0 0 8px #00e5ffaa, 0 0 20px #00e5ff88, inset 0 2px 6px #00b8d9cc;
+      box-shadow: 0 0 10px #00e5ff88, inset 0 2px 6px #00b8d9cc;
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      padding-right: 12px;
+      padding: 0 12px;
       z-index: 1000;
       backdrop-filter: blur(10px);
-      border-bottom: 1px solid #00e5ffcc;
     }
 
     .contenedor-principal {
       display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
       max-width: 1400px;
       margin: 0 auto;
-      padding: 0 40px 40px;
-      gap: 40px; /* mejora la separación entre columnas */
-      flex-grow: 1;
+      padding: 20px;
     }
 
     .lado-izquierdo {
-      flex: 1 1 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-left: 10px;
-    }
-
-    .nuevo-mensaje {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto 20px auto;
-      padding: 25px;
-      background: rgba(0, 50, 70, 0.6);
-      border-radius: 16px;
-      box-shadow: 0 0 12px #00e5ffcc, inset 0 0 6px #00e5ffaa;
-      border: 2px solid rgba(0, 229, 255, 0.8);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .nuevo-mensaje textarea {
-      width: 100%;
-      min-height: 80px;
-      background: rgba(0, 30, 40, 0.95);
-      border: none;
-      border-radius: 10px;
-      color: #0ff;
-      font-size: 1.1em;
-      padding: 12px;
-      resize: vertical;
-      box-shadow: inset 0 0 12px #00e5ffcc;
-    }
-
-    .nuevo-mensaje button {
-      align-self: flex-end;
-      padding: 10px 26px;
-      font-weight: bold;
-      background: #00e5ff;
-      color: #003;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 0 12px #00e5ffcc;
-      transition: background-color 0.3s ease;
-    }
-    .nuevo-mensaje button:hover {
-      background: #0099cc;
-    }
-
-    #listaMensajes {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    #listaMensajes .tarjeta {
-      width: 100%;
-      padding: 25px;
-      box-sizing: border-box;
-      background: rgba(0, 50, 70, 0.6);
-      border-radius: 16px;
-      margin-bottom: 22px;
-      box-shadow:
-        0 0 12px rgba(0, 229, 255, 0.8),
-        inset 0 0 10px rgba(0, 229, 255, 0.6);
-      border: 2px solid rgba(0, 229, 255, 0.8);
-      backdrop-filter: blur(3px);
-      transition: transform 0.2s ease;
-    }
-
-    #listaMensajes .tarjeta:hover {
-      transform: translateY(-2px);
-    }
-
-    .interacciones {
-      display: flex;
-      gap: 12px;
-      font-size: 0.9em;
-      margin-top: 10px;
-      color: #00e5ffcc;
+      flex: 1 1 600px;
     }
 
     .lado-derecho {
       display: none;
     }
 
+    @media (min-width: 900px) {
+      .lado-derecho {
+        display: block;
+        flex: 0 0 380px;
+        padding: 20px;
+        border-left: 2px solid rgba(0,229,255,0.2);
+        background: rgba(0, 30, 50, 0.25);
+        border-radius: 16px;
+        box-shadow: inset 0 0 10px rgba(0,229,255,0.2);
+      }
+    }
+
+    .nuevo-mensaje {
+      background: rgba(0, 50, 70, 0.6);
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #00e5ff99;
+    }
+
+    .nuevo-mensaje textarea {
+      width: 100%;
+      min-height: 80px;
+      background: rgba(0, 30, 40, 0.95);
+      color: #0ff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 1.05em;
+      resize: vertical;
+      box-shadow: inset 0 0 8px #00e5ffcc;
+    }
+
+    .nuevo-mensaje button {
+      margin-top: 10px;
+      padding: 10px 24px;
+      background: #00e5ff;
+      color: #003;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      float: right;
+    }
+
+    .tarjeta {
+      background: rgba(0, 50, 70, 0.6);
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #00e5ff88;
+    }
+
+    .interacciones {
+      display: flex;
+      gap: 14px;
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: #0ef;
+    }
+
+    .comentarios {
+      margin-top: 10px;
+    }
+
+    .comentarios textarea {
+      width: 100%;
+      min-height: 60px;
+      margin-top: 5px;
+      padding: 10px;
+      border-radius: 8px;
+      background: rgba(0, 30, 40, 0.9);
+      color: #0ff;
+      border: none;
+    }
+
+    .comentarios button {
+      margin-top: 6px;
+      padding: 6px 16px;
+      background: #00e5ff;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      float: right;
+    }
+
+    /* Chat derecho */
+    .lado-derecho h2 {
+      margin-top: 0;
+      color: #0ff;
+    }
+
+    #mensajes-chat {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+      background: rgba(0, 105, 148, 0.05);
+      border-radius: 12px;
+      box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.1);
+      margin-bottom: 10px;
+    }
+
+    .input-chat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-chat textarea {
+      background: rgba(0, 30, 40, 0.95);
+      color: #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      border: none;
+      resize: vertical;
+      min-height: 60px;
+      margin-bottom: 6px;
+    }
+
+    .input-chat button {
+      padding: 8px 20px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Botón flotante chat */
     #btnChatFlotante {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      bottom: 20px;
+      right: 20px;
       background: #00e5ff;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
-      width: 48px;
-      height: 48px;
       box-shadow: 0 0 14px #00e5ffcc;
-      border: 2px solid rgba(0, 229, 255, 0.8);
+      font-size: 28px;
       color: #003;
-      font-size: 26px;
       display: flex;
       justify-content: center;
       align-items: center;
-      cursor: pointer;
       z-index: 1001;
-      transition: box-shadow 0.3s ease;
-    }
-    #btnChatFlotante:hover {
-      box-shadow: 0 0 20px #00e5ffee, 0 0 30px #00e5ffbb;
+      cursor: pointer;
     }
 
-    @media (min-width: 901px) {
-      .lado-derecho {
-        display: flex;
-        flex-direction: column;
-        width: 360px;
-        background: rgba(0, 105, 148, 0.05);
-        border-radius: 16px;
-        padding: 18px;
-        border: 2px solid rgba(0, 229, 255, 0.6);
-        box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
-        margin-top: 12px;
-      }
+    @media (min-width: 900px) {
       #btnChatFlotante {
         display: none;
       }
     }
 
-    /* Modal para mobile */
+    /* Modal móvil */
     .modal-chat {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       backdrop-filter: blur(4px);
       justify-content: center;
       align-items: center;
       z-index: 2000;
     }
+
     .modal-contenido {
       background: #002c3e;
-      border-radius: 16px;
       padding: 20px;
+      border-radius: 14px;
       width: 95%;
       max-height: 85%;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 14px #00e5ffbb;
-      position: relative;
     }
+
     .cerrar-modal {
-      position: absolute;
-      top: 10px; right: 12px;
-      background: transparent;
+      align-self: flex-end;
+      background: none;
       border: none;
-      font-size: 1.4em;
+      font-size: 1.5em;
       color: #0ff;
       cursor: pointer;
     }
+
     .mensajes-modal {
       flex-grow: 1;
       overflow-y: auto;
@@ -213,7 +242,6 @@
       background: rgba(0, 105, 148, 0.05);
       box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.1);
       color: #ccf9ff;
-      max-height: 340px;
     }
   </style>
 </head>
@@ -221,6 +249,7 @@
   <div id="menu-superior"></div>
 
   <main class="contenedor-principal">
+    <!-- Publicaciones -->
     <section class="lado-izquierdo">
       <div class="nuevo-mensaje">
         <textarea id="nuevoMensaje" placeholder="¿Qué está pasando, @Papo?"></textarea>
@@ -229,23 +258,24 @@
       <div id="listaMensajes"></div>
     </section>
 
+    <!-- Chat Público (solo visible en desktop) -->
     <aside class="lado-derecho">
       <h2>💬 Chat Público</h2>
-      <div id="mensajes-chat" style="flex-grow: 1; overflow-y: auto; max-height: 350px;"></div>
-      <div class="input-chat" style="margin-top: 10px;">
+      <div id="mensajes-chat"></div>
+      <div class="input-chat">
         <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
         <button id="btnEnviar">Enviar</button>
       </div>
     </aside>
   </main>
 
-  <!-- Botón flotante para chat en móviles -->
+  <!-- Botón flotante para abrir chat en móviles -->
   <div id="btnChatFlotante" title="Abrir chat" onclick="abrirModalChat()">💬</div>
 
-  <!-- Modal de chat en móviles -->
+  <!-- Modal chat para móviles -->
   <div id="modalChat" class="modal-chat">
     <div class="modal-contenido">
-      <button id="cerrarModal" class="cerrar-modal">✖️</button>
+      <button class="cerrar-modal" onclick="cerrarModalChat()">✖️</button>
       <h2>💬 Chat Público</h2>
       <div id="mensajesChatModal" class="mensajes-modal"></div>
       <div class="input-chat">
@@ -255,20 +285,19 @@
     </div>
   </div>
 
-  <!-- Lógica del sitio -->
   <script type="module" src="home-app.js"></script>
   <script>
     function abrirModalChat() {
-      document.getElementById('modalChat').style.display = 'flex';
+      document.getElementById("modalChat").style.display = "flex";
     }
-    document.getElementById('cerrarModal').addEventListener('click', () => {
-      document.getElementById('modalChat').style.display = 'none';
-    });
-    document.getElementById('btnEnviarModal').addEventListener('click', () => {
-      const mensaje = document.getElementById('mensajeModal').value.trim();
-      if (mensaje && window.enviarMensaje) {
-        window.enviarMensaje(mensaje, 'modal');
-        document.getElementById('mensajeModal').value = '';
+    function cerrarModalChat() {
+      document.getElementById("modalChat").style.display = "none";
+    }
+    document.getElementById("btnEnviarModal").addEventListener("click", () => {
+      const msg = document.getElementById("mensajeModal").value.trim();
+      if (msg) {
+        window.enviarMensajeChatModal(msg);
+        document.getElementById("mensajeModal").value = "";
       }
     });
   </script>
