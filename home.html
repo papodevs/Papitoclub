@@ -5,7 +5,7 @@
   <title>Papoclub - Home</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#00e5ff" />
+  <meta name="theme-color" content="#00e5ff" />
 
   <style>
     body {
@@ -19,7 +19,8 @@
 
     #menu-superior {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       height: 60px;
       background: linear-gradient(145deg, #00e5ff, #0099cc);
@@ -34,15 +35,17 @@
 
     .contenedor-principal {
       display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
+      flex-direction: row;
+      justify-content: space-between;
       max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
+      gap: 40px;
     }
 
     .lado-izquierdo {
       flex: 1 1 600px;
+      margin-right: 20px;
     }
 
     .lado-derecho {
@@ -136,7 +139,6 @@
       float: right;
     }
 
-    /* Chat derecho */
     .lado-derecho h2 {
       margin-top: 0;
       color: #0ff;
@@ -178,7 +180,6 @@
       cursor: pointer;
     }
 
-    /* Botón flotante chat */
     #btnChatFlotante {
       position: fixed;
       bottom: 20px;
@@ -203,13 +204,14 @@
       }
     }
 
-    /* Modal móvil */
     .modal-chat {
       display: none;
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(4px);
       justify-content: center;
       align-items: center;
@@ -252,7 +254,6 @@
   <div id="menu-superior"></div>
 
   <main class="contenedor-principal">
-    <!-- Publicaciones -->
     <section class="lado-izquierdo">
       <div class="nuevo-mensaje">
         <textarea id="nuevoMensaje" placeholder="¿Qué está pasando, @Papo?"></textarea>
@@ -261,7 +262,6 @@
       <div id="listaMensajes"></div>
     </section>
 
-    <!-- Chat Público (solo visible en desktop) -->
     <aside class="lado-derecho">
       <h2>💬 Chat Público</h2>
       <div id="mensajes-chat"></div>
@@ -272,10 +272,8 @@
     </aside>
   </main>
 
-  <!-- Botón flotante para abrir chat en móviles -->
   <div id="btnChatFlotante" title="Abrir chat" onclick="abrirModalChat()">💬</div>
 
-  <!-- Modal chat para móviles -->
   <div id="modalChat" class="modal-chat">
     <div class="modal-contenido">
       <button class="cerrar-modal" onclick="cerrarModalChat()">✖️</button>
@@ -293,15 +291,22 @@
     function abrirModalChat() {
       document.getElementById("modalChat").style.display = "flex";
     }
+
     function cerrarModalChat() {
       document.getElementById("modalChat").style.display = "none";
     }
+
     document.getElementById("btnEnviarModal").addEventListener("click", () => {
       const msg = document.getElementById("mensajeModal").value.trim();
       if (msg) {
         window.enviarMensajeChatModal(msg);
         document.getElementById("mensajeModal").value = "";
       }
+    });
+
+    // Verifica errores del script
+    window.addEventListener('error', function (e) {
+      console.error("⚠️ Error detectado:", e.message);
     });
   </script>
 </body>
