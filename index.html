@@ -201,5 +201,41 @@
     .catch(err => console.error("SW error", err));
 }
   </script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJmOS9MjDhjJrKCMIUVbgmRiEi2xLIkrQ",
+    authDomain: "papoclub-737ac.firebaseapp.com",
+    projectId: "papoclub-737ac",
+    storageBucket: "papoclub-737ac.appspot.com",
+    messagingSenderId: "76712370993",
+    appId: "1:76712370993:web:2d2646b258efbccf68c73e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // 🔐 Función login que activa fullscreen y redirige
+  window.login = async function () {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // 🔳 Activar fullscreen si es compatible
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+
+      // ✅ Redirigir al home
+      location.href = "home.html";
+    } catch (error) {
+      alert("Error al iniciar sesión: " + error.message);
+    }
+  };
+</script>
 </body>
 </html>
