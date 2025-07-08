@@ -1,0 +1,12 @@
+{
+  "hosting": {
+    "public": "./", // Carpeta raíz donde están index.html, manifest, etc.
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
