@@ -35,16 +35,33 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return location.href = "index.html";
   currentUser = user;
   await cargarMenu();
+  await activarFullscreen();
   mostrarMensajes();
   escucharMensajesPublicos();
   inicializarEventosUI();
 });
 
+async function activarFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) await el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+
 async function cargarMenu() {
   const res = await fetch("menu.html");
   const html = await res.text();
   document.getElementById("menu-superior").innerHTML = html;
-  window.logout = () => signOut(auth).then(() => location.href = "index.html");
+
+  // 🔄 Nueva lógica para salir de fullscreen antes de logout
+  window.logout = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().finally(() => {
+        signOut(auth).then(() => location.href = "index.html");
+      });
+    } else {
+      signOut(auth).then(() => location.href = "index.html");
+    }
+  };
 }
 
 async function obtenerPerfil(uid) {
