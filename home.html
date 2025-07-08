@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Papoclub - Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       margin: 0;
@@ -28,7 +28,6 @@
       display: flex;
       justify-content: flex-end;
       align-items: center;
-      gap: 8px;
       padding-right: 12px;
       z-index: 1000;
       backdrop-filter: blur(10px);
@@ -37,23 +36,23 @@
 
     .contenedor-principal {
       display: flex;
-      flex-grow: 1;
       max-width: 1400px;
       margin: 0 auto;
-      padding: 0 20px 20px;
-      gap: 20px;
-      min-height: calc(100vh - 70px);
+      padding: 0 40px 40px;
+      gap: 40px; /* mejora la separación entre columnas */
+      flex-grow: 1;
     }
 
     .lado-izquierdo {
       flex: 1 1 0;
       display: flex;
       flex-direction: column;
-      align-items: center; /* para centrar el contenido */
+      align-items: center;
+      padding-left: 10px;
     }
 
     .nuevo-mensaje {
-      width: 80% !important;
+      width: 100%;
       max-width: 800px;
       margin: 0 auto 20px auto;
       padding: 25px;
@@ -67,7 +66,7 @@
     }
 
     .nuevo-mensaje textarea {
-      width: 97%;
+      width: 100%;
       min-height: 80px;
       background: rgba(0, 30, 40, 0.95);
       border: none;
@@ -96,25 +95,26 @@
     }
 
     #listaMensajes {
-      width: 80% !important;
+      width: 100%;
       max-width: 900px;
       margin: 0 auto;
     }
 
     #listaMensajes .tarjeta {
-  width: 97% !important;
-  padding: 25px !important;
-  box-sizing: border-box;
-  background: rgba(0, 50, 70, 0.6); /* fondo más oscuro como .nuevo-mensaje */
-  border-radius: 16px;
-  margin-bottom: 22px;
-  box-shadow:
-    0 0 12px rgba(0, 229, 255, 0.8),
-    inset 0 0 10px rgba(0, 229, 255, 0.6);
-  border: 2px solid rgba(0, 229, 255, 0.8);
-  backdrop-filter: blur(3px);
-  transition: transform 0.2s ease;
-}
+      width: 100%;
+      padding: 25px;
+      box-sizing: border-box;
+      background: rgba(0, 50, 70, 0.6);
+      border-radius: 16px;
+      margin-bottom: 22px;
+      box-shadow:
+        0 0 12px rgba(0, 229, 255, 0.8),
+        inset 0 0 10px rgba(0, 229, 255, 0.6);
+      border: 2px solid rgba(0, 229, 255, 0.8);
+      backdrop-filter: blur(3px);
+      transition: transform 0.2s ease;
+    }
+
     #listaMensajes .tarjeta:hover {
       transform: translateY(-2px);
     }
@@ -158,19 +158,20 @@
       .lado-derecho {
         display: flex;
         flex-direction: column;
-        width: 400px;
+        width: 360px;
         background: rgba(0, 105, 148, 0.05);
         border-radius: 16px;
         padding: 18px;
         border: 2px solid rgba(0, 229, 255, 0.6);
         box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+        margin-top: 12px;
       }
       #btnChatFlotante {
         display: none;
       }
     }
 
-    /* Modal chat */
+    /* Modal para mobile */
     .modal-chat {
       display: none;
       position: fixed;
@@ -230,16 +231,18 @@
 
     <aside class="lado-derecho">
       <h2>💬 Chat Público</h2>
-      <div id="mensajes-chat"></div>
-      <div class="input-chat">
+      <div id="mensajes-chat" style="flex-grow: 1; overflow-y: auto; max-height: 350px;"></div>
+      <div class="input-chat" style="margin-top: 10px;">
         <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
         <button id="btnEnviar">Enviar</button>
       </div>
     </aside>
   </main>
 
+  <!-- Botón flotante para chat en móviles -->
   <div id="btnChatFlotante" title="Abrir chat" onclick="abrirModalChat()">💬</div>
 
+  <!-- Modal de chat en móviles -->
   <div id="modalChat" class="modal-chat">
     <div class="modal-contenido">
       <button id="cerrarModal" class="cerrar-modal">✖️</button>
@@ -252,6 +255,7 @@
     </div>
   </div>
 
+  <!-- Lógica del sitio -->
   <script type="module" src="home-app.js"></script>
   <script>
     function abrirModalChat() {
@@ -260,14 +264,11 @@
     document.getElementById('cerrarModal').addEventListener('click', () => {
       document.getElementById('modalChat').style.display = 'none';
     });
-
     document.getElementById('btnEnviarModal').addEventListener('click', () => {
       const mensaje = document.getElementById('mensajeModal').value.trim();
-      if (mensaje !== "") {
-        if (window.enviarMensajeChatModal) {
-          window.enviarMensajeChatModal(mensaje);
-        }
-        document.getElementById('mensajeModal').value = "";
+      if (mensaje && window.enviarMensaje) {
+        window.enviarMensaje(mensaje, 'modal');
+        document.getElementById('mensajeModal').value = '';
       }
     });
   </script>
