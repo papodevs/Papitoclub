@@ -14,41 +14,100 @@
       text-align: center;
     }
 
-    .formulario-perfil, .tarjeta-perfil {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 16px;
+    .formulario-perfil {
+      background: rgba(0, 10, 30, 0.85);
+      border: 2px solid #00e5ff;
+      border-radius: 20px;
+      padding: 20px;
       margin: 40px auto;
-      box-shadow: 0 0 12px #00e5ff88;
-      max-width: 400px;
+      box-shadow: 0 0 20px #00e5ffaa, 0 0 40px #00e5ff66 inset;
+      max-width: 420px;
       text-align: left;
+      animation: entrada 0.5s ease;
     }
 
-    .formulario-perfil input, .formulario-perfil textarea {
+    @keyframes entrada {
+      from {
+        transform: translateY(30px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .formulario-perfil input,
+    .formulario-perfil textarea {
       width: 100%;
-      margin: 6px 0;
-      padding: 10px;
-      border-radius: 10px;
+      margin: 8px 0;
+      padding: 12px;
+      border-radius: 12px;
       border: none;
       background: #002f36;
       color: #0ff;
+      font-size: 1em;
+      box-shadow: inset 0 0 8px #00e5ff55;
+    }
+
+    .formulario-perfil textarea {
+      resize: vertical;
     }
 
     .formulario-perfil button {
-      margin-top: 12px;
+      margin-top: 14px;
       background: #00e5ff;
       color: #003;
       border: none;
-      padding: 10px 16px;
+      padding: 12px 20px;
       font-weight: bold;
-      border-radius: 10px;
+      font-size: 1em;
+      border-radius: 12px;
       cursor: pointer;
+      width: 100%;
+      transition: background 0.3s;
+    }
+
+    .formulario-perfil button:hover {
+      background: #00cce0;
+    }
+
+    .tarjeta-perfil {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 20px;
+      margin: 20px auto;
+      box-shadow: 0 0 12px #00e5ff88;
+      max-width: 420px;
+      text-align: center;
     }
 
     .tarjeta-perfil img {
       max-width: 100%;
-      border-radius: 12px;
+      border-radius: 14px;
       margin-bottom: 10px;
+      box-shadow: 0 0 8px #00e5ffaa;
+    }
+
+    .tarjeta-perfil h2 {
+      margin: 10px 0 5px;
+      font-size: 1.4em;
+    }
+
+    .tarjeta-perfil p {
+      margin: 4px 0;
+    }
+
+    .tarjeta-perfil a {
+      color: #0ff;
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      .formulario-perfil,
+      .tarjeta-perfil {
+        margin: 20px 16px;
+      }
     }
   </style>
 </head>
@@ -56,12 +115,12 @@
   <div id="menu-superior"></div>
 
   <div id="formularioPerfil" class="formulario-perfil" style="display: none;">
-    <h2>Crear/Editar Perfil</h2>
+    <h2>Crear / Editar Perfil</h2>
     <input type="text" id="nick" placeholder="Nick o nombre de usuario" />
-    <input type="text" id="avatar" placeholder="URL de la imagen de perfil" />
-    <textarea id="bio" placeholder="Biografía o descripción personal"></textarea>
-    <input type="text" id="link" placeholder="Página personal o contacto" />
-    <button onclick="guardarPerfil()">Guardar</button>
+    <input type="text" id="avatar" placeholder="URL de tu avatar" />
+    <textarea id="bio" placeholder="Biografía o descripción..."></textarea>
+    <input type="text" id="link" placeholder="Enlace personal o red social" />
+    <button onclick="guardarPerfil()">Guardar Perfil</button>
   </div>
 
   <div id="vistaPerfil" class="tarjeta-perfil"></div>
@@ -92,7 +151,7 @@
       const html = await res.text();
       document.getElementById("menu-superior").innerHTML = html;
 
-      // Asignar logout después de cargar el menú
+      // Activar logout si está en el menú
       if (!window.logout) {
         window.logout = () => {
           signOut(auth).then(() => location.href = "index.html");
@@ -117,6 +176,7 @@
         return;
       }
 
+      // Mostrar formulario si es el usuario actual
       if (user && profileUserId === user.uid) {
         document.getElementById("formularioPerfil").style.display = "block";
         const docSnap = await getDoc(doc(db, "users", user.uid));
@@ -129,14 +189,15 @@
         }
       }
 
+      // Mostrar perfil público
       const perfilSnap = await getDoc(doc(db, "users", profileUserId));
       if (perfilSnap.exists()) {
         const data = perfilSnap.data();
         document.getElementById("vistaPerfil").innerHTML = `
-          <img src="${data.avatar || ''}" alt="Avatar" />
+          <img src="${data.avatar || 'https://via.placeholder.com/300'}" alt="Avatar" />
           <h2>@${data.nick || 'Usuario'}</h2>
           <p>${data.bio || ''}</p>
-          <p><a href="${data.link}" target="_blank">${data.link}</a></p>
+          ${data.link ? `<p><a href="${data.link}" target="_blank">${data.link}</a></p>` : ""}
         `;
       } else {
         document.getElementById("vistaPerfil").innerHTML = "<p>No se encontró información de este perfil.</p>";
@@ -153,7 +214,7 @@
         link: document.getElementById("link").value.trim(),
       };
       await setDoc(doc(db, "users", uid), data);
-      alert("Perfil guardado correctamente.");
+      alert("✅ Perfil guardado correctamente.");
       location.reload();
     };
 
