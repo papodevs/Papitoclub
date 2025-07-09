@@ -17,7 +17,8 @@
     }
     #menu-superior {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100%;
       z-index: 1000;
     }
@@ -28,23 +29,46 @@
       display: flex;
       flex-direction: column;
       height: calc(100vh - 70px);
-      background: rgba(0,0,0,0.15);
     }
     .chat-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
     .chat-header h2 {
       margin: 0;
-      user-select: none;
     }
-    #mensajes-chat {
+    .cerrar-btn {
+      background: linear-gradient(145deg, #00e5ff, #0099cc);
+      border: none;
+      color: #003;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      box-shadow: 0 0 12px #00e5ffaa, inset 0 1px 4px #00b8d9cc;
+      cursor: pointer;
+      font-size: 1em;
+      transition: all 0.2s ease-in-out;
+    }
+    .cerrar-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 16px #00e5ffcc, 0 0 24px #00e5ff88;
+    }
+    .chat-historial {
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 14px;
+      padding: 10px;
+      margin-bottom: 12px;
       flex: 1;
       overflow-y: auto;
-      margin-bottom: 10px;
-      padding-right: 4px;
+      box-shadow: 0 0 10px #00e5ff55;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      width: 90%;
+    }
+    #mensajes-chat {
       scrollbar-width: thin;
       scrollbar-color: #00e5ff44 transparent;
     }
@@ -55,6 +79,14 @@
       background-color: #00e5ff44;
       border-radius: 4px;
     }
+    .mensaje-chat {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 14px;
+      padding: 12px;
+      margin-bottom: 14px;
+      box-shadow: 0 0 6px #00e5ff44;
+      word-wrap: break-word;
+    }
     .chat-input {
       background: rgba(0,0,0,0.2);
       border-radius: 16px;
@@ -62,11 +94,15 @@
       box-shadow: 0 0 10px #00e5ff55;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 8px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 90%;
     }
     .chat-input textarea {
-      width: 97%;
-      height: 70px;
+      width: 100%;
+      height: 40px;
       border-radius: 8px;
       border: none;
       padding: 10px;
@@ -76,7 +112,6 @@
       color: #0ff;
     }
     .chat-input button {
-      align-self: flex-end;
       background: #00e5ff;
       color: #003;
       border: none;
@@ -97,9 +132,11 @@
   <div class="chat-publico">
     <div class="chat-header">
       <h2>💬 Chat Público</h2>
-      <button onclick="location.href='home.html'">Volver a Home</button>
+      <button class="cerrar-btn" onclick="window.close()">Cerrar Ventana</button>
     </div>
-    <div id="mensajes-chat"></div>
+    <div class="chat-historial">
+      <div id="mensajes-chat"></div>
+    </div>
     <div class="chat-input">
       <textarea id="mensaje" placeholder="Escribe un mensaje..."></textarea>
       <button id="btnEnviar">Enviar</button>
@@ -140,10 +177,19 @@
     }
 
     async function enviarMensaje() {
-      const texto = document.getElementById("mensaje").value.trim();
+      const textarea = document.getElementById("mensaje");
+      const texto = textarea.value.trim();
       if (!texto) return alert("Escribe un mensaje antes de enviar.");
+
+      // Anti-URL para todos excepto el admin
+      if (currentUser.email !== "borincano@gmail.com" && /https?:\/\//i.test(texto)) {
+        textarea.value = "";
+        return alert("Mensaje no permitido");
+      }
+
       const perfilSnap = await getDoc(doc(db, "users", currentUser.uid));
       const perfil = perfilSnap.exists() ? perfilSnap.data() : {};
+
       await addDoc(collection(db, "chatPublico"), {
         texto,
         uid: currentUser.uid,
@@ -151,7 +197,15 @@
         avatar: perfil.avatar || "https://via.placeholder.com/30?text=👤",
         fecha: new Date()
       });
-      document.getElementById("mensaje").value = "";
+
+      // Delay de 2 segundos
+      textarea.value = "";
+      textarea.disabled = true;
+      textarea.placeholder = "Espera 2 segundos...";
+      setTimeout(() => {
+        textarea.disabled = false;
+        textarea.placeholder = "Escribe un mensaje...";
+      }, 2000);
     }
 
     function escucharMensajesPublicos() {
@@ -174,7 +228,6 @@
     }
 
     document.getElementById("btnEnviar").addEventListener("click", enviarMensaje);
-
   </script>
 </body>
 </html>
