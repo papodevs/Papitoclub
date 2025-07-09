@@ -65,20 +65,12 @@
     }
 
     .formulario-juego, .tarjeta-juego, .vista-juego {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 14px;
-      padding: 16px;
+      background: linear-gradient(145deg, rgba(0,50,70,0.9), rgba(0,20,40,0.8));
+      border-radius: 16px;
+      padding: 18px;
       margin-bottom: 20px;
       box-shadow: 0 0 12px #00e5ff88;
-    }
-
-    .tarjeta-juego {
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .tarjeta-juego:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 0 16px #00e5ff, 0 0 30px #00e5ffaa;
+      border: 1px solid rgba(0,229,255,0.3);
     }
 
     .formulario-juego input {
@@ -105,7 +97,6 @@
     .tarjeta-juego img, .vista-juego img, iframe {
       max-width: 100%;
       border-radius: 10px;
-      box-shadow: 0 0 8px #00e5ffaa;
     }
 
     .lista-juegos-lateral {
@@ -113,6 +104,8 @@
       border-radius: 12px;
       padding: 10px;
       box-shadow: 0 0 10px #00e5ff55;
+      max-height: 100%;
+      overflow-y: auto;
     }
 
     .lista-juegos-lateral ul {
@@ -157,15 +150,81 @@
       cursor: pointer;
     }
 
-    @media (min-width: 900px) {
+    @media (min-width: 768px) {
       #btnChatFlotante {
         display: none;
       }
     }
 
+    .modal-chat {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .modal-contenido {
+      background: #002c3e;
+      padding: 20px;
+      border-radius: 14px;
+      width: 95%;
+      max-height: 85%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cerrar-modal {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      color: #0ff;
+      cursor: pointer;
+    }
+
+    .mensajes-modal {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin: 10px 0;
+      border: 1px solid #00e5ff66;
+      padding: 12px;
+      border-radius: 12px;
+      background: rgba(0, 105, 148, 0.05);
+      box-shadow: inset 0 0 8px rgba(0, 229, 255, 0.1);
+      color: #ccf9ff;
+    }
+
+    .input-chat textarea {
+      background: rgba(0, 30, 40, 0.95);
+      color: #0ff;
+      border-radius: 8px;
+      padding: 10px;
+      border: none;
+      resize: vertical;
+      min-height: 60px;
+      margin-bottom: 6px;
+    }
+
+    .input-chat button {
+      padding: 8px 20px;
+      background: #00e5ff;
+      color: #003;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
     @media (max-width: 768px) {
-      .main-layout {
-        flex-direction: column;
+      .lista-juegos-lateral {
+        display: none;
       }
     }
   </style>
@@ -176,13 +235,9 @@
     <button onclick="location.href='perfil.html'" title="Perfil">👤</button>
     <button onclick="location.href='historial.html'" title="Juegos">🎮</button>
     <button onclick="location.href='eventos.html'" title="Eventos">📅</button>
-    <button onclick="location.href='mensajes.html'" id="iconoMensaje" title="Mensajes">
-      ✉️<span id="noti" class="alerta">•</span>
-    </button>
+    <button onclick="location.href='mensajes.html'" title="Privado">✉️</button>
     <button onclick="logout()" title="Cerrar sesión">🚪</button>
   </div>
-
-  <div id="btnChatFlotante" title="Abrir chat" onclick="location.href='mensajes.html'">💬</div>
 
   <div class="main-layout">
     <div class="col-izquierda">
@@ -210,6 +265,22 @@
     </div>
   </div>
 
+  <!-- Botón flotante de chat (solo en mobile) -->
+  <div id="btnChatFlotante" onclick="abrirModalChat()" title="Abrir chat">💬</div>
+
+  <!-- Modal de chat público -->
+  <div id="modalChat" class="modal-chat">
+    <div class="modal-contenido">
+      <button class="cerrar-modal" onclick="cerrarModalChat()">✖️</button>
+      <h2>💬 Chat Público</h2>
+      <div id="mensajesChatModal" class="mensajes-modal"></div>
+      <div class="input-chat">
+        <textarea id="mensajeModal" placeholder="Escribe un mensaje..."></textarea>
+        <button onclick="enviarDesdeModal()">Enviar</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
@@ -231,7 +302,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-
     let currentUser = null;
 
     onAuthStateChanged(auth, (user) => {
@@ -256,12 +326,10 @@
       const pagina = document.getElementById("paginaJuego").value.trim();
       const telegram = document.getElementById("telegramJuego").value.trim();
       const discord = document.getElementById("discordJuego").value.trim();
-
       if (!nombre || !imagen) {
         alert("El nombre y la imagen son obligatorios");
         return;
       }
-
       await addDoc(collection(db, "juegos"), {
         creadorUID: currentUser?.uid || "anonimo",
         nombre,
@@ -271,12 +339,6 @@
         discord,
         fecha: new Date()
       });
-
-      document.getElementById("nombreJuego").value = "";
-      document.getElementById("imagenJuego").value = "";
-      document.getElementById("paginaJuego").value = "";
-      document.getElementById("telegramJuego").value = "";
-      document.getElementById("discordJuego").value = "";
     }
 
     function cargarJuegos() {
@@ -288,11 +350,9 @@
       onSnapshot(q, (snapshot) => {
         lista.innerHTML = "";
         nombres.innerHTML = "";
-
         snapshot.forEach((doc, index) => {
           const j = doc.data();
           const idJuego = `juego_${index}`;
-
           const div = document.createElement("div");
           div.className = "tarjeta-juego";
           div.id = idJuego;
@@ -317,10 +377,40 @@
     }
 
     window.logout = function () {
-      signOut(auth).then(() => {
-        location.href = "index.html";
-      });
+      signOut(auth).then(() => location.href = "index.html");
     }
+
+    // Chat público modal
+    window.abrirModalChat = () => {
+      document.getElementById("modalChat").style.display = "flex";
+    }
+    window.cerrarModalChat = () => {
+      document.getElementById("modalChat").style.display = "none";
+    }
+    window.enviarDesdeModal = () => {
+      const mensaje = document.getElementById("mensajeModal").value.trim();
+      if (mensaje) {
+        addDoc(collection(db, "chatPublico"), {
+          uid: currentUser?.uid || "anonimo",
+          mensaje,
+          fecha: new Date()
+        });
+        document.getElementById("mensajeModal").value = "";
+      }
+    }
+    onSnapshot(query(collection(db, "chatPublico"), orderBy("fecha", "asc")), (snapshot) => {
+      const contenedor = document.getElementById("mensajesChatModal");
+      if (contenedor) {
+        contenedor.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.textContent = d.mensaje;
+          contenedor.appendChild(div);
+        });
+        contenedor.scrollTop = contenedor.scrollHeight;
+      }
+    });
   </script>
 </body>
 </html>
